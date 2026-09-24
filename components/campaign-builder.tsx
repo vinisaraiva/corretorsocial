@@ -53,7 +53,10 @@ import { InstagramCarouselPreview } from "@/components/instagram-carousel-previe
 import { InstagramCarouselControls } from "@/components/instagram-carousel-controls";
 import { buildCampaignRecommendation } from "@/lib/campaign-recommendation";
 import { MediaAnalysisStatus } from "@/components/media-analysis-status";
-import { renderAndUploadCampaignAssets } from "@/lib/campaign-renderer";
+import {
+  createCampaignAssetSignedUrls,
+  renderAndUploadCampaignAssets,
+} from "@/lib/campaign-renderer";
 import type { Property, SocialChannel } from "@/types";
 
 const allChannels: { id: SocialChannel; label: string }[] = [
@@ -267,6 +270,10 @@ export function CampaignBuilder({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [dirty, setDirty] = useState(false);
+  const [renderedDownloads, setRenderedDownloads] = useState<
+    Array<{ path: string; url: string }>
+  >([]);
+  const [renderedLabel, setRenderedLabel] = useState("");
   const [staging, setStaging] = useState(false);
   const [stagingStyle, setStagingStyle] =
     useState<(typeof stagingStyles)[number]>("Moderno");
@@ -368,6 +375,8 @@ export function CampaignBuilder({
   function markChanged() {
     setDirty(true);
     setMessage("");
+    setRenderedDownloads([]);
+    setRenderedLabel("");
   }
 
   function applyGlobalStyle(value: CampaignTemplateId) {
@@ -504,6 +513,8 @@ export function CampaignBuilder({
     setWorking("render");
     setError("");
     setMessage("");
+    setRenderedDownloads([]);
+    setRenderedLabel("");
 
     try {
       let campaignId = persistedCampaignId;
@@ -568,6 +579,10 @@ export function CampaignBuilder({
         format: config.format,
         paths,
       });
+
+      const signedFiles = await createCampaignAssetSignedUrls(paths);
+      setRenderedDownloads(signedFiles);
+      setRenderedLabel(activeArtName);
 
       setMessage(
         paths.length > 1
@@ -1158,6 +1173,32 @@ export function CampaignBuilder({
                   ? "TikTok · vídeo em breve"
                   : "Gerar PNG"}
           </button>
+
+          {renderedDownloads.length > 0 && (
+            <div className="rounded-xl border border-[#D1E9E2] bg-[#F6FEFC] p-3">
+              <div className="text-xs font-extrabold text-[#176B5B]">
+                Arquivo gerado · {renderedLabel}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {renderedDownloads.map((file, index) => (
+                  <a
+                    key={file.path}
+                    href={file.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-lg bg-white px-2.5 py-1.5 text-xs font-bold text-[#176B5B] shadow-sm ring-1 ring-[#D1E9E2]"
+                  >
+                    {renderedDownloads.length > 1
+                      ? `Abrir página ${index + 1}`
+                      : "Abrir PNG"}
+                  </a>
+                ))}
+              </div>
+              <div className="mt-2 text-[10px] leading-4 text-[#667085]">
+                Links temporários de 10 minutos. O arquivo permanece salvo na campanha.
+              </div>
+            </div>
+          )}
 
           <button
             type="button"
