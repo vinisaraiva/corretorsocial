@@ -125,6 +125,45 @@ export async function deleteProperty(propertyId: string) {
     .select("storage_path")
     .eq("property_id", property.id);
 
+  const { data: campaigns } = await supabase
+    .from("campaigns")
+    .select("id")
+    .eq("property_id", property.id)
+    .eq("user_id", user.id);
+
+  const campaignIds = (campaigns ?? []).map((campaign) => campaign.id);
+
+  let renderedPaths: string[] = [];
+
+  if (campaignIds.length > 0) {
+    const { data: renderedVariants } = await supabase
+      .from("campaign_variants")
+      .select("rendered_asset_path,render_metadata")
+      .in("campaign_id", campaignIds);
+
+    renderedPaths = Array.from(
+      new Set(
+        (renderedVariants ?? []).flatMap((variant) => {
+          const metadata =
+            variant.render_metadata &&
+            typeof variant.render_metadata === "object" &&
+            !Array.isArray(variant.render_metadata)
+              ? (variant.render_metadata as Record<string, unknown>)
+              : null;
+
+          const paths = Array.isArray(metadata?.rendered_asset_paths)
+            ? metadata.rendered_asset_paths.filter(
+                (path): path is string => typeof path === "string",
+              )
+            : [];
+
+          if (variant.rendered_asset_path) paths.push(variant.rendered_asset_path);
+          return paths;
+        }),
+      ),
+    ).filter((path) => path.startsWith(`${user.id}/`));
+  }
+
   if (mediaError) {
     throw new Error("Não foi possível preparar a exclusão do imóvel.");
   }
@@ -152,6 +191,19 @@ export async function deleteProperty(propertyId: string) {
       console.error(
         "Property deleted but some storage files could not be removed",
         storageError,
+      );
+    }
+  }
+
+  if (renderedPaths.length > 0) {
+    const { error: assetError } = await supabase.storage
+      .from("campaign-assets")
+      .remove(renderedPaths);
+
+    if (assetError) {
+      console.error(
+        "Property deleted but rendered campaign assets could not be removed",
+        assetError,
       );
     }
   }
