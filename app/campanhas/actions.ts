@@ -8,6 +8,7 @@ export type CampaignDraftInput = {
   propertyId: string;
   visualStyle: string;
   headline: string;
+  subheadline: string;
   cta: string;
   captions: {
     instagram: string;
@@ -66,7 +67,9 @@ async function persistCampaign(input: CampaignDraftInput) {
         visual_style: input.visualStyle,
         marketing_angle: input.headline,
         generation_metadata: {
-          source: "deterministic_preview_v0_1",
+          source: "deterministic_preview_v0_2",
+          template_id: input.visualStyle,
+          subheadline: input.subheadline.trim(),
         },
       })
       .eq("id", campaignId)
@@ -85,7 +88,9 @@ async function persistCampaign(input: CampaignDraftInput) {
         marketing_angle: input.headline,
         status: "ready",
         generation_metadata: {
-          source: "deterministic_preview_v0_1",
+          source: "deterministic_preview_v0_2",
+          template_id: input.visualStyle,
+          subheadline: input.subheadline.trim(),
         },
       })
       .select("id")
@@ -110,7 +115,8 @@ async function persistCampaign(input: CampaignDraftInput) {
         cta: input.cta.trim() || null,
         render_metadata: {
           visual_style: input.visualStyle,
-          source: "deterministic_preview_v0_1",
+          source: "deterministic_preview_v0_2",
+          subheadline: input.subheadline.trim(),
         },
       })),
       {
