@@ -41,7 +41,7 @@ export default async function NewCampaignPage({
   const [mediaResult, campaignsResult, profileResult] = await Promise.all([
     supabase
       .from("property_media")
-      .select("property_id,original_url,storage_path,is_cover,sort_order,width,height,ai_score,ai_tags")
+      .select("id,property_id,original_url,storage_path,is_cover,sort_order,width,height,ai_score,ai_tags")
       .eq("property_id", row.id),
     supabase
       .from("campaigns")
