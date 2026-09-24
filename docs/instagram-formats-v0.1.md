@@ -496,3 +496,54 @@ A renderização final não é idêntica:
 - TikTok poderá evoluir para vídeo/slideshow mantendo a mesma família visual.
 
 Os IDs internos usam `vertical-*`, evitando duplicação de templates.
+
+
+## Carrossel — ficha estruturada
+
+Campos estruturados do cadastro devem ser tratados separadamente dos diferenciais livres.
+
+### Campos estruturados atuais
+Ordem de prioridade:
+1. quartos;
+2. suítes;
+3. banheiros;
+4. vagas;
+5. área.
+
+Esses campos:
+- usam ícones monocromáticos;
+- aparecem em grid de até 6 posições;
+- usam 3 colunas por linha;
+- não devem ser substituídos por texto promocional apenas para completar a grade;
+- só aparecem quando o valor estiver preenchido e for maior que zero.
+
+O sexto slot fica reservado para futuro campo realmente estruturado. Não inventar dado para preencher espaço.
+
+### Ícones
+- quartos → cama;
+- suítes → chave;
+- banheiros → banho;
+- vagas → carro;
+- área → régua/metragem.
+
+Ícones devem permanecer pequenos, monocromáticos e coerentes com a cor de destaque do estilo.
+
+### Diferenciais livres
+Textos como:
+- perto da praia;
+- reformado;
+- vista mar;
+- oportunidade;
+- condomínio com lazer;
+
+não usam ícones automáticos.
+
+Eles aparecem em bloco/chips separados, porque não possuem semântica padronizada suficiente.
+
+### Altura adaptativa
+Nos slides com foto + ficha:
+- 1 a 3 informações → priorizar mais área de fotografia;
+- 4 a 6 informações → usar duas linhas em grid 3×2;
+- nunca reduzir a foto apenas para ocupar espaço vazio.
+
+A escolha de layout é automática. O usuário não controla colunas, alinhamento ou posição individual desses itens.
