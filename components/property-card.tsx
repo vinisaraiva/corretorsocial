@@ -47,7 +47,7 @@ export function PropertyCard({ property }: { property: Property }) {
             Ver imóvel
           </Link>
           <Link
-            href={`/campanhas/${property.id}`}
+            href={`/campanhas/nova?imovel=${property.id}`}
             className="app-button-primary flex items-center justify-center text-sm"
           >
             Criar campanha
