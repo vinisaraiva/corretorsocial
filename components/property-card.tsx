@@ -51,19 +51,25 @@ export function PropertyCard({ property }: { property: Property }) {
           {property.lastPublished && <span>· {property.lastPublished}</span>}
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div
+          className={`mt-4 grid gap-2 ${
+            property.status === "arquivado" ? "grid-cols-1" : "grid-cols-2"
+          }`}
+        >
           <Link
             href={`/imoveis/${property.id}`}
             className="app-button-secondary flex items-center justify-center text-sm"
           >
             Ver imóvel
           </Link>
-          <Link
-            href={`/campanhas/nova?imovel=${property.id}`}
-            className="app-button-primary flex items-center justify-center text-sm"
-          >
-            Criar campanha
-          </Link>
+          {property.status !== "arquivado" && (
+            <Link
+              href={`/campanhas/nova?imovel=${property.id}`}
+              className="app-button-primary flex items-center justify-center text-sm"
+            >
+              Criar campanha
+            </Link>
+          )}
         </div>
       </div>
     </article>
