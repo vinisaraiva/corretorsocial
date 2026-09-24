@@ -121,6 +121,14 @@ type InitialCampaign = {
     headline: string;
     cta: string;
   };
+  mediaSelection?: {
+    instagramFeed?: string;
+    instagramStory?: string;
+    facebook?: string;
+    tiktok?: string;
+    google?: string;
+    carousel?: string[];
+  };
   blockPositions?: {
     instagramFeed?: string;
     instagramStory?: string;
@@ -255,24 +263,56 @@ export function CampaignBuilder({
     useState<(typeof stagingStyles)[number]>("Moderno");
   const [stagingGenerated, setStagingGenerated] = useState(false);
 
+  const mediaById = new Map(
+    (property.media ?? [])
+      .filter((item) => Boolean(item.id))
+      .map((item) => [item.id!, item]),
+  );
+
+  const resolveSavedMedia = (
+    id: string | undefined,
+    fallback: { id?: string; url: string } | undefined,
+  ) => (id ? mediaById.get(id) ?? fallback : fallback);
+
+  const feedMedia = resolveSavedMedia(
+    campaignData?.mediaSelection?.instagramFeed,
+    recommendation.media.feedCover,
+  );
+  const storyMedia = resolveSavedMedia(
+    campaignData?.mediaSelection?.instagramStory,
+    recommendation.media.storyCover,
+  );
+  const tiktokMedia = resolveSavedMedia(
+    campaignData?.mediaSelection?.tiktok,
+    recommendation.media.tiktokCover,
+  );
+
+  const savedCarouselMedia = (campaignData?.mediaSelection?.carousel ?? [])
+    .map((id) => mediaById.get(id))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const carouselMedia =
+    savedCarouselMedia.length > 0
+      ? savedCarouselMedia
+      : recommendation.media.carousel;
+
   const feedProperty: Property = {
     ...property,
-    image: recommendation.media.feedCover ?? property.image,
+    image: feedMedia?.url ?? property.image,
   };
   const storyProperty: Property = {
     ...property,
-    image: recommendation.media.storyCover ?? property.image,
+    image: storyMedia?.url ?? property.image,
   };
   const tiktokProperty: Property = {
     ...property,
-    image: recommendation.media.tiktokCover ?? property.image,
+    image: tiktokMedia?.url ?? property.image,
   };
   const carouselProperty: Property = {
     ...property,
-    image: recommendation.media.carousel[0] ?? property.image,
+    image: carouselMedia[0]?.url ?? property.image,
     images:
-      recommendation.media.carousel.length > 0
-        ? recommendation.media.carousel
+      carouselMedia.length > 0
+        ? carouselMedia.map((item) => item.url)
         : property.images,
   };
 
@@ -281,7 +321,7 @@ export function CampaignBuilder({
   const selectedTiktokTemplate = getVerticalTemplate(tiktokTemplateId);
   const selectedCarouselModel = getCarouselModel(carouselModelId);
   const imageCount =
-    recommendation.media.carousel.length ||
+    carouselMedia.length ||
     property.images?.length ||
     (property.image ? 1 : 0);
   const carouselEligible = imageCount >= 3;
@@ -363,6 +403,16 @@ export function CampaignBuilder({
             slideCount: selectedCarouselModel.slideCount,
           }
         : undefined,
+      mediaSelection: {
+        instagramFeed: feedMedia?.id,
+        instagramStory: storyMedia?.id,
+        facebook: feedMedia?.id,
+        tiktok: tiktokMedia?.id,
+        google: feedMedia?.id,
+        carousel: carouselMedia
+          .map((item) => item.id)
+          .filter((id): id is string => Boolean(id)),
+      },
       blockPositions,
     };
   }
