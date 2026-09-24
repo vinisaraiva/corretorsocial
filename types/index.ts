@@ -45,6 +45,7 @@ export interface Property {
   image?: string;
   images?: string[];
   media?: PropertyMedia[];
+  coverManuallySelected?: boolean;
   status: PropertyStatus;
   campaigns: number;
   lastPublished?: string;
