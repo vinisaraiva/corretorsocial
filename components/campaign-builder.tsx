@@ -300,8 +300,8 @@ export function CampaignBuilder({
   return (
     <div className="space-y-5">
       <div className="rounded-xl bg-[#E9F4F1] p-4 text-sm text-[#176B5B]">
-        <strong>Seis artes profissionais, sem editor livre.</strong> Escolha a
-        composição que melhor valoriza o imóvel e edite apenas os textos.
+        <strong>Versões prontas por rede, sem editor livre.</strong> O sistema
+        prepara os formatos automaticamente; ajuste apenas o que quiser.
       </div>
 
       {dirty && (
