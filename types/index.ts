@@ -17,6 +17,16 @@ export type SocialChannel =
   | "tiktok"
   | "google";
 
+export interface PropertyMedia {
+  url: string;
+  width?: number | null;
+  height?: number | null;
+  aiScore?: number | null;
+  aiTags?: string[];
+  isCover?: boolean;
+  sortOrder: number;
+}
+
 export interface Property {
   id: string;
   title: string;
@@ -33,6 +43,7 @@ export interface Property {
   highlights: string[];
   image?: string;
   images?: string[];
+  media?: PropertyMedia[];
   status: PropertyStatus;
   campaigns: number;
   lastPublished?: string;
