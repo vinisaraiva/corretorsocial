@@ -13,6 +13,7 @@ import {
   createProperty,
   deletePropertyDraft,
   extractPropertyFromUrl,
+  queuePropertyMediaAnalysis,
   type PropertyDraftInput,
 } from "@/app/imoveis/novo/actions";
 import { uploadPropertyPhotos } from "@/lib/supabase/uploads";
@@ -206,7 +207,22 @@ export function NewPropertyFlow() {
         return;
       }
 
-      router.push(`/campanhas/nova?imovel=${id}`);
+      let analysisJobId: string | null = null;
+
+      try {
+        analysisJobId = await queuePropertyMediaAnalysis(id);
+      } catch (analysisError) {
+        console.warn(
+          "Media analysis could not be queued; using deterministic selection.",
+          analysisError,
+        );
+      }
+
+      const analysisQuery = analysisJobId
+        ? `&analise=${encodeURIComponent(analysisJobId)}`
+        : "";
+
+      router.push(`/campanhas/nova?imovel=${id}${analysisQuery}`);
       router.refresh();
     } catch (caught) {
       setStage("review");
