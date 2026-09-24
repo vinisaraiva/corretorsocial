@@ -3,6 +3,9 @@ import { cn } from "@/lib/utils";
 
 const labels: Record<CampaignStatus | PropertyStatus, string> = {
   ativo: "Ativo",
+  pausado: "Pausado",
+  vendido: "Vendido",
+  alugado: "Alugado",
   arquivado: "Arquivado",
   rascunho: "Rascunho",
   agendada: "Agendada",
@@ -25,7 +28,9 @@ export function StatusBadge({
             ? "bg-[#EFF8FF] text-[#175CD3]"
             : status === "erro"
               ? "bg-[#FEF3F2] text-[#B42318]"
-              : "bg-[#F2F4F7] text-[#475467]",
+              : status === "vendido" || status === "alugado"
+                ? "bg-[#F4F3FF] text-[#5925DC]"
+                : "bg-[#F2F4F7] text-[#475467]",
       )}
     >
       {labels[status]}
