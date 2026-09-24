@@ -54,6 +54,6 @@ Corretores autônomos brasileiros, inclusive usuários com pouca familiaridade c
 
 O GitHub é a fonte de verdade do projeto.
 
-Frontend inicial: Lovable, com React + TypeScript + Tailwind + shadcn/ui e componentes portáveis.
+Framework oficial: **Next.js App Router + TypeScript + Tailwind CSS + shadcn/ui**. O Lovable pode ser usado como apoio visual, mas o GitHub é a fonte de verdade e o código não depende do runtime do Lovable.
 
 Backend, banco, autenticação real e integrações externas serão adicionados depois da validação visual/UX do frontend.
