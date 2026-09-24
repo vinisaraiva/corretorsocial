@@ -41,11 +41,21 @@ export function allowedBlockPositions(
   return ["auto", "left", "right"];
 }
 
+export function suggestedBlockPositionFromTags(
+  tags?: string[] | null,
+): Exclude<BlockPosition, "auto"> | null {
+  if (tags?.includes("text-space:left")) return "left";
+  if (tags?.includes("text-space:right")) return "right";
+  return null;
+}
+
 export function resolveBlockPosition(
   position: BlockPosition,
   platform?: VerticalPlatform,
+  suggested?: Exclude<BlockPosition, "auto"> | null,
 ): Exclude<BlockPosition, "auto"> {
-  if (position === "right" && platform === "tiktok") return "left";
-  if (position === "auto") return "left";
-  return position;
+  const requested = position === "auto" ? suggested ?? "left" : position;
+
+  if (requested === "right" && platform === "tiktok") return "left";
+  return requested;
 }
