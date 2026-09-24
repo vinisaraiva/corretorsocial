@@ -116,3 +116,36 @@ Usar IA onde o ganho é material:
 5. futuramente staging e vídeo.
 
 O resultado precisa continuar editável e baseado em fatos do imóvel.
+
+## Seleção de mídia determinística
+
+Implementação atual:
+- `lib/media-intelligence.ts`;
+- upload local grava `width` e `height`;
+- ranking considera capa, ordem, resolução, proporção do formato e `ai_score` quando existir;
+- `ai_tags` podem aumentar diversidade do Carrossel quando estiverem preenchidas.
+
+O ranking é conservador. Sem metadados suficientes, mantém a preferência pela capa e pela ordem cadastrada.
+
+Fotos importadas apenas por URL podem não possuir dimensões nesta fase. Não atribuir qualidade presumida nesses casos.
+
+## Reprodutibilidade da campanha
+
+Ao salvar a campanha, cada variante persiste os IDs das mídias escolhidas em `render_metadata.media_ids`.
+
+Não persistir URLs assinadas de Storage, pois expiram.
+
+Ao reabrir:
+1. resolver os IDs contra a galeria atual do imóvel;
+2. gerar URLs assinadas atuais para exibição;
+3. usar recomendação nova somente se a mídia salva deixou de existir.
+
+Isso impede que uma campanha agendada mude silenciosamente apenas porque a galeria do imóvel foi reordenada.
+
+## UX de geração
+
+Não simular análise de IA com atraso artificial.
+
+Enquanto a recomendação for determinística, abrir a campanha assim que o imóvel e suas fotos forem persistidos.
+
+Quando houver visão real/worker, mostrar progresso somente para jobs efetivamente executados.
