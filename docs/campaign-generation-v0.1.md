@@ -66,11 +66,14 @@ Não.
 O sistema entrega uma recomendação pronta por padrão.
 
 O usuário pode:
-- trocar template;
+- trocar o estilo global da campanha;
 - editar headline/subheadline/CTA;
 - alterar legenda;
+- mover o bloco completo para Automática/Esquerda/Direita quando o template e a plataforma permitirem;
 - substituir uma foto específica quando o formato permitir;
 - desativar um canal antes de publicar.
+
+O estilo global propaga para os formatos equivalentes. A posição do bloco é específica de cada mídia e nunca é propagada globalmente.
 
 A edição é opcional.
 
