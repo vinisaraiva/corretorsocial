@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   CheckCircle2,
@@ -35,7 +35,7 @@ export function NewPropertyFlow() {
   const [activeAnalysis, setActiveAnalysis] = useState(0);
   const property = properties[0];
 
-  useMemo(() => {
+  useEffect(() => {
     if (!initialUrl || stage !== "loading") return;
     const timeout = setTimeout(() => setStage("review"), 900);
     return () => clearTimeout(timeout);
