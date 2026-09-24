@@ -27,6 +27,13 @@ import {
 } from "@/lib/campaign-templates";
 import { formatBRL } from "@/lib/utils";
 import {
+  campaignTemplateToVertical,
+  normalizeBlockPosition,
+  resolveBlockPosition,
+  type BlockPosition,
+} from "@/lib/campaign-layout";
+import { BlockPositionControl } from "@/components/block-position-control";
+import {
   getVerticalTemplate,
   getVerticalTemplateName,
   normalizeVerticalTemplate,
@@ -100,6 +107,13 @@ type InitialCampaign = {
     headline: string;
     subheadline: string;
     cta: string;
+  };
+  blockPositions?: {
+    instagramFeed?: string;
+    instagramStory?: string;
+    facebook?: string;
+    tiktok?: string;
+    google?: string;
   };
 };
 
@@ -178,6 +192,17 @@ export function CampaignBuilder({
   const [tiktokCta, setTiktokCta] = useState(
     campaignData?.tiktokVertical?.cta ?? "Veja mais detalhes",
   );
+  const [blockPositions, setBlockPositions] = useState({
+    instagramFeed: normalizeBlockPosition(
+      campaignData?.blockPositions?.instagramFeed,
+    ),
+    instagramStory: normalizeBlockPosition(
+      campaignData?.blockPositions?.instagramStory,
+    ),
+    facebook: normalizeBlockPosition(campaignData?.blockPositions?.facebook),
+    tiktok: normalizeBlockPosition(campaignData?.blockPositions?.tiktok),
+    google: normalizeBlockPosition(campaignData?.blockPositions?.google),
+  });
   const [captions, setCaptions] = useState<Record<SocialChannel, string>>({
     instagram:
       campaignData?.captions?.instagram ?? generatedCaptions.instagram,
@@ -213,10 +238,39 @@ export function CampaignBuilder({
       ? getVerticalTemplateName(tiktokTemplateId, "tiktok")
       : selectedTemplate.name;
   const copy = captions[channel];
+  const activeNonVerticalPosition =
+    channel === "facebook"
+      ? blockPositions.facebook
+      : channel === "google"
+        ? blockPositions.google
+        : blockPositions.instagramFeed;
 
   function markChanged() {
     setDirty(true);
     setMessage("");
+  }
+
+  function applyGlobalStyle(value: CampaignTemplateId) {
+    setTemplateId(value);
+    const verticalTemplate = campaignTemplateToVertical(value);
+    setStoryTemplateId(verticalTemplate);
+    setTiktokTemplateId(verticalTemplate);
+    markChanged();
+  }
+
+  function updateNonVerticalPosition(value: BlockPosition) {
+    const key =
+      channel === "facebook"
+        ? "facebook"
+        : channel === "google"
+          ? "google"
+          : "instagramFeed";
+
+    setBlockPositions((current) => ({
+      ...current,
+      [key]: value,
+    }));
+    markChanged();
   }
 
   function draftInput(): CampaignDraftInput {
@@ -240,6 +294,7 @@ export function CampaignBuilder({
         subheadline: tiktokSubheadline,
         cta: tiktokCta,
       },
+      blockPositions,
     };
   }
 
@@ -402,6 +457,7 @@ export function CampaignBuilder({
               headline={storyHeadline}
               subheadline={storySubheadline}
               cta={storyCta}
+              blockPosition={blockPositions.instagramStory}
             />
           ) : isTiktokView ? (
             <VerticalCreativePreview
@@ -412,6 +468,7 @@ export function CampaignBuilder({
               headline={tiktokHeadline}
               subheadline={tiktokSubheadline}
               cta={tiktokCta}
+              blockPosition={blockPositions.tiktok}
             />
           ) : (
             <CreativePreview
@@ -422,6 +479,7 @@ export function CampaignBuilder({
               subheadline={subheadline}
               copy={copy}
               cta={cta}
+              blockPosition={activeNonVerticalPosition}
             />
           )}
         </div>
@@ -432,14 +490,11 @@ export function CampaignBuilder({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="font-extrabold">
-                    {isStoryView
-                      ? "Escolha o Story"
-                      : isTiktokView
-                        ? "Escolha a arte do TikTok"
-                        : "Escolha a arte"}
+                    Ajustar campanha
                   </div>
                   <p className="mt-1 text-xs leading-5 text-[#667085]">
-                    Estrutura fixa para preservar qualidade e consistência.
+                    O estilo vale para a campanha. Os demais ajustes valem
+                    apenas para a mídia aberta.
                   </p>
                 </div>
 
@@ -453,26 +508,80 @@ export function CampaignBuilder({
                 </button>
               </div>
 
+              <div className="mt-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-extrabold">
+                      Estilo da campanha
+                    </div>
+                    <p className="mt-1 text-xs leading-5 text-[#667085]">
+                      Aplicado automaticamente aos formatos equivalentes de
+                      todas as redes.
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-[#E9F4F1] px-2.5 py-1 text-[10px] font-bold text-[#176B5B]">
+                    Padrão: Clean Base
+                  </span>
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {campaignTemplates.map((template) => (
+                    <button
+                      key={template.id}
+                      type="button"
+                      aria-pressed={templateId === template.id}
+                      onClick={() => applyGlobalStyle(template.id)}
+                      className={`overflow-hidden rounded-xl border text-left transition ${
+                        templateId === template.id
+                          ? "border-[#176B5B] ring-2 ring-[#176B5B]/10"
+                          : "border-[#E4E7EC] hover:border-[#98A2B3]"
+                      }`}
+                    >
+                      <TemplateThumbnail
+                        property={property}
+                        brand={brand}
+                        templateId={template.id}
+                      />
+                      <div className="p-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-extrabold">
+                            {template.name}
+                          </span>
+                          {templateId === template.id && (
+                            <Check size={14} className="text-[#176B5B]" />
+                          )}
+                        </div>
+                        <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-[#667085]">
+                          {template.description}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {isVerticalView ? (
                 <>
                   <VerticalTemplateControls
-                    property={property}
-                    brand={brand}
                     platform={isStoryView ? "instagram_story" : "tiktok"}
                     templateId={
                       isStoryView ? storyTemplateId : tiktokTemplateId
+                    }
+                    blockPosition={
+                      isStoryView
+                        ? blockPositions.instagramStory
+                        : blockPositions.tiktok
                     }
                     headline={isStoryView ? storyHeadline : tiktokHeadline}
                     subheadline={
                       isStoryView ? storySubheadline : tiktokSubheadline
                     }
                     cta={isStoryView ? storyCta : tiktokCta}
-                    onTemplateChange={(value) => {
-                      if (isStoryView) {
-                        setStoryTemplateId(value);
-                      } else {
-                        setTiktokTemplateId(value);
-                      }
+                    onBlockPositionChange={(value) => {
+                      setBlockPositions((current) => ({
+                        ...current,
+                        [isStoryView ? "instagramStory" : "tiktok"]: value,
+                      }));
                       markChanged();
                     }}
                     onHeadlineChange={(value) => {
@@ -527,55 +636,25 @@ export function CampaignBuilder({
                 </>
               ) : (
                 <>
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    {campaignTemplates.map((template) => (
-                      <button
-                        key={template.id}
-                        type="button"
-                        aria-pressed={templateId === template.id}
-                        onClick={() => {
-                          setTemplateId(template.id);
-                          markChanged();
-                        }}
-                        className={`overflow-hidden rounded-xl border text-left transition ${
-                          templateId === template.id
-                            ? "border-[#176B5B] ring-2 ring-[#176B5B]/10"
-                            : "border-[#E4E7EC] hover:border-[#98A2B3]"
-                        }`}
-                      >
-                        <TemplateThumbnail
-                          property={property}
-                          brand={brand}
-                          templateId={template.id}
-                        />
-                        <div className="p-2.5">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-extrabold">
-                              {template.name}
-                            </span>
-                            {templateId === template.id && (
-                              <Check size={14} className="text-[#176B5B]" />
-                            )}
-                          </div>
-                          <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-[#667085]">
-                            {template.description}
-                          </p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-
                   <div className="mt-5 border-t border-[#E4E7EC] pt-5">
                     <div className="mb-4">
                       <div className="text-sm font-extrabold">
                         Textos desta arte
                       </div>
                       <p className="mt-1 text-xs leading-5 text-[#667085]">
-                        Sem posição, tamanho ou blocos livres.
+                        Sem posicionamento livre: apenas opções seguras do
+                        template.
                       </p>
                     </div>
 
                     <div className="space-y-4">
+                      {selectedTemplate.supportsBlockPosition && (
+                        <BlockPositionControl
+                          value={activeNonVerticalPosition}
+                          onChange={updateNonVerticalPosition}
+                        />
+                      )}
+
                       <label className="block text-sm font-bold">
                         Headline
                         <input
@@ -906,6 +985,7 @@ function CreativePreview({
   subheadline,
   copy,
   cta,
+  blockPosition,
 }: {
   property: Property;
   brand: CampaignBrand;
@@ -914,6 +994,7 @@ function CreativePreview({
   subheadline: string;
   copy: string;
   cta: string;
+  blockPosition: BlockPosition;
 }) {
   const brandColor = safeBrandColor(brand.primaryColor);
   const brandText = contrastText(brandColor);
@@ -922,6 +1003,15 @@ function CreativePreview({
     .join(" · ");
   const features = featureItems(property);
   const price = priceText(property);
+  const resolvedPosition = selectedTemplateSupportsPosition(templateId)
+    ? resolveBlockPosition(blockPosition)
+    : "left";
+  const sideClass =
+    resolvedPosition === "right"
+      ? "right-4 left-auto text-right"
+      : "left-4 right-auto text-left";
+  const innerAlignment =
+    resolvedPosition === "right" ? "ml-auto text-right" : "mr-auto text-left";
 
   return (
     <div className="mx-auto max-w-[430px] overflow-hidden rounded-2xl border border-[#E4E7EC] bg-white shadow-sm">
@@ -930,21 +1020,23 @@ function CreativePreview({
 
         {templateId === "clean-base" && (
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/55 to-transparent p-5 pt-28 text-white">
-            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/75">
-              {locality}
-            </div>
-            <div className="mt-2 text-3xl font-black leading-[1.05]">
-              {headline}
-            </div>
-            <div className="mt-4 inline-flex rounded-full bg-white/95 px-3 py-1.5 text-sm font-black text-[#18202A]">
-              {price}
+            <div className={`max-w-[78%] ${innerAlignment}`}>
+              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/75">
+                {locality}
+              </div>
+              <div className="mt-2 text-3xl font-black leading-[1.05]">
+                {headline}
+              </div>
+              <div className="mt-4 inline-flex rounded-full bg-white/95 px-3 py-1.5 text-sm font-black text-[#18202A]">
+                {price}
+              </div>
             </div>
           </div>
         )}
 
         {templateId === "clean-top" && (
           <>
-            <div className="absolute inset-x-4 top-4 rounded-2xl bg-white/95 p-4 shadow-sm backdrop-blur">
+            <div className={`absolute top-4 w-[78%] ${sideClass} rounded-2xl bg-white/95 p-4 shadow-sm backdrop-blur`}>
               <BrandMark brand={brand} compact />
               <div className="mt-3 text-2xl font-black leading-tight text-[#18202A]">
                 {headline}
@@ -954,7 +1046,7 @@ function CreativePreview({
               </div>
             </div>
             <div
-              className="absolute bottom-4 right-4 rounded-xl px-4 py-2 text-base font-black shadow"
+              className={`absolute bottom-4 ${resolvedPosition === "right" ? "right-4" : "left-4"} rounded-xl px-4 py-2 text-base font-black shadow`}
               style={{ backgroundColor: brandColor, color: brandText }}
             >
               {price}
@@ -970,7 +1062,7 @@ function CreativePreview({
             >
               {property.purpose}
             </div>
-            <div className="absolute inset-x-4 bottom-4 rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur">
+            <div className={`absolute bottom-4 w-[78%] ${sideClass} rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur`}>
               <div className="text-xl font-black leading-tight text-[#18202A]">
                 {headline}
               </div>
@@ -1009,7 +1101,7 @@ function CreativePreview({
         {templateId === "info-card" && (
           <>
             <div className="absolute inset-x-0 top-0 h-[57%]" />
-            <div className="absolute inset-x-0 bottom-0 min-h-[43%] bg-white p-5 text-[#18202A]">
+            <div className={`absolute bottom-0 min-h-[43%] w-[84%] ${resolvedPosition === "right" ? "right-0 left-auto text-right" : "left-0 right-auto text-left"} bg-white p-5 text-[#18202A]`}>
               <div className="flex items-center justify-between gap-3">
                 <BrandMark brand={brand} compact />
                 <span
@@ -1045,7 +1137,7 @@ function CreativePreview({
             <div className="absolute left-5 top-5 rounded-xl bg-white/95 px-3 py-2 shadow backdrop-blur">
               <BrandMark brand={brand} compact />
             </div>
-            <div className="absolute inset-x-5 bottom-5 rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur">
+            <div className={`absolute bottom-5 w-[78%] ${resolvedPosition === "right" ? "right-5 left-auto text-right" : "left-5 right-auto text-left"} rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur`}>
               <div className="text-2xl font-black leading-tight text-[#18202A]">
                 {headline}
               </div>
@@ -1088,6 +1180,12 @@ function CreativePreview({
       </div>
     </div>
   );
+}
+
+function selectedTemplateSupportsPosition(
+  templateId: CampaignTemplateId,
+) {
+  return getCampaignTemplate(templateId).supportsBlockPosition;
 }
 
 function TemplateThumbnail({
