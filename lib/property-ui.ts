@@ -11,7 +11,7 @@ export type PropertyMediaRow = Pick<
   Partial<
     Pick<
       Tables<"property_media">,
-      "width" | "height" | "ai_score" | "ai_tags"
+      "id" | "width" | "height" | "ai_score" | "ai_tags"
     >
   >;
 
@@ -81,6 +81,7 @@ export function propertyToView(
   const mediaView = mediaForProperty
     .filter((item) => Boolean(item.original_url))
     .map((item) => ({
+      id: item.id,
       url: item.original_url!,
       width: item.width ?? null,
       height: item.height ?? null,
