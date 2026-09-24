@@ -168,7 +168,15 @@ export function OnboardingFlow({ reviewMode = false }: { reviewMode?: boolean })
               })}
             </div>
             <div className="mt-6 rounded-xl bg-[#E9F4F1] p-4 text-sm text-[#176B5B]">
-              {reviewMode ? (\n                <><strong>Alterações prontas.</strong> Elas serão usadas nas próximas campanhas.</>\n              ) : (\n                <><strong>Tudo pronto.</strong> Agora vamos divulgar seu primeiro imóvel.</>\n              )}
+              {reviewMode ? (
+                <>
+                  <strong>Alterações prontas.</strong> Elas serão usadas nas próximas campanhas.
+                </>
+              ) : (
+                <>
+                  <strong>Tudo pronto.</strong> Agora vamos divulgar seu primeiro imóvel.
+                </>
+              )}
             </div>
           </>
         )}
