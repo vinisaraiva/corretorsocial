@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { PropertyList } from "@/components/property-list";
 import { createClient } from "@/lib/supabase/server";
-import { propertyToView } from "@/lib/property-ui";
+import { propertyToView, resolvePrivateMedia } from "@/lib/property-ui";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +57,7 @@ export default async function PropertiesPage() {
         .in("property_id", ids),
     ]);
 
-    media = mediaResult.data ?? [];
+    media = await resolvePrivateMedia(supabase, mediaResult.data ?? []);
     campaigns = campaignsResult.data ?? [];
   }
 
