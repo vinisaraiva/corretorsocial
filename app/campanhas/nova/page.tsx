@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function NewCampaignPage({
   searchParams,
 }: {
-  searchParams: Promise<{ imovel?: string }>;
+  searchParams: Promise<{ imovel?: string; analise?: string }>;
 }) {
   const params = await searchParams;
 
@@ -87,7 +87,11 @@ export default async function NewCampaignPage({
       title="Nova campanha"
       description="Revise a versão recomendada antes de publicar."
     >
-      <CampaignBuilder propertyData={property} brand={brand} />
+      <CampaignBuilder
+        propertyData={property}
+        brand={brand}
+        mediaAnalysisJobId={params.analise}
+      />
     </AppShell>
   );
 }
