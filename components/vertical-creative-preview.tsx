@@ -169,7 +169,12 @@ export function VerticalCreativePreview({
 
   return (
     <div className="mx-auto w-full max-w-[330px] overflow-hidden rounded-2xl border border-[#E4E7EC] bg-[#EAECF0] shadow-sm">
-      <div className="relative aspect-[9/16] overflow-hidden">
+      <div
+        className="relative aspect-[9/16] overflow-hidden"
+        data-render-target={
+          platform === "instagram_story" ? "story" : undefined
+        }
+      >
         <PropertyImage property={property} />
 
         {templateId === "vertical-clean" && (
@@ -288,10 +293,12 @@ export function VerticalCreativePreview({
         )}
 
         <div
+          data-render-ignore="true"
           className="pointer-events-none absolute inset-x-0 top-0 border-b border-dashed border-white/20"
           style={{ height: `${safeZone.topPercent}%` }}
         />
         <div
+          data-render-ignore="true"
           className="pointer-events-none absolute inset-x-0 bottom-0 border-t border-dashed border-white/20"
           style={{ height: `${safeZone.bottomPercent}%` }}
         />
