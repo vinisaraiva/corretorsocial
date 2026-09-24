@@ -50,10 +50,12 @@ export function EditPropertyForm({
   propertyId,
   initialDraft,
   initialMedia,
+  initialCoverManuallySelected,
 }: {
   propertyId: string;
   initialDraft: PropertyDraftInput;
   initialMedia: PropertyMedia[];
+  initialCoverManuallySelected: boolean;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState(initialDraft);
@@ -61,6 +63,9 @@ export function EditPropertyForm({
     initialDraft.highlights.join(", "),
   );
   const [media, setMedia] = useState(initialMedia);
+  const [coverManuallySelected, setCoverManuallySelected] = useState(
+    initialCoverManuallySelected,
+  );
   const [saving, setSaving] = useState(false);
   const [galleryWorking, setGalleryWorking] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -69,6 +74,10 @@ export function EditPropertyForm({
   useEffect(() => {
     setMedia(initialMedia);
   }, [initialMedia]);
+
+  useEffect(() => {
+    setCoverManuallySelected(initialCoverManuallySelected);
+  }, [initialCoverManuallySelected]);
 
   const recommendedId = useMemo(() => {
     const scored = media
@@ -164,7 +173,8 @@ export function EditPropertyForm({
           isCover: item.id === mediaId,
         })),
       );
-      setMessage("Foto de capa atualizada.");
+      setCoverManuallySelected(true);
+      setMessage("Foto de capa fixada manualmente.");
       router.refresh();
     } catch (caught) {
       setError(
@@ -244,6 +254,9 @@ export function EditPropertyForm({
         }));
       });
 
+      if (removed?.isCover) {
+        setCoverManuallySelected(false);
+      }
       setMessage("Foto removida.");
       router.refresh();
     } catch (caught) {
@@ -305,8 +318,10 @@ export function EditPropertyForm({
           <div>
             <h2 className="text-lg font-extrabold">Galeria</h2>
             <p className="mt-1 text-sm text-[#667085]">
-              {media.length}/20 fotos · a capa manual tem prioridade sobre a
-              recomendação automática.
+              {media.length}/20 fotos ·{" "}
+              {coverManuallySelected
+                ? "capa fixada manualmente"
+                : "capa em modo automático"}.
             </p>
           </div>
 
@@ -396,11 +411,19 @@ export function EditPropertyForm({
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <button
                         type="button"
-                        disabled={!itemId || item.isCover || busy}
+                        disabled={
+                          !itemId ||
+                          busy ||
+                          (item.isCover && coverManuallySelected)
+                        }
                         onClick={() => itemId && void chooseCover(itemId)}
                         className="app-button-secondary min-h-9 px-2 text-xs"
                       >
-                        Definir capa
+                        {item.isCover
+                          ? coverManuallySelected
+                            ? "Capa fixada"
+                            : "Fixar esta capa"
+                          : "Definir capa"}
                       </button>
 
                       <div className="grid grid-cols-2 gap-1">
@@ -448,7 +471,7 @@ export function EditPropertyForm({
         <div className="mt-5 rounded-xl bg-[#F9FAFB] p-4 text-xs leading-5 text-[#667085]">
           <strong className="text-[#475467]">Sobre a sugestão da IA:</strong>{" "}
           quando houver análise visual, a maior nota aparece como recomendação.
-          Ela nunca troca automaticamente uma capa escolhida manualmente.
+          Ela nunca troca automaticamente uma capa fixada manualmente.
         </div>
       </section>
     </div>
