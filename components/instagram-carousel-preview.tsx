@@ -341,12 +341,14 @@ function SlideArtwork({
   templateId,
   index,
   total,
+  exportMode = false,
 }: {
   slide: Slide;
   brand: CarouselBrand;
   templateId: CampaignTemplateId;
   index: number;
   total: number;
+  exportMode?: boolean;
 }) {
   const brandColor = safeBrandColor(brand.primaryColor);
   const brandText = contrastText(brandColor);
@@ -357,7 +359,11 @@ function SlideArtwork({
     slide.kind === "facts" ? factSlideImageHeight(slide) : null;
 
   return (
-    <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#EAECF0]">
+    <div
+      className={`relative aspect-[4/5] overflow-hidden bg-[#EAECF0] ${
+        exportMode ? "" : "rounded-2xl"
+      }`}
+    >
       {slide.kind !== "cta" && slide.kind !== "facts" && slide.image && (
         <img
           src={slide.image}
@@ -515,9 +521,11 @@ function SlideArtwork({
         </div>
       )}
 
-      <div className="absolute right-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-bold text-white">
-        {index + 1}/{total}
-      </div>
+      {!exportMode && (
+        <div className="absolute right-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-bold text-white">
+          {index + 1}/{total}
+        </div>
+      )}
     </div>
   );
 }
@@ -589,6 +597,28 @@ export function InstagramCarouselPreview({
         index={safeActive}
         total={slides.length}
       />
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed left-[-10000px] top-0 w-[470px]"
+      >
+        {slides.map((slide, index) => (
+          <div
+            key={`export-${slide.kind}-${index}`}
+            data-render-carousel-slide="true"
+            className="w-[470px]"
+          >
+            <SlideArtwork
+              slide={slide}
+              brand={brand}
+              templateId={templateId}
+              index={index}
+              total={slides.length}
+              exportMode
+            />
+          </div>
+        ))}
+      </div>
 
       <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
         {slides.map((slide, index) => (
