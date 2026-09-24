@@ -183,6 +183,7 @@ export function buildCampaignRecommendation(
 
   const mediaSelection = buildMediaSelection(
     property.media?.length ? property.media : fallbackMedia,
+    property.coverManuallySelected ?? false,
   );
 
   return {
