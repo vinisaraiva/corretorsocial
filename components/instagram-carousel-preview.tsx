@@ -211,7 +211,7 @@ function SlideArtwork({
 
   return (
     <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#EAECF0]">
-      {slide.kind !== "cta" && slide.image && (
+      {slide.kind !== "cta" && slide.kind !== "facts" && slide.image && (
         <img
           src={slide.image}
           alt=""
@@ -251,35 +251,61 @@ function SlideArtwork({
 
       {slide.kind === "facts" && (
         <>
-          {slide.image && (
-            <div className="absolute inset-0 bg-black/45" />
-          )}
-          <div
-            className={`absolute inset-5 flex flex-col justify-end rounded-2xl p-5 shadow-xl ${
-              slide.image ? "bg-white/95" : "bg-white"
-            }`}
-          >
-            <div
-              className="mb-3 h-1.5 w-12 rounded-full"
-              style={{ backgroundColor: accent }}
-            />
-            <div className="text-2xl font-black leading-tight text-[#18202A]">
-              {slide.title}
-            </div>
-            <div className="mt-4 space-y-2">
-              {(slide.items.length > 0
-                ? slide.items
-                : ["Consulte os detalhes deste imóvel."]
-              ).map((item) => (
+          {slide.image ? (
+            <>
+              <img
+                src={slide.image}
+                alt=""
+                className="absolute inset-x-0 top-0 h-[38%] w-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-x-0 bottom-0 top-[36%] rounded-t-3xl bg-white p-5">
                 <div
-                  key={item}
-                  className="rounded-xl bg-[#F2F4F7] px-3 py-2 text-sm font-bold text-[#475467]"
-                >
-                  {item}
+                  className="mb-3 h-1.5 w-12 rounded-full"
+                  style={{ backgroundColor: accent }}
+                />
+                <div className="text-2xl font-black leading-tight text-[#18202A]">
+                  {slide.title}
                 </div>
-              ))}
+                <div className="mt-4 space-y-2">
+                  {(slide.items.length > 0
+                    ? slide.items
+                    : ["Consulte os detalhes deste imóvel."]
+                  ).map((item) => (
+                    <div
+                      key={item}
+                      className="rounded-xl bg-[#F2F4F7] px-3 py-2 text-sm font-bold text-[#475467]"
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="absolute inset-5 flex flex-col justify-end rounded-2xl bg-white p-5 shadow-xl">
+              <div
+                className="mb-3 h-1.5 w-12 rounded-full"
+                style={{ backgroundColor: accent }}
+              />
+              <div className="text-2xl font-black leading-tight text-[#18202A]">
+                {slide.title}
+              </div>
+              <div className="mt-4 space-y-2">
+                {(slide.items.length > 0
+                  ? slide.items
+                  : ["Consulte os detalhes deste imóvel."]
+                ).map((item) => (
+                  <div
+                    key={item}
+                    className="rounded-xl bg-[#F2F4F7] px-3 py-2 text-sm font-bold text-[#475467]"
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
 
