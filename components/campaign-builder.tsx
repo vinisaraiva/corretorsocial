@@ -49,6 +49,7 @@ import {
 import { InstagramCarouselPreview } from "@/components/instagram-carousel-preview";
 import { InstagramCarouselControls } from "@/components/instagram-carousel-controls";
 import { buildCampaignRecommendation } from "@/lib/campaign-recommendation";
+import { MediaAnalysisStatus } from "@/components/media-analysis-status";
 import type { Property, SocialChannel } from "@/types";
 
 const allChannels: { id: SocialChannel; label: string }[] = [
@@ -142,10 +143,12 @@ export function CampaignBuilder({
   propertyData,
   brand,
   campaignData,
+  mediaAnalysisJobId,
 }: {
   propertyData: Property;
   brand: CampaignBrand;
   campaignData?: InitialCampaign;
+  mediaAnalysisJobId?: string | null;
 }) {
   const property = propertyData;
   const brandColor = safeBrandColor(brand.primaryColor);
@@ -477,6 +480,8 @@ export function CampaignBuilder({
         <strong>Versões prontas por rede, sem editor livre.</strong> O sistema
         prepara os formatos automaticamente; ajuste apenas o que quiser.
       </div>
+
+      <MediaAnalysisStatus jobId={mediaAnalysisJobId} />
 
       {dirty && (
         <div className="flex items-center gap-2 rounded-xl border border-[#FEDF89] bg-[#FFFAEB] p-4 text-sm font-bold text-[#B54708]">
