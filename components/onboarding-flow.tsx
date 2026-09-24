@@ -5,12 +5,12 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Upload,
 } from "lucide-react";
 import {
   saveOnboarding,
   type OnboardingInput,
 } from "@/app/onboarding/actions";
+import { LogoUploader } from "@/components/logo-uploader";
 
 type InitialProfile = {
   professionalName?: string;
@@ -20,6 +20,7 @@ type InitialProfile = {
   city?: string;
   serviceRegions?: string[];
   primaryColor?: string;
+  logoUrl?: string | null;
 };
 
 const networks = ["Instagram", "Facebook", "TikTok", "Google Business"];
@@ -130,14 +131,7 @@ export function OnboardingFlow({
             </p>
 
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
-              <div className="flex min-h-36 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#D0D5DD] bg-[#F9FAFB] p-4 text-center text-sm">
-                <Upload size={24} className="text-[#176B5B]" />
-                <strong>Logo profissional</strong>
-                <span className="text-xs text-[#667085]">
-                  Upload será ativado junto ao Storage. Você pode continuar sem
-                  logo.
-                </span>
-              </div>
+              <LogoUploader initialUrl={initialProfile?.logoUrl} />
 
               <label className="text-sm font-bold">
                 Cor principal
