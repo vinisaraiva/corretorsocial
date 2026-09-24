@@ -317,3 +317,28 @@ export async function removePropertyMedia(
 
   return { removed: true };
 }
+
+
+export async function enableAutomaticPropertyCover(propertyId: string) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  const { error } = await supabase
+    .from("properties")
+    .update({ cover_manually_selected: false })
+    .eq("id", propertyId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    throw new Error("Não foi possível reativar a seleção automática de capa.");
+  }
+
+  revalidatePath("/imoveis");
+  revalidatePath(`/imoveis/${propertyId}`);
+  revalidatePath(`/imoveis/${propertyId}/editar`);
+}
