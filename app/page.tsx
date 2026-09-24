@@ -16,7 +16,7 @@ export default function HomePage() {
             O que vamos divulgar hoje?
           </h1>
         </div>
-        <Link href="/onboarding" className="text-sm font-bold text-[#667085] hover:text-[#176B5B]">
+        <Link href="/onboarding?mode=review" className="text-sm font-bold text-[#667085] hover:text-[#176B5B]">
           Rever configuração inicial
         </Link>
       </div>
