@@ -2,6 +2,14 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+function publicUrl(path: string) {
+  const base =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    "https://greenyellow-duck-334187.hostingersite.com";
+
+  return new URL(path, base);
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const tokenHash = requestUrl.searchParams.get("token_hash");
@@ -18,7 +26,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!error) {
-      return NextResponse.redirect(new URL(next, request.url));
+      return NextResponse.redirect(publicUrl(next));
     }
   }
 
@@ -26,14 +34,23 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      return NextResponse.redirect(new URL(next, request.url));
+      return NextResponse.redirect(publicUrl(next));
+    }
+
+    if (error.code === "bad_code_verifier") {
+      const loginUrl = publicUrl("/login");
+      loginUrl.searchParams.set(
+        "success",
+        "Seu e-mail foi confirmado. Entre com sua senha para continuar.",
+      );
+      return NextResponse.redirect(loginUrl);
     }
   }
 
-  const loginUrl = new URL("/login", request.url);
+  const loginUrl = publicUrl("/login");
   loginUrl.searchParams.set(
     "error",
-    "Não foi possível confirmar seu acesso. Solicite um novo link.",
+    "Não foi possível concluir o acesso por esse link. Se o e-mail já foi confirmado, entre normalmente com sua senha.",
   );
 
   return NextResponse.redirect(loginUrl);
