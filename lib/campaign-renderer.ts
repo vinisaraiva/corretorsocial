@@ -134,3 +134,24 @@ export async function renderAndUploadCampaignAssets(input: {
       : new Error("Não foi possível gerar os arquivos da campanha.");
   }
 }
+
+
+export async function createCampaignAssetSignedUrls(paths: string[]) {
+  if (paths.length === 0) return [];
+
+  const supabase = createClient();
+  const { data, error } = await supabase.storage
+    .from("campaign-assets")
+    .createSignedUrls(paths, 10 * 60);
+
+  if (error) {
+    throw new Error("Os arquivos foram gerados, mas não foi possível abrir a prévia.");
+  }
+
+  return (data ?? [])
+    .filter((item) => Boolean(item.signedUrl))
+    .map((item, index) => ({
+      path: paths[index],
+      url: item.signedUrl!,
+    }));
+}
