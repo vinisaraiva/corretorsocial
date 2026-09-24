@@ -124,6 +124,7 @@ export function propertyToView(
     image,
     images,
     media: mediaView,
+    coverManuallySelected: row.cover_manually_selected,
     status: statusMap[row.status],
     campaigns: propertyCampaigns.length,
     lastPublished: lastPublished
