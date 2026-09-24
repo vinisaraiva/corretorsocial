@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import {
+  Building2,
   CalendarClock,
   Check,
   ChevronDown,
@@ -10,9 +11,9 @@ import {
   Sparkles,
   WandSparkles,
 } from "lucide-react";
-import { campaigns, properties } from "@/data/mock";
+import { campaigns, properties as mockProperties } from "@/data/mock";
 import { formatBRL } from "@/lib/utils";
-import type { SocialChannel } from "@/types";
+import type { Campaign, Property, SocialChannel } from "@/types";
 
 const allChannels: { id: SocialChannel; label: string }[] = [
   { id: "instagram", label: "Instagram" },
@@ -28,23 +29,28 @@ const styles = [
   ["Alto padrão", "Minimalista e sofisticado"],
 ] as const;
 
-const stagingStyles = ["Moderno", "Minimalista", "Clássico", "Praiano"] as const;
+const stagingStyles = [
+  "Moderno",
+  "Minimalista",
+  "Clássico",
+  "Praiano",
+] as const;
 
 export function CampaignBuilder({
   campaignId,
-  propertyId,
+  propertyData,
 }: {
   campaignId?: string;
-  propertyId?: string;
+  propertyData?: Property;
 }) {
-  const campaign = campaignId
+  const campaign: Campaign | undefined = campaignId
     ? campaigns.find((item) => item.id === campaignId)
     : undefined;
 
   const property =
-    properties.find(
-      (item) => item.id === (campaign?.propertyId ?? propertyId),
-    ) ?? properties[0];
+    propertyData ??
+    mockProperties.find((item) => item.id === campaign?.propertyId) ??
+    mockProperties[0];
 
   const initialChannel =
     campaign?.channels[0] ?? ("instagram" as SocialChannel);
@@ -71,13 +77,15 @@ export function CampaignBuilder({
   }, [campaign]);
 
   const copy = {
-    instagram: `${property.title}: ${property.description} Fale comigo para saber mais.`,
-    facebook: `${property.title}, ${property.location}. ${property.description}`,
+    instagram: `${property.title}: ${property.description || "Conheça este imóvel."} Fale comigo para saber mais.`,
+    facebook: `${property.title}, ${property.location}. ${property.description || "Entre em contato para conhecer os detalhes."}`,
     tiktok: `Você moraria aqui? Conheça ${property.title.toLowerCase()} em ${property.location}.`,
-    google: `${property.title} em ${property.location}, ${property.city}. ${property.bedrooms} quartos e ${property.area} m².`,
+    google: `${property.title} em ${property.location}${property.city ? `, ${property.city}` : ""}. ${property.bedrooms ? `${property.bedrooms} quartos` : "Veja os detalhes"}${property.area ? ` e ${property.area} m²` : ""}.`,
   }[channel];
 
-  const locality = `${property.location} · ${property.city.replace(" - BA", "")}`;
+  const locality = [property.location, property.city]
+    .filter(Boolean)
+    .join(" · ");
 
   function confirmSchedule() {
     if (!scheduledFor) return;
@@ -92,19 +100,39 @@ export function CampaignBuilder({
     setScheduleOpen(false);
   }
 
+  const featureLine = [
+    property.bedrooms ? `${property.bedrooms} quartos` : null,
+    property.suites ? `${property.suites} suítes` : null,
+    property.area ? `${property.area} m²` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <div className="space-y-5">
+      {!campaign && (
+        <div className="rounded-xl bg-[#FFFAEB] p-4 text-sm text-[#B54708]">
+          <strong>Prévia da campanha.</strong> Os textos e a arte ainda são
+          demonstrativos. A persistência do imóvel já é real; o motor de
+          geração/publicação entra na próxima etapa.
+        </div>
+      )}
+
       {published && (
         <div className="flex items-center gap-2 rounded-xl bg-[#ECFDF3] p-4 text-sm font-bold text-[#067647]">
           <Check size={18} />
-          Demonstração: campanha publicada com sucesso.
+          Demonstração: ação de publicação concluída na interface.
         </div>
       )}
 
       {scheduled && !published && (
         <div className="flex items-center gap-2 rounded-xl bg-[#EFF8FF] p-4 text-sm font-bold text-[#175CD3]">
           <CalendarClock size={18} />
-          Campanha agendada{scheduledFor ? ` para ${new Date(scheduledFor).toLocaleString("pt-BR")}` : ""}.
+          Agendamento demonstrativo
+          {scheduledFor
+            ? ` para ${new Date(scheduledFor).toLocaleString("pt-BR")}`
+            : ""}
+          .
         </div>
       )}
 
@@ -115,8 +143,11 @@ export function CampaignBuilder({
               <div className="text-xs font-bold uppercase tracking-wide text-[#176B5B]">
                 {campaign ? "Campanha" : "Campanha pronta"}
               </div>
-              <h2 className="mt-1 text-xl font-extrabold">{property.title}</h2>
+              <h2 className="mt-1 text-xl font-extrabold">
+                {property.title}
+              </h2>
             </div>
+
             <span className="inline-flex items-center gap-1 rounded-full bg-[#E9F4F1] px-3 py-1.5 text-xs font-bold text-[#176B5B]">
               <Sparkles size={14} />
               Estilo {style}
@@ -141,34 +172,55 @@ export function CampaignBuilder({
           </div>
 
           <div className="mx-auto max-w-[430px] overflow-hidden rounded-2xl border border-[#E4E7EC] bg-white">
-            <div className="relative aspect-[4/5]">
-              <Image
-                src={property.image}
-                alt={property.title}
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 pt-20 text-white">
-                <div className="text-xs font-bold uppercase tracking-wider">
-                  {locality}
+            <div className="relative aspect-[4/5] bg-[#EAECF0]">
+              {property.image ? (
+                <Image
+                  src={property.image}
+                  alt={property.title}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-[#98A2B3]">
+                  <div className="text-center">
+                    <Building2 size={48} className="mx-auto" />
+                    <p className="mt-2 text-sm font-semibold">
+                      Adicione fotos para enriquecer o criativo
+                    </p>
+                  </div>
                 </div>
+              )}
+
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-5 pt-20 text-white">
+                {locality && (
+                  <div className="text-xs font-bold uppercase tracking-wider">
+                    {locality}
+                  </div>
+                )}
                 <div className="mt-2 text-2xl font-black">{headline}</div>
-                <div className="mt-2 text-sm font-semibold">
-                  {property.bedrooms} quartos · {property.suites} suítes ·{" "}
-                  {property.area} m²
-                </div>
+                {featureLine && (
+                  <div className="mt-2 text-sm font-semibold">
+                    {featureLine}
+                  </div>
+                )}
                 <div className="mt-3 text-xl font-black">
-                  {formatBRL(property.price)}
-                  {property.purpose === "Aluguel" && (
+                  {property.price > 0
+                    ? formatBRL(property.price)
+                    : "Preço sob consulta"}
+                  {property.purpose === "Aluguel" && property.price > 0 && (
                     <span className="text-xs font-semibold">/mês</span>
                   )}
                 </div>
               </div>
             </div>
+
             <div className="p-4">
               <p className="text-sm leading-6 text-[#475467]">{copy}</p>
               <p className="mt-3 text-sm font-bold text-[#176B5B]">
-                #Imóveis #{property.location.replace(/\s+/g, "")} #CorretorDeImóveis
+                #Imóveis #
+                {property.location.replace(/[^\p{L}\p{N}]/gu, "") ||
+                  "Imóvel"}{" "}
+                #CorretorDeImóveis
               </p>
               <div className="mt-4 flex items-center gap-2 rounded-lg bg-[#F9FAFB] p-3 text-sm font-bold">
                 <MessageCircle size={18} className="text-[#176B5B]" />
@@ -187,14 +239,15 @@ export function CampaignBuilder({
               {property.highlights[0] ?? property.title}
             </p>
             <p className="mt-1 text-sm text-[#667085]">
-              Escolhido automaticamente a partir das informações do imóvel.
+              Nesta prévia usamos o primeiro diferencial informado.
             </p>
           </div>
 
           <button
             type="button"
+            disabled={!property.image}
             onClick={() => setStaging(true)}
-            className="app-card flex w-full items-center justify-between p-4 text-left"
+            className="app-card flex w-full items-center justify-between p-4 text-left disabled:cursor-not-allowed disabled:opacity-50"
           >
             <div>
               <div className="flex items-center gap-2 font-extrabold">
@@ -215,6 +268,7 @@ export function CampaignBuilder({
           >
             Ajustar campanha
           </button>
+
           <button
             type="button"
             onClick={() => setScheduleOpen((value) => !value)}
@@ -223,6 +277,7 @@ export function CampaignBuilder({
             <CalendarClock size={18} />
             Agendar
           </button>
+
           <button
             type="button"
             onClick={publish}
@@ -239,6 +294,7 @@ export function CampaignBuilder({
           <p className="mt-1 text-sm text-[#667085]">
             Escolha quando a campanha deve ser publicada.
           </p>
+
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
             <label className="flex-1 text-sm font-bold">
               Data e horário
@@ -249,6 +305,7 @@ export function CampaignBuilder({
                 className="app-input mt-2"
               />
             </label>
+
             <button
               type="button"
               disabled={!scheduledFor}
@@ -267,6 +324,7 @@ export function CampaignBuilder({
           <p className="mt-1 text-sm text-[#667085]">
             Só mexa no que quiser. A versão recomendada já está pronta.
           </p>
+
           <div className="mt-5 grid gap-5 lg:grid-cols-2">
             <label className="text-sm font-bold">
               Headline
@@ -276,6 +334,7 @@ export function CampaignBuilder({
                 onChange={(event) => setHeadline(event.target.value)}
               />
             </label>
+
             <label className="text-sm font-bold">
               CTA
               <input
@@ -285,6 +344,7 @@ export function CampaignBuilder({
               />
             </label>
           </div>
+
           <div className="mt-5">
             <div className="mb-3 text-sm font-bold">Estilo visual</div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -316,18 +376,21 @@ export function CampaignBuilder({
         </section>
       )}
 
-      {staging && (
+      {staging && property.image && (
         <section className="app-card p-5 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <div className="text-xs font-bold uppercase tracking-wide text-[#176B5B]">
                 Premium
               </div>
-              <h3 className="mt-1 text-lg font-extrabold">Ambientação virtual</h3>
+              <h3 className="mt-1 text-lg font-extrabold">
+                Ambientação virtual
+              </h3>
               <p className="mt-1 text-sm text-[#667085]">
                 Escolha um estilo. A foto original sempre será preservada.
               </p>
             </div>
+
             <button
               type="button"
               onClick={() => setStaging(false)}
@@ -339,7 +402,9 @@ export function CampaignBuilder({
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <div>
-              <div className="mb-2 text-xs font-bold text-[#667085]">ORIGINAL</div>
+              <div className="mb-2 text-xs font-bold text-[#667085]">
+                ORIGINAL
+              </div>
               <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
                 <Image
                   src={property.image}
@@ -349,6 +414,7 @@ export function CampaignBuilder({
                 />
               </div>
             </div>
+
             <div>
               <div className="mb-2 text-xs font-bold text-[#667085]">
                 AMBIENTAÇÃO VIRTUAL
