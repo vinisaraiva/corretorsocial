@@ -264,12 +264,35 @@ function visualTreatment(templateId: CampaignTemplateId) {
 }
 
 function factSlideImageHeight(slide: Extract<Slide, { kind: "facts" }>) {
-  const count = slide.structuredItems?.length ?? slide.items.length;
+  const structuredCount = slide.structuredItems?.length ?? 0;
 
-  if (count <= 3) {
+  if (structuredCount > 0) {
+    if (structuredCount <= 3) {
+      return {
+        imageClass: "h-[70%]",
+        panelClass: "top-[67%]",
+      };
+    }
+
+    if (structuredCount <= 5) {
+      return {
+        imageClass: "h-[63%]",
+        panelClass: "top-[60%]",
+      };
+    }
+
     return {
-      imageClass: "h-[66%]",
-      panelClass: "top-[62%]",
+      imageClass: "h-[60%]",
+      panelClass: "top-[57%]",
+    };
+  }
+
+  const textCount = slide.items.length;
+
+  if (textCount <= 2) {
+    return {
+      imageClass: "h-[62%]",
+      panelClass: "top-[59%]",
     };
   }
 
@@ -287,22 +310,22 @@ function StructuredFactsGrid({
   accent: string;
 }) {
   return (
-    <div className="mt-4 grid grid-cols-3 gap-2">
+    <div className="mt-3 grid grid-cols-3 gap-1.5">
       {items.slice(0, 6).map((item) => {
         const Icon = structuredFactIcon(item.kind);
 
         return (
           <div
             key={item.kind}
-            className="flex min-h-14 items-center gap-2 rounded-xl bg-[#F2F4F7] px-2.5 py-2"
+            className="flex min-h-12 items-center gap-1.5 rounded-xl bg-[#F2F4F7] px-2 py-1.5"
           >
             <span
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white"
               style={{ color: accent }}
             >
-              <Icon size={15} strokeWidth={2} />
+              <Icon size={14} strokeWidth={2} />
             </span>
-            <span className="min-w-0 text-[12px] font-extrabold leading-4 text-[#475467]">
+            <span className="min-w-0 text-[11px] font-extrabold leading-4 text-[#475467]">
               {item.label}
             </span>
           </div>
@@ -384,13 +407,21 @@ function SlideArtwork({
                 referrerPolicy="no-referrer"
               />
               <div
-                className={`absolute inset-x-0 bottom-0 rounded-t-3xl bg-white p-5 ${factsLayout?.panelClass}`}
+                className={`absolute inset-x-0 bottom-0 rounded-t-3xl bg-white ${
+                  slide.structuredItems?.length ? "p-4" : "p-5"
+                } ${factsLayout?.panelClass}`}
               >
                 <div
-                  className="mb-3 h-1.5 w-12 rounded-full"
+                  className={`${
+                    slide.structuredItems?.length ? "mb-2" : "mb-3"
+                  } h-1.5 w-12 rounded-full`}
                   style={{ backgroundColor: accent }}
                 />
-                <div className="text-2xl font-black leading-tight text-[#18202A]">
+                <div
+                  className={`${
+                    slide.structuredItems?.length ? "text-xl" : "text-2xl"
+                  } font-black leading-tight text-[#18202A]`}
+                >
                   {slide.title}
                 </div>
                 {slide.structuredItems?.length ? (
