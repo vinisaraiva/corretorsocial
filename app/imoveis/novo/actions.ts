@@ -617,5 +617,18 @@ export async function queuePropertyMediaAnalysis(propertyId: string) {
     throw new Error("Não foi possível iniciar a análise das fotos.");
   }
 
+  const { error: invokeError } = await supabase.functions.invoke(
+    "media-analysis",
+    {
+      body: {
+        job_id: job.id,
+      },
+    },
+  );
+
+  if (invokeError) {
+    console.error("Failed to invoke media-analysis Edge Function", invokeError);
+  }
+
   return job.id;
 }
