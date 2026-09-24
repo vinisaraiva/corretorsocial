@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Building2 } from "lucide-react";
+import { Building2, FilePenLine } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { StatusBadge } from "@/components/status-badge";
 import { PropertyActions } from "@/components/property-actions";
@@ -67,6 +67,13 @@ export default async function PropertyDetailPage({
         .join(" · ")}
       action={
         <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/imoveis/${property.id}/editar`}
+            className="app-button-secondary inline-flex items-center gap-2 text-sm"
+          >
+            <FilePenLine size={16} />
+            Editar imóvel
+          </Link>
           {property.status !== "arquivado" && (
             <Link
               href={`/campanhas/nova?imovel=${property.id}`}
