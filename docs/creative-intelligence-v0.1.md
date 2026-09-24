@@ -149,3 +149,48 @@ Não simular análise de IA com atraso artificial.
 Enquanto a recomendação for determinística, abrir a campanha assim que o imóvel e suas fotos forem persistidos.
 
 Quando houver visão real/worker, mostrar progresso somente para jobs efetivamente executados.
+
+
+## Execução da análise visual
+
+Estratégia do MVP:
+
+1. `jobs` continua sendo a fila persistente e observável;
+2. a aplicação cria um job `media_analysis`;
+3. a Supabase Edge Function `media-analysis` tenta assumir o job por ID de forma atômica;
+4. a função responde rápido e processa a análise em `EdgeRuntime.waitUntil()`;
+5. o frontend acompanha o status em `jobs`;
+6. se o job permanecer `queued` ou `retrying`, a interface pode disparar novamente a função;
+7. o claim atômico impede processamento concorrente do mesmo job.
+
+A Edge Function é a estratégia inicial para evitar custo fixo de infraestrutura no MVP.
+
+O diretório `worker/` permanece como fallback de escala para:
+- processamento que exceda os limites de duração/CPU da Edge Function;
+- renderização pesada;
+- vídeo/FFmpeg;
+- publicação em lote;
+- volume sustentado que justifique processo residente.
+
+Não remover o worker apenas porque a primeira fase usa Edge Functions.
+
+### Feature flag
+
+`MEDIA_ANALYSIS_ENABLED=false` por padrão.
+
+Só ativar quando:
+- a Edge Function estiver deployed;
+- `OPENAI_API_KEY` estiver configurada nos secrets das Edge Functions;
+- pelo menos um teste de análise real tiver sido concluído com sucesso.
+
+### Modelo inicial
+
+Default: `gpt-5.6-luna`.
+
+Motivo:
+- aceita imagem;
+- suporta Responses API;
+- suporta Structured Outputs;
+- é adequado a workloads sensíveis a custo.
+
+Manter `OPENAI_VISION_MODEL` configurável para A/B com modelos superiores caso a qualidade visual seja insuficiente.
