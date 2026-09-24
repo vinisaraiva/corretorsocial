@@ -25,10 +25,20 @@ export default async function OnboardingPage({
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "professional_name,creci,whatsapp,website,city,service_regions,primary_color",
+      "professional_name,creci,whatsapp,website,city,service_regions,primary_color,logo_path",
     )
     .eq("user_id", user.id)
     .maybeSingle();
+
+  let logoUrl: string | null = null;
+
+  if (profile?.logo_path) {
+    const { data } = await supabase.storage
+      .from("profile-assets")
+      .createSignedUrl(profile.logo_path, 60 * 60);
+
+    logoUrl = data?.signedUrl ?? null;
+  }
 
   const initialProfile = {
     professionalName: profile?.professional_name ?? "",
@@ -38,6 +48,7 @@ export default async function OnboardingPage({
     city: profile?.city ?? "Porto Seguro - BA",
     serviceRegions: profile?.service_regions ?? [],
     primaryColor: profile?.primary_color ?? "#176B5B",
+    logoUrl,
   };
 
   if (reviewMode) {
