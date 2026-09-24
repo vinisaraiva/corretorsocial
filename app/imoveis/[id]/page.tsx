@@ -16,7 +16,7 @@ export default async function PropertyDetailPage({
     <AppShell
       title={property.title}
       description={`${property.location} · ${property.city}`}
-      action={<Link href={`/campanhas/${property.id}`} className="app-button-primary text-sm">Criar nova campanha</Link>}
+      action={<Link href={`/campanhas/nova?imovel=${property.id}`} className="app-button-primary text-sm">Criar nova campanha</Link>}
     >
       <section className="app-card overflow-hidden">
         <div className="grid lg:grid-cols-[1.1fr_1fr]">
