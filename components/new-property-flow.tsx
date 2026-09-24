@@ -13,9 +13,11 @@ import {
 } from "lucide-react";
 import {
   createProperty,
+  deletePropertyDraft,
   extractPropertyFromUrl,
   type PropertyDraftInput,
 } from "@/app/imoveis/novo/actions";
+import { uploadPropertyPhotos } from "@/lib/supabase/uploads";
 import { formatBRL } from "@/lib/utils";
 
 type Mode = "link" | "fotos" | "manual";
@@ -55,6 +57,8 @@ export function NewPropertyFlow() {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [stage, setStage] = useState<Stage>("input");
   const [url, setUrl] = useState(initialUrl);
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(false);
   const [extractionMessage, setExtractionMessage] = useState("");
@@ -73,6 +77,37 @@ export function NewPropertyFlow() {
     // The initial URL is intentionally processed only once.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUrl]);
+
+  useEffect(() => {
+    return () => {
+      photoPreviews.forEach((preview) => URL.revokeObjectURL(preview));
+    };
+  }, [photoPreviews]);
+
+  function selectPhotos(fileList: FileList | null) {
+    setError("");
+
+    const files = Array.from(fileList ?? []).slice(0, 20);
+
+    if (files.length === 0) {
+      setPhotoFiles([]);
+      setPhotoPreviews([]);
+      return;
+    }
+
+    const allowed = new Set(["image/jpeg", "image/png", "image/webp"]);
+    const invalid = files.find(
+      (file) => !allowed.has(file.type) || file.size > 12 * 1024 * 1024,
+    );
+
+    if (invalid) {
+      setError("Use até 20 imagens JPG, PNG ou WebP, com no máximo 12 MB cada.");
+      return;
+    }
+
+    setPhotoFiles(files);
+    setPhotoPreviews(files.map((file) => URL.createObjectURL(file)));
+  }
 
   async function extractFromLink(link = url) {
     setError("");
@@ -128,6 +163,11 @@ export function NewPropertyFlow() {
   function reviewManual() {
     setError("");
 
+    if (mode === "fotos" && photoFiles.length === 0) {
+      setError("Escolha pelo menos uma foto do imóvel.");
+      return;
+    }
+
     if (!draft.title.trim()) {
       setError("Informe pelo menos o título do imóvel.");
       return;
@@ -156,6 +196,20 @@ export function NewPropertyFlow() {
           .map((item) => item.trim())
           .filter(Boolean),
       });
+
+      if (photoFiles.length > 0) {
+        try {
+          await uploadPropertyPhotos(id, photoFiles);
+        } catch (uploadError) {
+          try {
+            await deletePropertyDraft(id);
+          } catch {
+            // If rollback also fails, the incomplete draft remains visible
+            // instead of silently creating another copy on retry.
+          }
+          throw uploadError;
+        }
+      }
 
       if (!goToCampaign) {
         router.push(`/imoveis/${id}`);
@@ -250,7 +304,7 @@ export function NewPropertyFlow() {
   }
 
   if (stage === "review") {
-    const coverImage = draft.images?.[0];
+    const coverImage = draft.images?.[0] ?? photoPreviews[0];
 
     return (
       <div className="space-y-5">
@@ -350,9 +404,11 @@ export function NewPropertyFlow() {
                     </div>
                   )}
 
-                  {draft.images && draft.images.length > 1 && (
+                  {(draft.images?.length || photoFiles.length > 0) && (
                     <p className="mt-5 text-xs font-semibold text-[#667085]">
-                      {draft.images.length} imagens públicas encontradas
+                      {draft.images?.length
+                        ? `${draft.images.length} imagens públicas encontradas`
+                        : `${photoFiles.length} fotos prontas para envio`}
                     </p>
                   )}
                 </>
@@ -457,21 +513,64 @@ export function NewPropertyFlow() {
       )}
 
       {mode === "fotos" && (
-        <div className="rounded-xl border border-dashed border-[#D0D5DD] bg-[#F9FAFB] p-8 text-center">
-          <ImagePlus size={30} className="mx-auto text-[#176B5B]" />
-          <h2 className="mt-3 font-extrabold">Upload de fotos</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-[#667085]">
-            O Storage já está no planejamento, mas não vamos simular um upload
-            como se ele estivesse persistindo. Use o cadastro manual por
-            enquanto.
-          </p>
-          <button
-            type="button"
-            onClick={() => setMode("manual")}
-            className="app-button-secondary mt-5"
-          >
-            Cadastrar manualmente
-          </button>
+        <div className="space-y-6">
+          <label className="flex min-h-44 cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#98A2B3] bg-[#F9FAFB] p-6 text-center">
+            <ImagePlus size={30} className="text-[#176B5B]" />
+            <strong>
+              {photoFiles.length > 0
+                ? `${photoFiles.length} foto${photoFiles.length === 1 ? "" : "s"} selecionada${photoFiles.length === 1 ? "" : "s"}`
+                : "Escolha as fotos do imóvel"}
+            </strong>
+            <span className="text-sm text-[#667085]">
+              JPG, PNG ou WebP · até 20 fotos · 12 MB por imagem
+            </span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              className="sr-only"
+              onChange={(event) => selectPhotos(event.target.files)}
+            />
+          </label>
+
+          {photoPreviews.length > 0 && (
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+              {photoPreviews.slice(0, 10).map((preview, index) => (
+                <div
+                  key={preview}
+                  className="relative aspect-square overflow-hidden rounded-lg bg-[#EAECF0]"
+                >
+                  <img
+                    src={preview}
+                    alt={`Foto selecionada ${index + 1}`}
+                    className="h-full w-full object-cover"
+                  />
+                  {index === 0 && (
+                    <span className="absolute left-1.5 top-1.5 rounded bg-white/90 px-2 py-1 text-[10px] font-bold text-[#176B5B]">
+                      CAPA
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <PropertyEditor
+            draft={draft}
+            highlightsText={highlightsText}
+            setDraft={setDraft}
+            setHighlightsText={setHighlightsText}
+          />
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={reviewManual}
+              className="app-button-primary"
+            >
+              Revisar imóvel
+            </button>
+          </div>
         </div>
       )}
 
