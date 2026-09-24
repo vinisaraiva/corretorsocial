@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  ensureCampaignVariant,
   registerRenderedAssets,
   saveCampaignDraft,
   scheduleCampaignDraft,
@@ -517,17 +518,6 @@ export function CampaignBuilder({
     setRenderedLabel("");
 
     try {
-      let campaignId = persistedCampaignId;
-
-      if (!campaignId || dirty) {
-        campaignId = await saveCampaignDraft(draftInput());
-        setPersistedCampaignId(campaignId);
-        setDirty(false);
-        setStatus((current) =>
-          current === "scheduled" ? "scheduled" : "ready",
-        );
-      }
-
       const config = isStoryView
         ? {
             provider: "instagram" as const,
@@ -567,6 +557,30 @@ export function CampaignBuilder({
                   width: 1080,
                   height: 1350,
                 };
+
+      let campaignId = persistedCampaignId;
+
+      if (!campaignId || dirty) {
+        campaignId = await saveCampaignDraft(draftInput());
+        setPersistedCampaignId(campaignId);
+        setDirty(false);
+        setStatus((current) =>
+          current === "scheduled" ? "scheduled" : "ready",
+        );
+      }
+
+      const input = {
+        ...draftInput(),
+        campaignId,
+      };
+
+      campaignId = await ensureCampaignVariant(
+        input,
+        config.provider,
+        config.format,
+      );
+
+      setPersistedCampaignId(campaignId);
 
       const paths = await renderAndUploadCampaignAssets({
         campaignId,
