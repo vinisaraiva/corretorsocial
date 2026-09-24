@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import type { PropertyDraftInput } from "@/app/imoveis/novo/actions";
 
 const restorableStatuses = new Set([
   "active",
@@ -159,4 +160,160 @@ export async function deleteProperty(propertyId: string) {
   revalidatePath("/campanhas");
 
   return { deleted: true };
+}
+
+
+export async function updateProperty(
+  propertyId: string,
+  input: PropertyDraftInput,
+) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  if (!input.title.trim()) {
+    throw new Error("Informe um título para o imóvel.");
+  }
+
+  const { data: property } = await supabase
+    .from("properties")
+    .select("id,status")
+    .eq("id", propertyId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!property) {
+    throw new Error("Imóvel não encontrado.");
+  }
+
+  const { error } = await supabase
+    .from("properties")
+    .update({
+      purpose: input.purpose === "Aluguel" ? "rent" : "sale",
+      title: input.title.trim(),
+      price: input.price || null,
+      neighborhood: input.neighborhood.trim() || null,
+      city: input.city.trim() || null,
+      state: input.state?.trim() || null,
+      public_location:
+        [input.neighborhood, input.city].filter(Boolean).join(", ") || null,
+      bedrooms: input.bedrooms || null,
+      suites: input.suites || null,
+      bathrooms: input.bathrooms || null,
+      parking: input.parking || null,
+      area_m2: input.area || null,
+      description: input.description.trim() || null,
+      highlights: input.highlights,
+    })
+    .eq("id", property.id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    throw new Error("Não foi possível atualizar o imóvel.");
+  }
+
+  revalidatePath("/imoveis");
+  revalidatePath(`/imoveis/${property.id}`);
+  revalidatePath(`/imoveis/${property.id}/editar`);
+
+  return { updated: true };
+}
+
+export async function setPropertyCover(
+  propertyId: string,
+  mediaId: string,
+) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  const { error } = await supabase.rpc("set_property_cover", {
+    p_property_id: propertyId,
+    p_media_id: mediaId,
+  });
+
+  if (error) {
+    throw new Error("Não foi possível definir a foto de capa.");
+  }
+
+  revalidatePath("/imoveis");
+  revalidatePath(`/imoveis/${propertyId}`);
+  revalidatePath(`/imoveis/${propertyId}/editar`);
+}
+
+export async function reorderPropertyMedia(
+  propertyId: string,
+  mediaIds: string[],
+) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  const { error } = await supabase.rpc("reorder_property_media", {
+    p_property_id: propertyId,
+    p_media_ids: mediaIds,
+  });
+
+  if (error) {
+    throw new Error("Não foi possível alterar a ordem das fotos.");
+  }
+
+  revalidatePath(`/imoveis/${propertyId}`);
+  revalidatePath(`/imoveis/${propertyId}/editar`);
+}
+
+export async function removePropertyMedia(
+  propertyId: string,
+  mediaId: string,
+) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  const { data: storagePath, error } = await supabase.rpc(
+    "remove_property_media",
+    {
+      p_property_id: propertyId,
+      p_media_id: mediaId,
+    },
+  );
+
+  if (error) {
+    throw new Error("Não foi possível remover a foto.");
+  }
+
+  if (storagePath) {
+    const { error: storageError } = await supabase.storage
+      .from("property-media")
+      .remove([storagePath]);
+
+    if (storageError) {
+      console.error(
+        "Media row removed but storage file could not be deleted",
+        storageError,
+      );
+    }
+  }
+
+  revalidatePath("/imoveis");
+  revalidatePath(`/imoveis/${propertyId}`);
+  revalidatePath(`/imoveis/${propertyId}/editar`);
+
+  return { removed: true };
 }
