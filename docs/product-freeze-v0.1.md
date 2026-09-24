@@ -40,7 +40,7 @@ Formatos: Feed 4:5, Carrossel, Story 9:16 e Reel/slideshow.
 Ações principais: Publicar em todas, Agendar e Ajustar campanha.
 
 ### Ajustar campanha
-Headline, foto, estilo, preço, CTA, legenda, hashtags e redes.
+Escolha entre seis artes profissionais de estrutura fixa. O usuário edita headline, subheadline quando suportada, CTA e legenda por rede. Não há editor livre, arraste ou reposicionamento manual.
 
 ### Imóveis
 Grid/lista com status, campanhas e ações.
@@ -57,12 +57,16 @@ Publicações, cliques no WhatsApp, melhor campanha e melhor rede.
 ### Configurações
 Perfil, contato, marca, área de atuação, redes e preferências.
 
-## Estilos visuais iniciais
+## Artes visuais do MVP
 
-1. Essencial
-2. Destaque
-3. Oportunidade
-4. Alto padrão
+1. Clean Base
+2. Clean Topo
+3. Comercial
+4. Oportunidade
+5. Card Informativo
+6. Moldura Branding
+
+Especificação detalhada em `docs/creative-templates-v0.1.md`.
 
 ## Premium
 
