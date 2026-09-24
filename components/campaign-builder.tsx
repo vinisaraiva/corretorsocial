@@ -4,15 +4,21 @@ import { useMemo, useState } from "react";
 import {
   Building2,
   CalendarClock,
-  Check,
+  CheckCircle2,
   ChevronDown,
+  LoaderCircle,
   MessageCircle,
+  Save,
   Sparkles,
   WandSparkles,
 } from "lucide-react";
-import { campaigns, properties as mockProperties } from "@/data/mock";
+import {
+  saveCampaignDraft,
+  scheduleCampaignDraft,
+  type CampaignDraftInput,
+} from "@/app/campanhas/actions";
 import { formatBRL } from "@/lib/utils";
-import type { Campaign, Property, SocialChannel } from "@/types";
+import type { Property, SocialChannel } from "@/types";
 
 const allChannels: { id: SocialChannel; label: string }[] = [
   { id: "instagram", label: "Instagram" },
@@ -35,69 +41,71 @@ const stagingStyles = [
   "Praiano",
 ] as const;
 
+type InitialCampaign = {
+  id: string;
+  visualStyle: string;
+  headline: string;
+  cta: string;
+  status: string;
+  scheduledFor?: string | null;
+  captions?: Partial<Record<SocialChannel, string>>;
+};
+
 export function CampaignBuilder({
-  campaignId,
   propertyData,
+  campaignData,
 }: {
-  campaignId?: string;
-  propertyData?: Property;
+  propertyData: Property;
+  campaignData?: InitialCampaign;
 }) {
-  const campaign: Campaign | undefined = campaignId
-    ? campaigns.find((item) => item.id === campaignId)
-    : undefined;
-
-  const property =
-    propertyData ??
-    mockProperties.find((item) => item.id === campaign?.propertyId) ??
-    mockProperties[0];
-
-  const initialChannel =
-    campaign?.channels[0] ?? ("instagram" as SocialChannel);
-
-  const [channel, setChannel] = useState<SocialChannel>(initialChannel);
-  const [adjusting, setAdjusting] = useState(false);
-  const [style, setStyle] = useState("Destaque");
-  const [headline, setHeadline] = useState(
-    campaign?.headline ?? property.highlights[0] ?? property.title,
+  const property = propertyData;
+  const generatedCaptions = useMemo(
+    () => ({
+      instagram: `${property.title}: ${property.description || "Conheça este imóvel."} Fale comigo para saber mais.`,
+      facebook: `${property.title}, ${property.location}. ${property.description || "Entre em contato para conhecer os detalhes."}`,
+      tiktok: `Você moraria aqui? Conheça ${property.title.toLowerCase()} em ${property.location}.`,
+      google: `${property.title} em ${property.location}${property.city ? `, ${property.city}` : ""}. ${property.bedrooms ? `${property.bedrooms} quartos` : "Veja os detalhes"}${property.area ? ` e ${property.area} m²` : ""}.`,
+    }),
+    [property],
   );
-  const [cta, setCta] = useState("Fale comigo no WhatsApp");
-  const [published, setPublished] = useState(campaign?.status === "publicada");
+
+  const [persistedCampaignId, setPersistedCampaignId] = useState(
+    campaignData?.id,
+  );
+  const [channel, setChannel] = useState<SocialChannel>("instagram");
+  const [adjusting, setAdjusting] = useState(false);
+  const [style, setStyle] = useState(campaignData?.visualStyle ?? "Destaque");
+  const [headline, setHeadline] = useState(
+    campaignData?.headline ?? property.highlights[0] ?? property.title,
+  );
+  const [cta, setCta] = useState(campaignData?.cta ?? "Fale comigo no WhatsApp");
+  const [captions] = useState({
+    instagram:
+      campaignData?.captions?.instagram ?? generatedCaptions.instagram,
+    facebook:
+      campaignData?.captions?.facebook ?? generatedCaptions.facebook,
+    tiktok: campaignData?.captions?.tiktok ?? generatedCaptions.tiktok,
+    google: campaignData?.captions?.google ?? generatedCaptions.google,
+  });
   const [scheduleOpen, setScheduleOpen] = useState(false);
-  const [scheduledFor, setScheduledFor] = useState("");
-  const [scheduled, setScheduled] = useState(campaign?.status === "agendada");
+  const [scheduledFor, setScheduledFor] = useState(
+    campaignData?.scheduledFor
+      ? new Date(campaignData.scheduledFor).toISOString().slice(0, 16)
+      : "",
+  );
+  const [status, setStatus] = useState(campaignData?.status ?? "draft");
+  const [working, setWorking] = useState<"save" | "schedule" | null>(null);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [staging, setStaging] = useState(false);
   const [stagingStyle, setStagingStyle] =
     useState<(typeof stagingStyles)[number]>("Moderno");
   const [stagingGenerated, setStagingGenerated] = useState(false);
 
-  const channels = useMemo(() => {
-    if (!campaign) return allChannels;
-    return allChannels.filter((item) => campaign.channels.includes(item.id));
-  }, [campaign]);
-
-  const copy = {
-    instagram: `${property.title}: ${property.description || "Conheça este imóvel."} Fale comigo para saber mais.`,
-    facebook: `${property.title}, ${property.location}. ${property.description || "Entre em contato para conhecer os detalhes."}`,
-    tiktok: `Você moraria aqui? Conheça ${property.title.toLowerCase()} em ${property.location}.`,
-    google: `${property.title} em ${property.location}${property.city ? `, ${property.city}` : ""}. ${property.bedrooms ? `${property.bedrooms} quartos` : "Veja os detalhes"}${property.area ? ` e ${property.area} m²` : ""}.`,
-  }[channel];
-
+  const copy = captions[channel];
   const locality = [property.location, property.city]
     .filter(Boolean)
     .join(" · ");
-
-  function confirmSchedule() {
-    if (!scheduledFor) return;
-    setScheduled(true);
-    setPublished(false);
-    setScheduleOpen(false);
-  }
-
-  function publish() {
-    setPublished(true);
-    setScheduled(false);
-    setScheduleOpen(false);
-  }
 
   const featureLine = [
     property.bedrooms ? `${property.bedrooms} quartos` : null,
@@ -107,31 +115,82 @@ export function CampaignBuilder({
     .filter(Boolean)
     .join(" · ");
 
+  function draftInput(): CampaignDraftInput {
+    return {
+      campaignId: persistedCampaignId,
+      propertyId: property.id,
+      visualStyle: style,
+      headline,
+      cta,
+      captions,
+    };
+  }
+
+  async function save() {
+    setWorking("save");
+    setError("");
+    setMessage("");
+
+    try {
+      const id = await saveCampaignDraft(draftInput());
+      setPersistedCampaignId(id);
+      setStatus("ready");
+      setMessage("Campanha salva.");
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Não foi possível salvar a campanha.",
+      );
+    } finally {
+      setWorking(null);
+    }
+  }
+
+  async function schedule() {
+    if (!scheduledFor) return;
+
+    setWorking("schedule");
+    setError("");
+    setMessage("");
+
+    try {
+      const id = await scheduleCampaignDraft(draftInput(), scheduledFor);
+      setPersistedCampaignId(id);
+      setStatus("scheduled");
+      setScheduleOpen(false);
+      setMessage(
+        `Campanha agendada para ${new Date(scheduledFor).toLocaleString("pt-BR")}.`,
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Não foi possível agendar a campanha.",
+      );
+    } finally {
+      setWorking(null);
+    }
+  }
+
   return (
     <div className="space-y-5">
-      {!campaign && (
-        <div className="rounded-xl bg-[#FFFAEB] p-4 text-sm text-[#B54708]">
-          <strong>Prévia da campanha.</strong> Os textos e a arte ainda são
-          demonstrativos. A persistência do imóvel já é real; o motor de
-          geração/publicação entra na próxima etapa.
-        </div>
-      )}
+      <div className="rounded-xl bg-[#FFFAEB] p-4 text-sm text-[#B54708]">
+        <strong>Prévia determinística.</strong> O imóvel, o rascunho e o
+        agendamento já são persistentes. A análise por IA e a publicação nas
+        redes serão ligadas nas próximas integrações.
+      </div>
 
-      {published && (
+      {message && (
         <div className="flex items-center gap-2 rounded-xl bg-[#ECFDF3] p-4 text-sm font-bold text-[#067647]">
-          <Check size={18} />
-          Demonstração: ação de publicação concluída na interface.
+          <CheckCircle2 size={18} />
+          {message}
         </div>
       )}
 
-      {scheduled && !published && (
-        <div className="flex items-center gap-2 rounded-xl bg-[#EFF8FF] p-4 text-sm font-bold text-[#175CD3]">
-          <CalendarClock size={18} />
-          Agendamento demonstrativo
-          {scheduledFor
-            ? ` para ${new Date(scheduledFor).toLocaleString("pt-BR")}`
-            : ""}
-          .
+      {error && (
+        <div className="rounded-xl bg-[#FEF3F2] p-4 text-sm font-semibold text-[#B42318]">
+          {error}
         </div>
       )}
 
@@ -140,11 +199,9 @@ export function CampaignBuilder({
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="text-xs font-bold uppercase tracking-wide text-[#176B5B]">
-                {campaign ? "Campanha" : "Campanha pronta"}
+                {persistedCampaignId ? "Campanha salva" : "Nova campanha"}
               </div>
-              <h2 className="mt-1 text-xl font-extrabold">
-                {property.title}
-              </h2>
+              <h2 className="mt-1 text-xl font-extrabold">{property.title}</h2>
             </div>
 
             <span className="inline-flex items-center gap-1 rounded-full bg-[#E9F4F1] px-3 py-1.5 text-xs font-bold text-[#176B5B]">
@@ -154,7 +211,7 @@ export function CampaignBuilder({
           </div>
 
           <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
-            {channels.map((item) => (
+            {allChannels.map((item) => (
               <button
                 key={item.id}
                 type="button"
@@ -232,13 +289,17 @@ export function CampaignBuilder({
         <aside className="space-y-3">
           <div className="app-card p-4">
             <div className="text-xs font-bold uppercase tracking-wide text-[#667085]">
-              Argumento principal
+              Estado da campanha
             </div>
             <p className="mt-2 font-extrabold">
-              {property.highlights[0] ?? property.title}
+              {status === "scheduled"
+                ? "Agendada"
+                : persistedCampaignId
+                  ? "Salva"
+                  : "Ainda não salva"}
             </p>
             <p className="mt-1 text-sm text-[#667085]">
-              Nesta prévia usamos o primeiro diferencial informado.
+              Nenhuma publicação externa é executada sem uma conexão OAuth real.
             </p>
           </div>
 
@@ -254,7 +315,7 @@ export function CampaignBuilder({
                 Mobiliar com IA
               </div>
               <div className="mt-1 text-xs text-[#667085]">
-                Premium · 1 crédito por imagem
+                Premium · ainda não consome créditos
               </div>
             </div>
             <ChevronDown size={18} className="text-[#667085]" />
@@ -270,8 +331,23 @@ export function CampaignBuilder({
 
           <button
             type="button"
+            onClick={save}
+            disabled={working !== null}
+            className="app-button-secondary flex w-full items-center justify-center gap-2 disabled:opacity-60"
+          >
+            {working === "save" ? (
+              <LoaderCircle size={18} className="animate-spin" />
+            ) : (
+              <Save size={18} />
+            )}
+            Salvar campanha
+          </button>
+
+          <button
+            type="button"
             onClick={() => setScheduleOpen((value) => !value)}
-            className="app-button-secondary flex w-full items-center justify-center gap-2"
+            disabled={working !== null}
+            className="app-button-primary flex w-full items-center justify-center gap-2 disabled:opacity-60"
           >
             <CalendarClock size={18} />
             Agendar
@@ -279,19 +355,25 @@ export function CampaignBuilder({
 
           <button
             type="button"
-            onClick={publish}
-            className="app-button-primary w-full"
+            disabled
+            title="Disponível após conectar uma rede social"
+            className="app-button-secondary w-full cursor-not-allowed opacity-50"
           >
             Publicar em todas
           </button>
+
+          <p className="text-center text-xs text-[#667085]">
+            Publicação será liberada após a integração OAuth das redes.
+          </p>
         </aside>
       </section>
 
       {scheduleOpen && (
         <section className="app-card p-5 sm:p-6">
-          <h3 className="text-lg font-extrabold">Agendar publicação</h3>
+          <h3 className="text-lg font-extrabold">Agendar campanha</h3>
           <p className="mt-1 text-sm text-[#667085]">
-            Escolha quando a campanha deve ser publicada.
+            O agendamento já é salvo no banco. A execução automática começa
+            quando o worker de publicação estiver conectado.
           </p>
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -307,11 +389,14 @@ export function CampaignBuilder({
 
             <button
               type="button"
-              disabled={!scheduledFor}
-              onClick={confirmSchedule}
-              className="app-button-primary disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!scheduledFor || working !== null}
+              onClick={schedule}
+              className="app-button-primary inline-flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Confirmar agendamento
+              {working === "schedule" && (
+                <LoaderCircle size={18} className="animate-spin" />
+              )}
+              Salvar agendamento
             </button>
           </div>
         </section>
@@ -321,7 +406,7 @@ export function CampaignBuilder({
         <section className="app-card p-5 sm:p-6">
           <h3 className="text-lg font-extrabold">Ajustar campanha</h3>
           <p className="mt-1 text-sm text-[#667085]">
-            Só mexa no que quiser. A versão recomendada já está pronta.
+            Os ajustes são persistidos quando você salva ou agenda.
           </p>
 
           <div className="mt-5 grid gap-5 lg:grid-cols-2">
@@ -363,11 +448,6 @@ export function CampaignBuilder({
                   <div className="mt-1 text-xs text-[#667085]">
                     {description}
                   </div>
-                  {style === name && (
-                    <div className="mt-3 text-xs font-bold text-[#176B5B]">
-                      Selecionado
-                    </div>
-                  )}
                 </button>
               ))}
             </div>
@@ -386,7 +466,8 @@ export function CampaignBuilder({
                 Ambientação virtual
               </h3>
               <p className="mt-1 text-sm text-[#667085]">
-                Escolha um estilo. A foto original sempre será preservada.
+                Esta tela ainda é uma prévia funcional; nenhum crédito nem
+                geração de imagem é executado nesta etapa.
               </p>
             </div>
 
@@ -428,7 +509,7 @@ export function CampaignBuilder({
                       referrerPolicy="no-referrer"
                     />
                     <div className="absolute inset-x-3 bottom-3 rounded-lg bg-white/95 p-2 text-center text-xs font-bold">
-                      Ambientação virtual gerada por IA · {stagingStyle}
+                      Prévia de ambientação · {stagingStyle}
                     </div>
                   </>
                 ) : (
@@ -466,7 +547,7 @@ export function CampaignBuilder({
             onClick={() => setStagingGenerated(true)}
             className="app-button-primary mt-5"
           >
-            Gerar ambientação · 1 crédito
+            Gerar prévia simulada
           </button>
         </section>
       )}
