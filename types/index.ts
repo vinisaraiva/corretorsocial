@@ -18,6 +18,7 @@ export type SocialChannel =
   | "google";
 
 export interface PropertyMedia {
+  id?: string;
   url: string;
   width?: number | null;
   height?: number | null;
