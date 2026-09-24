@@ -258,10 +258,10 @@ function SlideArtwork({
               <img
                 src={slide.image}
                 alt=""
-                className="absolute inset-x-0 top-0 h-[38%] w-full object-cover"
+                className="absolute inset-x-0 top-0 h-[55%] w-full object-cover"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-x-0 bottom-0 top-[36%] rounded-t-3xl bg-white p-5">
+              <div className="absolute inset-x-0 bottom-0 top-[52%] rounded-t-3xl bg-white p-5">
                 <div
                   className="mb-3 h-1.5 w-12 rounded-full"
                   style={{ backgroundColor: accent }}
@@ -269,14 +269,16 @@ function SlideArtwork({
                 <div className="text-2xl font-black leading-tight text-[#18202A]">
                   {slide.title}
                 </div>
-                <div className="mt-4 space-y-2">
+                <div className="mt-4 grid grid-cols-2 gap-2">
                   {(slide.items.length > 0
                     ? slide.items
                     : ["Consulte os detalhes deste imóvel."]
                   ).map((item) => (
                     <div
                       key={item}
-                      className="rounded-xl bg-[#F2F4F7] px-3 py-2 text-sm font-bold text-[#475467]"
+                      className={`rounded-xl bg-[#F2F4F7] px-3 py-2 text-sm font-bold leading-5 text-[#475467] ${
+                        item.length > 24 ? "col-span-2" : ""
+                      }`}
                     >
                       {item}
                     </div>
