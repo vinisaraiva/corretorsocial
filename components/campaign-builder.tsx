@@ -55,7 +55,9 @@ import { InstagramCarouselControls } from "@/components/instagram-carousel-contr
 import { buildCampaignRecommendation } from "@/lib/campaign-recommendation";
 import { MediaAnalysisStatus } from "@/components/media-analysis-status";
 import {
+  cleanupCampaignAssetFolder,
   createCampaignAssetSignedUrls,
+  removeCampaignAssetPaths,
   renderAndUploadCampaignAssets,
 } from "@/lib/campaign-renderer";
 import type { Property, SocialChannel } from "@/types";
@@ -587,11 +589,23 @@ export function CampaignBuilder({
         ...config,
       });
 
-      await registerRenderedAssets({
+      try {
+        await registerRenderedAssets({
+          campaignId,
+          provider: config.provider,
+          format: config.format,
+          paths,
+        });
+      } catch (registerError) {
+        await removeCampaignAssetPaths(paths);
+        throw registerError;
+      }
+
+      await cleanupCampaignAssetFolder({
         campaignId,
         provider: config.provider,
         format: config.format,
-        paths,
+        keepPaths: paths,
       });
 
       const signedFiles = await createCampaignAssetSignedUrls(paths);
