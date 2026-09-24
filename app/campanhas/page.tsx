@@ -2,6 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { createClient } from "@/lib/supabase/server";
+import {
+  getCampaignTemplate,
+  normalizeCampaignTemplate,
+} from "@/lib/campaign-templates";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +46,7 @@ export default async function CampaignsPage() {
 
   const { data: campaigns, error } = await supabase
     .from("campaigns")
-    .select("id,property_id,status,marketing_angle,scheduled_for,published_at,created_at")
+    .select("id,property_id,status,marketing_angle,visual_style,scheduled_for,published_at,created_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -114,6 +118,9 @@ export default async function CampaignsPage() {
                 campaign.scheduled_for ??
                 campaign.published_at ??
                 campaign.created_at;
+              const template = getCampaignTemplate(
+                normalizeCampaignTemplate(campaign.visual_style),
+              );
 
               return (
                 <div
@@ -143,11 +150,10 @@ export default async function CampaignsPage() {
                       {propertyTitle.get(campaign.property_id) ?? "Imóvel"}
                     </h2>
                     <p className="mt-1 text-sm text-[#667085]">{headline}</p>
-                    {channels.length > 0 && (
-                      <p className="mt-2 text-xs text-[#667085]">
-                        {channels.join(" · ")}
-                      </p>
-                    )}
+                    <p className="mt-2 text-xs text-[#667085]">
+                      Arte: {template.name}
+                      {channels.length > 0 ? ` · ${channels.join(" · ")}` : ""}
+                    </p>
                   </div>
 
                   <Link
