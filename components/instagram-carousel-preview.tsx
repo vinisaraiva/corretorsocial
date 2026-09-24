@@ -1,7 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Images } from "lucide-react";
+import {
+  Bath,
+  BedDouble,
+  CarFront,
+  ChevronLeft,
+  ChevronRight,
+  Images,
+  KeyRound,
+  Ruler,
+  type LucideIcon,
+} from "lucide-react";
 import type { Property } from "@/types";
 import type { CampaignTemplateId } from "@/lib/campaign-templates";
 import {
@@ -16,6 +26,18 @@ type CarouselBrand = {
   primaryColor: string;
 };
 
+type StructuredFactKind =
+  | "bedrooms"
+  | "suites"
+  | "bathrooms"
+  | "parking"
+  | "area";
+
+type StructuredFact = {
+  kind: StructuredFactKind;
+  label: string;
+};
+
 type Slide =
   | {
       kind: "cover";
@@ -27,6 +49,7 @@ type Slide =
       kind: "facts";
       title: string;
       items: string[];
+      structuredItems?: StructuredFact[];
       image?: string;
     }
   | {
@@ -60,13 +83,58 @@ function priceText(property: Property) {
   return `${formatBRL(property.price)}${property.purpose === "Aluguel" ? "/mês" : ""}`;
 }
 
-function propertyFacts(property: Property) {
+function plural(value: number, singular: string, pluralForm: string) {
+  return `${value} ${value === 1 ? singular : pluralForm}`;
+}
+
+function propertyStructuredFacts(property: Property): StructuredFact[] {
   return [
-    property.bedrooms ? `${property.bedrooms} quartos` : null,
-    property.suites ? `${property.suites} suítes` : null,
-    property.area ? `${property.area} m²` : null,
-    property.parking ? `${property.parking} vagas` : null,
-  ].filter((item): item is string => Boolean(item));
+    property.bedrooms
+      ? {
+          kind: "bedrooms" as const,
+          label: plural(property.bedrooms, "quarto", "quartos"),
+        }
+      : null,
+    property.suites
+      ? {
+          kind: "suites" as const,
+          label: plural(property.suites, "suíte", "suítes"),
+        }
+      : null,
+    property.bathrooms
+      ? {
+          kind: "bathrooms" as const,
+          label: plural(property.bathrooms, "banheiro", "banheiros"),
+        }
+      : null,
+    property.parking
+      ? {
+          kind: "parking" as const,
+          label: plural(property.parking, "vaga", "vagas"),
+        }
+      : null,
+    property.area
+      ? {
+          kind: "area" as const,
+          label: `${property.area} m²`,
+        }
+      : null,
+  ].filter((item): item is StructuredFact => Boolean(item));
+}
+
+function structuredFactIcon(kind: StructuredFactKind): LucideIcon {
+  switch (kind) {
+    case "bedrooms":
+      return BedDouble;
+    case "suites":
+      return KeyRound;
+    case "bathrooms":
+      return Bath;
+    case "parking":
+      return CarFront;
+    case "area":
+      return Ruler;
+  }
 }
 
 function buildSlides(
@@ -76,7 +144,7 @@ function buildSlides(
   cta: string,
 ): Slide[] {
   const images = property.images ?? (property.image ? [property.image] : []);
-  const facts = propertyFacts(property);
+  const structuredFacts = propertyStructuredFacts(property);
   const highlights = property.highlights.filter(Boolean);
   const location = [property.location, property.city].filter(Boolean).join(" · ");
   const price = priceText(property);
@@ -91,8 +159,9 @@ function buildSlides(
       },
       {
         kind: "facts",
-        title: "Por que vale conhecer",
-        items: [...highlights, ...facts].slice(0, 4),
+        title: "Informações principais",
+        items: [],
+        structuredItems: structuredFacts.slice(0, 6),
       },
       {
         kind: "photo",
@@ -124,7 +193,8 @@ function buildSlides(
       {
         kind: "facts",
         title: "Características",
-        items: facts.slice(0, 4),
+        items: [],
+        structuredItems: structuredFacts.slice(0, 6),
       },
       {
         kind: "photo",
@@ -192,6 +262,55 @@ function visualTreatment(templateId: CampaignTemplateId) {
   return "clean";
 }
 
+function factSlideImageHeight(slide: Extract<Slide, { kind: "facts" }>) {
+  const count = slide.structuredItems?.length ?? slide.items.length;
+
+  if (count <= 3) {
+    return {
+      imageClass: "h-[66%]",
+      panelClass: "top-[62%]",
+    };
+  }
+
+  return {
+    imageClass: "h-[57%]",
+    panelClass: "top-[54%]",
+  };
+}
+
+function StructuredFactsGrid({
+  items,
+  accent,
+}: {
+  items: StructuredFact[];
+  accent: string;
+}) {
+  return (
+    <div className="mt-4 grid grid-cols-3 gap-2">
+      {items.slice(0, 6).map((item) => {
+        const Icon = structuredFactIcon(item.kind);
+
+        return (
+          <div
+            key={item.kind}
+            className="flex min-h-14 items-center gap-2 rounded-xl bg-[#F2F4F7] px-2.5 py-2"
+          >
+            <span
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white"
+              style={{ color: accent }}
+            >
+              <Icon size={15} strokeWidth={2} />
+            </span>
+            <span className="min-w-0 text-[12px] font-extrabold leading-4 text-[#475467]">
+              {item.label}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function SlideArtwork({
   slide,
   brand,
@@ -210,6 +329,8 @@ function SlideArtwork({
   const treatment = visualTreatment(templateId);
   const accent = treatment === "opportunity" ? "#F79009" : brandColor;
   const accentText = contrastText(accent);
+  const factsLayout =
+    slide.kind === "facts" ? factSlideImageHeight(slide) : null;
 
   return (
     <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#EAECF0]">
@@ -258,10 +379,12 @@ function SlideArtwork({
               <img
                 src={slide.image}
                 alt=""
-                className="absolute inset-x-0 top-0 h-[55%] w-full object-cover"
+                className={`absolute inset-x-0 top-0 w-full object-cover ${factsLayout?.imageClass}`}
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-x-0 bottom-0 top-[52%] rounded-t-3xl bg-white p-5">
+              <div
+                className={`absolute inset-x-0 bottom-0 rounded-t-3xl bg-white p-5 ${factsLayout?.panelClass}`}
+              >
                 <div
                   className="mb-3 h-1.5 w-12 rounded-full"
                   style={{ backgroundColor: accent }}
@@ -269,21 +392,28 @@ function SlideArtwork({
                 <div className="text-2xl font-black leading-tight text-[#18202A]">
                   {slide.title}
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  {(slide.items.length > 0
-                    ? slide.items
-                    : ["Consulte os detalhes deste imóvel."]
-                  ).map((item) => (
-                    <div
-                      key={item}
-                      className={`rounded-xl bg-[#F2F4F7] px-3 py-2 text-sm font-bold leading-5 text-[#475467] ${
-                        item.length > 24 ? "col-span-2" : ""
-                      }`}
-                    >
-                      {item}
-                    </div>
-                  ))}
-                </div>
+                {slide.structuredItems?.length ? (
+                  <StructuredFactsGrid
+                    items={slide.structuredItems}
+                    accent={accent}
+                  />
+                ) : (
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    {(slide.items.length > 0
+                      ? slide.items
+                      : ["Consulte os detalhes deste imóvel."]
+                    ).map((item) => (
+                      <div
+                        key={item}
+                        className={`rounded-xl bg-[#F2F4F7] px-3 py-2 text-sm font-bold leading-5 text-[#475467] ${
+                          item.length > 24 ? "col-span-2" : ""
+                        }`}
+                      >
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           ) : (
@@ -295,19 +425,26 @@ function SlideArtwork({
               <div className="text-2xl font-black leading-tight text-[#18202A]">
                 {slide.title}
               </div>
-              <div className="mt-4 space-y-2">
-                {(slide.items.length > 0
-                  ? slide.items
-                  : ["Consulte os detalhes deste imóvel."]
-                ).map((item) => (
-                  <div
-                    key={item}
-                    className="rounded-xl bg-[#F2F4F7] px-3 py-2 text-sm font-bold text-[#475467]"
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
+              {slide.structuredItems?.length ? (
+                <StructuredFactsGrid
+                  items={slide.structuredItems}
+                  accent={accent}
+                />
+              ) : (
+                <div className="mt-4 space-y-2">
+                  {(slide.items.length > 0
+                    ? slide.items
+                    : ["Consulte os detalhes deste imóvel."]
+                  ).map((item) => (
+                    <div
+                      key={item}
+                      className="rounded-xl bg-[#F2F4F7] px-3 py-2 text-sm font-bold text-[#475467]"
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </>
