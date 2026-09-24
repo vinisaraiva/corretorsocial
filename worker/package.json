@@ -1,0 +1,21 @@
+{
+  "name": "corretor-social-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.1",
+    "tsx": "^4.20.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=22 <25"
+  }
+}
