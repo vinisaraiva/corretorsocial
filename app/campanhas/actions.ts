@@ -347,6 +347,33 @@ export async function deleteCampaign(campaignId: string) {
     );
   }
 
+  const { data: renderedVariants } = await supabase
+    .from("campaign_variants")
+    .select("rendered_asset_path,render_metadata")
+    .eq("campaign_id", campaign.id);
+
+  const renderedPaths = Array.from(
+    new Set(
+      (renderedVariants ?? []).flatMap((variant) => {
+        const metadata =
+          variant.render_metadata &&
+          typeof variant.render_metadata === "object" &&
+          !Array.isArray(variant.render_metadata)
+            ? (variant.render_metadata as Record<string, unknown>)
+            : null;
+
+        const paths = Array.isArray(metadata?.rendered_asset_paths)
+          ? metadata.rendered_asset_paths.filter(
+              (path): path is string => typeof path === "string",
+            )
+          : [];
+
+        if (variant.rendered_asset_path) paths.push(variant.rendered_asset_path);
+        return paths;
+      }),
+    ),
+  ).filter((path) => path.startsWith(`${user.id}/`));
+
   const { error } = await supabase
     .from("campaigns")
     .delete()
@@ -355,6 +382,19 @@ export async function deleteCampaign(campaignId: string) {
 
   if (error) {
     throw new Error("Não foi possível excluir a campanha.");
+  }
+
+  if (renderedPaths.length > 0) {
+    const { error: assetError } = await supabase.storage
+      .from("campaign-assets")
+      .remove(renderedPaths);
+
+    if (assetError) {
+      console.error(
+        "Campaign deleted but rendered assets could not be removed",
+        assetError,
+      );
+    }
   }
 
   revalidatePath("/campanhas");
