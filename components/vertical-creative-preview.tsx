@@ -304,6 +304,7 @@ export function VerticalCreativePreview({
         />
         {safeZone.rightPercent > 0 && (
           <div
+            data-render-ignore="true"
             className="pointer-events-none absolute right-0 top-0 bottom-0 border-l border-dashed border-white/20"
             style={{ width: `${safeZone.rightPercent}%` }}
           />
