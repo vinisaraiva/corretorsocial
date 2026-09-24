@@ -16,7 +16,13 @@ export type CampaignDraftInput = {
     tiktok: string;
     google: string;
   };
-  instagramStory?: {
+  instagramStory: {
+    templateId: string;
+    headline: string;
+    subheadline: string;
+    cta: string;
+  };
+  tiktokVertical: {
     templateId: string;
     headline: string;
     subheadline: string;
@@ -27,7 +33,6 @@ export type CampaignDraftInput = {
 const variants = [
   { key: "instagram", provider: "instagram", format: "feed_4x5" },
   { key: "facebook", provider: "facebook", format: "feed" },
-  { key: "tiktok", provider: "tiktok", format: "vertical_video" },
   { key: "google", provider: "google_business", format: "post" },
 ] as const;
 
@@ -135,21 +140,33 @@ async function persistCampaign(input: CampaignDraftInput) {
     },
   }));
 
-  if (input.instagramStory) {
-    variantRows.push({
-      campaign_id: campaignId!,
-      provider: "instagram",
-      format: "story_9x16",
-      headline: input.instagramStory.headline.trim() || null,
-      caption: input.captions.instagram.trim() || null,
-      cta: input.instagramStory.cta.trim() || null,
-      render_metadata: {
-        visual_style: input.instagramStory.templateId,
-        source: "deterministic_story_v0_1",
-        subheadline: input.instagramStory.subheadline.trim(),
-      },
-    });
-  }
+  variantRows.push({
+    campaign_id: campaignId!,
+    provider: "instagram",
+    format: "story_9x16",
+    headline: input.instagramStory.headline.trim() || null,
+    caption: input.captions.instagram.trim() || null,
+    cta: input.instagramStory.cta.trim() || null,
+    render_metadata: {
+      visual_style: input.instagramStory.templateId,
+      source: "deterministic_vertical_v0_1",
+      subheadline: input.instagramStory.subheadline.trim(),
+    },
+  });
+
+  variantRows.push({
+    campaign_id: campaignId!,
+    provider: "tiktok",
+    format: "vertical_video",
+    headline: input.tiktokVertical.headline.trim() || null,
+    caption: input.captions.tiktok.trim() || null,
+    cta: input.tiktokVertical.cta.trim() || null,
+    render_metadata: {
+      visual_style: input.tiktokVertical.templateId,
+      source: "deterministic_vertical_v0_1",
+      subheadline: input.tiktokVertical.subheadline.trim(),
+    },
+  });
 
   const { error: variantsError } = await supabase
     .from("campaign_variants")
