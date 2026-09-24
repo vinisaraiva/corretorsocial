@@ -38,7 +38,7 @@ export default async function NewCampaignPage({
     notFound();
   }
 
-  const [mediaResult, campaignsResult] = await Promise.all([
+  const [mediaResult, campaignsResult, profileResult] = await Promise.all([
     supabase
       .from("property_media")
       .select("property_id,original_url,storage_path,is_cover,sort_order")
@@ -47,6 +47,11 @@ export default async function NewCampaignPage({
       .from("campaigns")
       .select("property_id,published_at")
       .eq("property_id", row.id),
+    supabase
+      .from("profiles")
+      .select("professional_name,logo_path,primary_color")
+      .eq("user_id", user.id)
+      .maybeSingle(),
   ]);
 
   const media = await resolvePrivateMedia(
@@ -60,12 +65,29 @@ export default async function NewCampaignPage({
     campaignsResult.data ?? [],
   );
 
+  let logoUrl: string | null = null;
+
+  if (profileResult.data?.logo_path) {
+    const { data } = await supabase.storage
+      .from("profile-assets")
+      .createSignedUrl(profileResult.data.logo_path, 60 * 60);
+
+    logoUrl = data?.signedUrl ?? null;
+  }
+
+  const brand = {
+    professionalName:
+      profileResult.data?.professional_name ?? "Corretor Social",
+    logoUrl,
+    primaryColor: profileResult.data?.primary_color ?? "#176B5B",
+  };
+
   return (
     <AppShell
       title="Nova campanha"
       description="Revise a versão recomendada antes de publicar."
     >
-      <CampaignBuilder propertyData={property} />
+      <CampaignBuilder propertyData={property} brand={brand} />
     </AppShell>
   );
 }
