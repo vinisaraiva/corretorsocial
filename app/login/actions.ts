@@ -3,8 +3,12 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-function messageUrl(type: "error" | "success", message: string) {
+function loginMessageUrl(type: "error" | "success", message: string) {
   return `/login?${type}=${encodeURIComponent(message)}`;
+}
+
+function signupMessageUrl(type: "error" | "success", message: string) {
+  return `/cadastro?${type}=${encodeURIComponent(message)}`;
 }
 
 export async function login(formData: FormData) {
@@ -13,7 +17,10 @@ export async function login(formData: FormData) {
     !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
   ) {
     redirect(
-      messageUrl("error", "Supabase ainda não foi configurado na hospedagem."),
+      loginMessageUrl(
+        "error",
+        "Supabase ainda não foi configurado na hospedagem.",
+      ),
     );
   }
 
@@ -22,16 +29,19 @@ export async function login(formData: FormData) {
   const next = String(formData.get("next") ?? "/").trim() || "/";
 
   if (!email || !password) {
-    redirect(messageUrl("error", "Informe e-mail e senha."));
+    redirect(loginMessageUrl("error", "Informe e-mail e senha."));
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    redirect(
-      messageUrl("error", "Não foi possível entrar. Confira seus dados."),
-    );
+    const message =
+      error.code === "email_not_confirmed"
+        ? "Seu cadastro já existe, mas o e-mail ainda não foi confirmado. Abra a mensagem enviada pelo Corretor Social e confirme antes de entrar."
+        : "Não foi possível entrar. Confira seu e-mail e sua senha.";
+
+    redirect(loginMessageUrl("error", message));
   }
 
   redirect(next.startsWith("/") ? next : "/");
@@ -43,20 +53,34 @@ export async function signup(formData: FormData) {
     !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
   ) {
     redirect(
-      messageUrl("error", "Supabase ainda não foi configurado na hospedagem."),
+      signupMessageUrl(
+        "error",
+        "Supabase ainda não foi configurado na hospedagem.",
+      ),
     );
   }
 
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const passwordConfirmation = String(
+    formData.get("password_confirmation") ?? "",
+  );
 
-  if (!email || password.length < 8) {
+  if (!email) {
+    redirect(signupMessageUrl("error", "Informe um e-mail válido."));
+  }
+
+  if (password.length < 8) {
     redirect(
-      messageUrl(
+      signupMessageUrl(
         "error",
-        "Informe um e-mail válido e uma senha com pelo menos 8 caracteres.",
+        "A senha precisa ter pelo menos 8 caracteres.",
       ),
     );
+  }
+
+  if (password !== passwordConfirmation) {
+    redirect(signupMessageUrl("error", "As duas senhas precisam ser iguais."));
   }
 
   const appUrl =
@@ -73,7 +97,12 @@ export async function signup(formData: FormData) {
   });
 
   if (error) {
-    redirect(messageUrl("error", "Não foi possível criar a conta."));
+    const message =
+      error.code === "over_email_send_rate_limit"
+        ? "A confirmação já foi solicitada há poucos segundos. Aguarde cerca de 1 minuto antes de tentar novamente."
+        : "Não foi possível criar a conta. Tente novamente.";
+
+    redirect(signupMessageUrl("error", message));
   }
 
   if (data.session) {
@@ -81,9 +110,51 @@ export async function signup(formData: FormData) {
   }
 
   redirect(
-    messageUrl(
+    signupMessageUrl(
       "success",
-      "Conta criada. Verifique seu e-mail para confirmar o cadastro.",
+      "Conta criada. Enviamos um e-mail de confirmação. Abra a mensagem e confirme seu cadastro antes de entrar.",
+    ),
+  );
+}
+
+export async function resendConfirmation(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim();
+
+  if (!email) {
+    redirect(
+      signupMessageUrl(
+        "error",
+        "Informe o e-mail da conta para reenviar a confirmação.",
+      ),
+    );
+  }
+
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    "https://greenyellow-duck-334187.hostingersite.com";
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: {
+      emailRedirectTo: `${appUrl}/auth/confirm?next=/onboarding`,
+    },
+  });
+
+  if (error) {
+    const message =
+      error.code === "over_email_send_rate_limit"
+        ? "Aguarde cerca de 1 minuto antes de pedir outro e-mail."
+        : "Não foi possível reenviar a confirmação.";
+
+    redirect(signupMessageUrl("error", message));
+  }
+
+  redirect(
+    signupMessageUrl(
+      "success",
+      "Novo e-mail de confirmação enviado. Verifique também a caixa de spam.",
     ),
   );
 }
