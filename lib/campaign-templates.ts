@@ -71,6 +71,7 @@ export const campaignTemplates = [
     showsPrice: true,
     showsFeatures: false,
     showsCtaOnArt: true,
+    supportsBlockPosition: true,
   },
 ] as const;
 
