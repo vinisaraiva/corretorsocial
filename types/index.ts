@@ -32,6 +32,7 @@ export interface Property {
   description: string;
   highlights: string[];
   image?: string;
+  images?: string[];
   status: PropertyStatus;
   campaigns: number;
   lastPublished?: string;
