@@ -16,6 +16,7 @@ import {
   type PropertyDraftInput,
 } from "@/app/imoveis/novo/actions";
 import {
+  enableAutomaticPropertyCover,
   removePropertyMedia,
   reorderPropertyMedia,
   setPropertyCover,
@@ -154,6 +155,27 @@ export function EditPropertyForm({
         caught instanceof Error
           ? caught.message
           : "Não foi possível adicionar as fotos.",
+      );
+    } finally {
+      setGalleryWorking(null);
+    }
+  }
+
+  async function enableAutomaticCover() {
+    setGalleryWorking("automatic-cover");
+    setError("");
+    setMessage("");
+
+    try {
+      await enableAutomaticPropertyCover(propertyId);
+      setCoverManuallySelected(false);
+      setMessage("Seleção automática de capa reativada para novas campanhas.");
+      router.refresh();
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Não foi possível reativar a seleção automática.",
       );
     } finally {
       setGalleryWorking(null);
@@ -325,13 +347,25 @@ export function EditPropertyForm({
             </p>
           </div>
 
-          <label
-            className={`app-button-secondary inline-flex cursor-pointer items-center gap-2 text-sm ${
-              media.length >= 20 || galleryWorking === "upload"
-                ? "pointer-events-none opacity-50"
-                : ""
-            }`}
-          >
+          <div className="flex flex-wrap items-center gap-2">
+            {coverManuallySelected && (
+              <button
+                type="button"
+                disabled={galleryWorking !== null}
+                onClick={() => void enableAutomaticCover()}
+                className="app-button-secondary text-sm"
+              >
+                Voltar para automático
+              </button>
+            )}
+
+            <label
+              className={`app-button-secondary inline-flex cursor-pointer items-center gap-2 text-sm ${
+                media.length >= 20 || galleryWorking === "upload"
+                  ? "pointer-events-none opacity-50"
+                  : ""
+              }`}
+            >
             {galleryWorking === "upload" ? (
               <LoaderCircle size={17} className="animate-spin" />
             ) : (
