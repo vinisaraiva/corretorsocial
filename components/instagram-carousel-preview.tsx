@@ -207,6 +207,7 @@ function SlideArtwork({
   const brandText = contrastText(brandColor);
   const treatment = visualTreatment(templateId);
   const accent = treatment === "opportunity" ? "#F79009" : brandColor;
+  const accentText = contrastText(accent);
 
   return (
     <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#EAECF0]">
@@ -239,7 +240,7 @@ function SlideArtwork({
               className="mt-4 inline-flex rounded-full px-3 py-1.5 text-xs font-black"
               style={{
                 backgroundColor: treatment === "clean" ? "#FFFFFF" : accent,
-                color: treatment === "clean" ? "#18202A" : brandText,
+                color: treatment === "clean" ? "#18202A" : accentText,
               }}
             >
               {slide.subtitle}
@@ -297,7 +298,7 @@ function SlideArtwork({
       {slide.kind === "cta" && (
         <div
           className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center"
-          style={{ backgroundColor: accent, color: brandText }}
+          style={{ backgroundColor: accent, color: accentText }}
         >
           {brand.logoUrl ? (
             <img
