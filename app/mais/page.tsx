@@ -5,8 +5,10 @@ import {
   ChevronRight,
   Settings,
   UserRoundCog,
+  LogOut,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { signout } from "@/app/login/actions";
 
 const links = [
   {
@@ -60,6 +62,18 @@ export default function MorePage() {
             <ChevronRight size={18} className="shrink-0 text-[#98A2B3]" />
           </Link>
         ))}
+
+        <form action={signout} className="sm:col-span-2">
+          <button
+            type="submit"
+            className="app-card flex min-h-16 w-full items-center gap-4 p-4 text-left text-[#B42318]"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FEF3F2]">
+              <LogOut size={20} />
+            </span>
+            <span className="font-extrabold">Sair da conta</span>
+          </button>
+        </form>
       </div>
     </AppShell>
   );
