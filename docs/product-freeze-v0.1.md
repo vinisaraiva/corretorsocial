@@ -87,6 +87,10 @@ Perfil, contato, marca, área de atuação, redes e preferências.
 
 Especificação detalhada em `docs/creative-templates-v0.1.md`.
 
+Os seis estilos são suficientes para o MVP e ficam congelados nesta fase. Não adicionar modelos apenas para aumentar variedade. Novos estilos exigem uma necessidade visual não coberta ou evidência de uso real.
+
+Recomendação automática: `docs/creative-intelligence-v0.1.md`.
+
 ## Instagram — roadmap de formatos
 
 ### Feed 4:5
