@@ -1,6 +1,21 @@
-export type PropertyStatus = "ativo" | "arquivado";
-export type CampaignStatus = "rascunho" | "agendada" | "publicada" | "erro";
-export type SocialChannel = "instagram" | "facebook" | "tiktok" | "google";
+export type PropertyStatus =
+  | "ativo"
+  | "pausado"
+  | "vendido"
+  | "alugado"
+  | "arquivado";
+
+export type CampaignStatus =
+  | "rascunho"
+  | "agendada"
+  | "publicada"
+  | "erro";
+
+export type SocialChannel =
+  | "instagram"
+  | "facebook"
+  | "tiktok"
+  | "google";
 
 export interface Property {
   id: string;
@@ -16,7 +31,7 @@ export interface Property {
   area: number;
   description: string;
   highlights: string[];
-  image: string;
+  image?: string;
   status: PropertyStatus;
   campaigns: number;
   lastPublished?: string;
