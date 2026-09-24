@@ -10,8 +10,10 @@ import {
   Megaphone,
   Plus,
   Settings,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { signout } from "@/app/login/actions";
 
 const items = [
   { href: "/", label: "Início", icon: Home },
@@ -64,10 +66,22 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="mt-auto rounded-xl border border-[#E4E7EC] bg-[#F9FAFB] p-3">
-        <div className="text-xs font-semibold text-[#667085]">Plano atual</div>
-        <div className="mt-1 text-sm font-bold">Corretor</div>
-        <div className="mt-1 text-sm text-[#176B5B]">R$ 89,90/mês</div>
+      <div className="mt-auto space-y-2">
+        <div className="rounded-xl border border-[#E4E7EC] bg-[#F9FAFB] p-3">
+          <div className="text-xs font-semibold text-[#667085]">Plano atual</div>
+          <div className="mt-1 text-sm font-bold">Corretor</div>
+          <div className="mt-1 text-sm text-[#176B5B]">R$ 89,90/mês</div>
+        </div>
+
+        <form action={signout}>
+          <button
+            type="submit"
+            className="flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 text-sm font-semibold text-[#667085] transition hover:bg-[#F7F8FA] hover:text-[#B42318]"
+          >
+            <LogOut size={18} />
+            Sair
+          </button>
+        </form>
       </div>
     </aside>
   );
