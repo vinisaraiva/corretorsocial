@@ -1,113 +1,261 @@
-"use client";
+import { Save } from "lucide-react";
+import { saveSettings } from "@/app/configuracoes/actions";
 
-import { useState } from "react";
-import { Check, Save } from "lucide-react";
+type ProfileSettings = {
+  professional_name: string | null;
+  agency_name: string | null;
+  creci: string | null;
+  email: string | null;
+  whatsapp: string | null;
+  phone: string | null;
+  website: string | null;
+  city: string | null;
+  service_regions: string[];
+  primary_color: string;
+  secondary_color: string;
+  communication_tone: string;
+  default_cta: string;
+  review_before_publish: boolean;
+};
 
-export function SettingsForm() {
-  const [saved, setSaved] = useState(false);
-  const [review, setReview] = useState(true);
+type Connection = {
+  provider: "instagram" | "facebook" | "tiktok" | "google_business";
+  status: string;
+};
+
+const networkLabels = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+  tiktok: "TikTok",
+  google_business: "Google Business",
+} as const;
+
+export function SettingsForm({
+  profile,
+  connections,
+}: {
+  profile: ProfileSettings;
+  connections: Connection[];
+}) {
+  const statusByProvider = new Map(
+    connections.map((connection) => [connection.provider, connection.status]),
+  );
 
   return (
-    <div className="space-y-5">
-      {saved && (
-        <div className="flex items-center gap-2 rounded-xl bg-[#ECFDF3] p-4 text-sm font-bold text-[#067647]">
-          <Check size={18} />
-          Configurações salvas nesta demonstração.
-        </div>
-      )}
-
-      <Section title="Perfil profissional" description="Como você aparece nos criativos e publicações.">
+    <form action={saveSettings} className="space-y-5">
+      <Section
+        title="Perfil profissional"
+        description="Como você aparece nos criativos e publicações."
+      >
         <Grid>
-          <Field label="Nome profissional" defaultValue="João Silva" />
-          <Field label="CRECI" defaultValue="CRECI 12345-BA" />
-          <Field label="Imobiliária (opcional)" placeholder="Nome da imobiliária" />
-          <Field label="E-mail" defaultValue="joao@exemplo.com.br" />
+          <Field
+            name="professional_name"
+            label="Nome profissional"
+            defaultValue={profile.professional_name ?? ""}
+            placeholder="João Silva"
+          />
+          <Field
+            name="creci"
+            label="CRECI"
+            defaultValue={profile.creci ?? ""}
+            placeholder="CRECI 12345-BA"
+          />
+          <Field
+            name="agency_name"
+            label="Imobiliária (opcional)"
+            defaultValue={profile.agency_name ?? ""}
+            placeholder="Nome da imobiliária"
+          />
+          <label className="text-sm font-bold">
+            E-mail
+            <input
+              value={profile.email ?? ""}
+              readOnly
+              className="app-input mt-2 bg-[#F9FAFB] text-[#667085]"
+            />
+          </label>
         </Grid>
       </Section>
 
-      <Section title="Contato" description="O WhatsApp será o principal destino dos interessados.">
+      <Section
+        title="Contato"
+        description="O WhatsApp será o principal destino dos interessados."
+      >
         <Grid>
-          <Field label="WhatsApp" defaultValue="(73) 99999-9999" />
-          <Field label="Telefone" defaultValue="(73) 99999-9999" />
-          <Field label="Site" defaultValue="meusite.com.br" />
-          <Field label="Endereço (opcional)" placeholder="Seu escritório" />
+          <Field
+            name="whatsapp"
+            label="WhatsApp"
+            defaultValue={profile.whatsapp ?? ""}
+            placeholder="(73) 99999-9999"
+          />
+          <Field
+            name="phone"
+            label="Telefone"
+            defaultValue={profile.phone ?? ""}
+            placeholder="(73) 99999-9999"
+          />
+          <Field
+            name="website"
+            label="Site"
+            defaultValue={profile.website ?? ""}
+            placeholder="seusite.com.br"
+          />
+          <Field
+            name="city"
+            label="Cidade principal"
+            defaultValue={profile.city ?? ""}
+            placeholder="Porto Seguro - BA"
+          />
         </Grid>
+
+        <label className="mt-4 block text-sm font-bold">
+          Bairros ou regiões atendidas
+          <input
+            name="service_regions"
+            className="app-input mt-2"
+            defaultValue={profile.service_regions.join(", ")}
+            placeholder="Taperapuã, Centro, Arraial d'Ajuda"
+          />
+        </label>
       </Section>
 
-      <Section title="Marca" description="Aplicada automaticamente aos seus criativos.">
+      <Section
+        title="Marca"
+        description="Aplicada automaticamente aos seus criativos."
+      >
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="text-sm font-bold">
             Cor principal
             <div className="mt-2 flex h-12 items-center gap-3 rounded-lg border border-[#E4E7EC] px-3">
-              <input type="color" defaultValue="#176B5B" className="h-8 w-10 border-0 bg-transparent" />
-              <span>#176B5B</span>
+              <input
+                name="primary_color"
+                type="color"
+                defaultValue={profile.primary_color}
+                className="h-8 w-10 border-0 bg-transparent"
+              />
+              <span className="text-sm text-[#667085]">
+                {profile.primary_color.toUpperCase()}
+              </span>
             </div>
           </label>
+
           <label className="text-sm font-bold">
             Cor secundária
             <div className="mt-2 flex h-12 items-center gap-3 rounded-lg border border-[#E4E7EC] px-3">
-              <input type="color" defaultValue="#18202A" className="h-8 w-10 border-0 bg-transparent" />
-              <span>#18202A</span>
+              <input
+                name="secondary_color"
+                type="color"
+                defaultValue={profile.secondary_color}
+                className="h-8 w-10 border-0 bg-transparent"
+              />
+              <span className="text-sm text-[#667085]">
+                {profile.secondary_color.toUpperCase()}
+              </span>
             </div>
           </label>
         </div>
-      </Section>
 
-      <Section title="Redes conectadas" description="Você poderá reconectar uma rede se a autorização expirar.">
-        <div className="grid gap-3 sm:grid-cols-2">
-          {["Instagram", "Facebook", "TikTok", "Google Business"].map((network) => (
-            <div key={network} className="flex min-h-14 items-center justify-between rounded-xl border border-[#E4E7EC] px-4">
-              <strong>{network}</strong>
-              <span className="text-sm font-bold text-[#067647]">Conectado</span>
-            </div>
-          ))}
+        <div className="mt-4 rounded-xl border border-dashed border-[#D0D5DD] bg-[#F9FAFB] p-4 text-sm text-[#667085]">
+          Upload de logo será conectado ao Supabase Storage na próxima etapa.
         </div>
       </Section>
 
-      <Section title="Preferências" description="Você pode manter tudo no automático e alterar apenas quando quiser.">
-        <div className="flex min-h-16 items-center justify-between gap-5 rounded-xl border border-[#E4E7EC] p-4">
+      <Section
+        title="Redes sociais"
+        description="Só mostramos uma rede como conectada depois da autorização real."
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
+          {(Object.keys(networkLabels) as Array<keyof typeof networkLabels>).map(
+            (provider) => {
+              const status = statusByProvider.get(provider);
+              const connected = status === "connected";
+
+              return (
+                <div
+                  key={provider}
+                  className="flex min-h-14 items-center justify-between rounded-xl border border-[#E4E7EC] px-4"
+                >
+                  <strong>{networkLabels[provider]}</strong>
+                  <span
+                    className={
+                      connected
+                        ? "text-sm font-bold text-[#067647]"
+                        : "text-sm font-bold text-[#667085]"
+                    }
+                  >
+                    {connected ? "Conectado" : "A conectar"}
+                  </span>
+                </div>
+              );
+            },
+          )}
+        </div>
+      </Section>
+
+      <Section
+        title="Preferências"
+        description="Você pode manter tudo no automático e alterar apenas quando quiser."
+      >
+        <label className="flex min-h-16 items-center justify-between gap-5 rounded-xl border border-[#E4E7EC] p-4">
           <div>
             <div className="font-bold">Revisar antes de publicar</div>
-            <div className="mt-1 text-sm text-[#667085]">Recomendado enquanto você conhece a plataforma.</div>
+            <div className="mt-1 text-sm text-[#667085]">
+              Recomendado enquanto você conhece a plataforma.
+            </div>
           </div>
-          <button
-            type="button"
-            aria-pressed={review}
-            onClick={() => setReview((value) => !value)}
-            className={`h-7 w-12 rounded-full p-1 transition ${
-              review ? "bg-[#176B5B]" : "bg-[#D0D5DD]"
-            }`}
-          >
-            <span className={`block h-5 w-5 rounded-full bg-white transition ${
-              review ? "translate-x-5" : "translate-x-0"
-            }`} />
-          </button>
-        </div>
+          <input
+            type="checkbox"
+            name="review_before_publish"
+            defaultChecked={profile.review_before_publish}
+            className="h-5 w-5 accent-[#176B5B]"
+          />
+        </label>
+
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Field label="CTA padrão" defaultValue="Fale comigo no WhatsApp" />
+          <Field
+            name="default_cta"
+            label="CTA padrão"
+            defaultValue={profile.default_cta}
+          />
+
           <label className="text-sm font-bold">
             Tom de comunicação
-            <select className="app-input mt-2">
-              <option>Profissional</option>
-              <option>Amigável</option>
-              <option>Sofisticado</option>
-              <option>Direto</option>
+            <select
+              name="communication_tone"
+              className="app-input mt-2"
+              defaultValue={profile.communication_tone}
+            >
+              <option value="professional">Profissional</option>
+              <option value="friendly">Amigável</option>
+              <option value="sophisticated">Sofisticado</option>
+              <option value="direct">Direto</option>
             </select>
           </label>
         </div>
       </Section>
 
       <div className="flex justify-end">
-        <button onClick={() => setSaved(true)} className="app-button-primary inline-flex items-center gap-2">
+        <button
+          type="submit"
+          className="app-button-primary inline-flex items-center gap-2"
+        >
           <Save size={18} />
           Salvar configurações
         </button>
       </div>
-    </div>
+    </form>
   );
 }
 
-function Section({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+function Section({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="app-card p-5 sm:p-6">
       <h2 className="text-lg font-extrabold">{title}</h2>
@@ -116,14 +264,31 @@ function Section({ title, description, children }: { title: string; description:
     </section>
   );
 }
+
 function Grid({ children }: { children: React.ReactNode }) {
   return <div className="grid gap-4 sm:grid-cols-2">{children}</div>;
 }
-function Field({ label, defaultValue, placeholder }: { label: string; defaultValue?: string; placeholder?: string }) {
+
+function Field({
+  name,
+  label,
+  defaultValue,
+  placeholder,
+}: {
+  name: string;
+  label: string;
+  defaultValue?: string;
+  placeholder?: string;
+}) {
   return (
     <label className="text-sm font-bold">
       {label}
-      <input className="app-input mt-2" defaultValue={defaultValue} placeholder={placeholder} />
+      <input
+        name={name}
+        className="app-input mt-2"
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+      />
     </label>
   );
 }
