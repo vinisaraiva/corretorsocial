@@ -9,12 +9,12 @@ const networks = ["Instagram", "Facebook", "TikTok", "Google Business"];
 export function OnboardingFlow({ reviewMode = false }: { reviewMode?: boolean }) {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [connected, setConnected] = useState<string[]>(["Instagram", "Facebook"]);
+  const [connected, setConnected] = useState<string[]>(reviewMode ? networks : []);
   const [form, setForm] = useState({
-    name: "",
-    creci: "",
-    whatsapp: "",
-    site: "",
+    name: reviewMode ? "João Silva" : "",
+    creci: reviewMode ? "CRECI 12345-BA" : "",
+    whatsapp: reviewMode ? "(73) 99999-9999" : "",
+    site: reviewMode ? "meusite.com.br" : "",
     city: "Porto Seguro - BA",
     color: "#176B5B",
   });
