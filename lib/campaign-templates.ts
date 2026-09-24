@@ -1,3 +1,5 @@
+export const DEFAULT_CAMPAIGN_TEMPLATE_ID = "clean-base" as const;
+
 export const campaignTemplates = [
   {
     id: "clean-base",
@@ -9,6 +11,7 @@ export const campaignTemplates = [
     showsPrice: true,
     showsFeatures: false,
     showsCtaOnArt: false,
+    supportsBlockPosition: true,
   },
   {
     id: "clean-top",
@@ -20,6 +23,7 @@ export const campaignTemplates = [
     showsPrice: true,
     showsFeatures: false,
     showsCtaOnArt: false,
+    supportsBlockPosition: true,
   },
   {
     id: "commercial",
@@ -31,6 +35,7 @@ export const campaignTemplates = [
     showsPrice: true,
     showsFeatures: true,
     showsCtaOnArt: false,
+    supportsBlockPosition: true,
   },
   {
     id: "opportunity",
@@ -42,6 +47,7 @@ export const campaignTemplates = [
     showsPrice: true,
     showsFeatures: true,
     showsCtaOnArt: false,
+    supportsBlockPosition: false,
   },
   {
     id: "info-card",
@@ -53,6 +59,7 @@ export const campaignTemplates = [
     showsPrice: true,
     showsFeatures: true,
     showsCtaOnArt: true,
+    supportsBlockPosition: true,
   },
   {
     id: "brand-frame",
@@ -79,12 +86,12 @@ const legacyTemplateMap: Record<string, CampaignTemplateId> = {
 export function normalizeCampaignTemplate(
   value?: string | null,
 ): CampaignTemplateId {
-  if (!value) return "clean-base";
+  if (!value) return DEFAULT_CAMPAIGN_TEMPLATE_ID;
 
   const direct = campaignTemplates.find((template) => template.id === value);
   if (direct) return direct.id;
 
-  return legacyTemplateMap[value] ?? "clean-base";
+  return legacyTemplateMap[value] ?? DEFAULT_CAMPAIGN_TEMPLATE_ID;
 }
 
 export function getCampaignTemplate(id: CampaignTemplateId) {
