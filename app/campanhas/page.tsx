@@ -22,7 +22,7 @@ export default function CampaignsPage() {
                   {campaign.whatsappClicks !== undefined && ` · ${campaign.whatsappClicks} cliques no WhatsApp`}
                 </p>
               </div>
-              <Link href={`/campanhas/${campaign.propertyId}`} className="app-button-secondary flex items-center justify-center text-sm">
+              <Link href={`/campanhas/${campaign.id}`} className="app-button-secondary flex items-center justify-center text-sm">
                 Ver campanha
               </Link>
             </div>
