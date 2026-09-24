@@ -12,11 +12,14 @@ export async function login(formData: FormData) {
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
   ) {
-    redirect(messageUrl("error", "Supabase ainda não foi configurado na hospedagem."));
+    redirect(
+      messageUrl("error", "Supabase ainda não foi configurado na hospedagem."),
+    );
   }
 
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const next = String(formData.get("next") ?? "/").trim() || "/";
 
   if (!email || !password) {
     redirect(messageUrl("error", "Informe e-mail e senha."));
@@ -26,10 +29,12 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    redirect(messageUrl("error", "Não foi possível entrar. Confira seus dados."));
+    redirect(
+      messageUrl("error", "Não foi possível entrar. Confira seus dados."),
+    );
   }
 
-  redirect("/");
+  redirect(next.startsWith("/") ? next : "/");
 }
 
 export async function signup(formData: FormData) {
@@ -37,7 +42,9 @@ export async function signup(formData: FormData) {
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
   ) {
-    redirect(messageUrl("error", "Supabase ainda não foi configurado na hospedagem."));
+    redirect(
+      messageUrl("error", "Supabase ainda não foi configurado na hospedagem."),
+    );
   }
 
   const email = String(formData.get("email") ?? "").trim();
@@ -52,8 +59,18 @@ export async function signup(formData: FormData) {
     );
   }
 
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    "https://greenyellow-duck-334187.hostingersite.com";
+
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: `${appUrl}/auth/confirm?next=/onboarding`,
+    },
+  });
 
   if (error) {
     redirect(messageUrl("error", "Não foi possível criar a conta."));
