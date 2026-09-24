@@ -255,11 +255,35 @@ export function CampaignBuilder({
     useState<(typeof stagingStyles)[number]>("Moderno");
   const [stagingGenerated, setStagingGenerated] = useState(false);
 
+  const feedProperty: Property = {
+    ...property,
+    image: recommendation.media.feedCover ?? property.image,
+  };
+  const storyProperty: Property = {
+    ...property,
+    image: recommendation.media.storyCover ?? property.image,
+  };
+  const tiktokProperty: Property = {
+    ...property,
+    image: recommendation.media.tiktokCover ?? property.image,
+  };
+  const carouselProperty: Property = {
+    ...property,
+    image: recommendation.media.carousel[0] ?? property.image,
+    images:
+      recommendation.media.carousel.length > 0
+        ? recommendation.media.carousel
+        : property.images,
+  };
+
   const selectedTemplate = getCampaignTemplate(templateId);
   const selectedStoryTemplate = getVerticalTemplate(storyTemplateId);
   const selectedTiktokTemplate = getVerticalTemplate(tiktokTemplateId);
   const selectedCarouselModel = getCarouselModel(carouselModelId);
-  const imageCount = property.images?.length ?? (property.image ? 1 : 0);
+  const imageCount =
+    recommendation.media.carousel.length ||
+    property.images?.length ||
+    (property.image ? 1 : 0);
   const carouselEligible = imageCount >= 3;
   const isStoryView =
     channel === "instagram" && instagramFormat === "story";
@@ -506,7 +530,7 @@ export function CampaignBuilder({
 
           {isStoryView ? (
             <VerticalCreativePreview
-              property={property}
+              property={storyProperty}
               brand={brand}
               platform="instagram_story"
               templateId={storyTemplateId}
@@ -517,7 +541,7 @@ export function CampaignBuilder({
             />
           ) : isCarouselView ? (
             <InstagramCarouselPreview
-              property={property}
+              property={carouselProperty}
               brand={brand}
               templateId={templateId}
               modelId={carouselModelId}
@@ -526,7 +550,7 @@ export function CampaignBuilder({
             />
           ) : isTiktokView ? (
             <VerticalCreativePreview
-              property={property}
+              property={tiktokProperty}
               brand={brand}
               platform="tiktok"
               templateId={tiktokTemplateId}
@@ -537,7 +561,7 @@ export function CampaignBuilder({
             />
           ) : (
             <CreativePreview
-              property={property}
+              property={feedProperty}
               brand={brand}
               templateId={templateId}
               headline={headline}
@@ -603,7 +627,7 @@ export function CampaignBuilder({
                       }`}
                     >
                       <TemplateThumbnail
-                        property={property}
+                        property={feedProperty}
                         brand={brand}
                         templateId={template.id}
                       />
