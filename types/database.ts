@@ -278,6 +278,7 @@ export type Database = {
           bedrooms: number | null
           city: string | null
           condo_fee: number | null
+          cover_manually_selected: boolean
           created_at: string
           description: string | null
           exact_location_private: boolean
@@ -308,6 +309,7 @@ export type Database = {
           bedrooms?: number | null
           city?: string | null
           condo_fee?: number | null
+          cover_manually_selected?: boolean
           created_at?: string
           description?: string | null
           exact_location_private?: boolean
@@ -338,6 +340,7 @@ export type Database = {
           bedrooms?: number | null
           city?: string | null
           condo_fee?: number | null
+          cover_manually_selected?: boolean
           created_at?: string
           description?: string | null
           exact_location_private?: boolean
