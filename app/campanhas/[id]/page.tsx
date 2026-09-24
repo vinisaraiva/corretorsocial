@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { CampaignBuilder } from "@/components/campaign-builder";
+import { CampaignActions } from "@/components/campaign-actions";
 import { createClient } from "@/lib/supabase/server";
 import { propertyToView, resolvePrivateMedia } from "@/lib/property-ui";
 import type { SocialChannel } from "@/types";
@@ -277,6 +278,12 @@ export default async function CampaignDetailPage({
     <AppShell
       title="Campanha"
       description="Edite, salve ou altere o agendamento."
+      action={
+        <CampaignActions
+          campaignId={campaign.id}
+          status={campaign.status}
+        />
+      }
     >
       <CampaignBuilder
         propertyData={property}
