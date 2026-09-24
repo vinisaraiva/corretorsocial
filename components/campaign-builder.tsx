@@ -48,6 +48,7 @@ import {
 } from "@/lib/carousel-templates";
 import { InstagramCarouselPreview } from "@/components/instagram-carousel-preview";
 import { InstagramCarouselControls } from "@/components/instagram-carousel-controls";
+import { buildCampaignRecommendation } from "@/lib/campaign-recommendation";
 import type { Property, SocialChannel } from "@/types";
 
 const allChannels: { id: SocialChannel; label: string }[] = [
@@ -141,19 +142,10 @@ export function CampaignBuilder({
   const property = propertyData;
   const brandColor = safeBrandColor(brand.primaryColor);
 
-  const generatedCaptions = useMemo(
-    () => ({
-      instagram: `${property.title}: ${property.description || "Conheça este imóvel."} Fale comigo para saber mais.`,
-      facebook: `${property.title}, ${property.location}. ${property.description || "Entre em contato para conhecer os detalhes."}`,
-      tiktok: `Você moraria aqui? Conheça ${property.title.toLowerCase()} em ${property.location}.`,
-      google: `${property.title} em ${property.location}${property.city ? `, ${property.city}` : ""}. ${property.bedrooms ? `${property.bedrooms} quartos` : "Veja os detalhes"}${property.area ? ` e ${property.area} m²` : ""}.`,
-    }),
+  const recommendation = useMemo(
+    () => buildCampaignRecommendation(property),
     [property],
   );
-
-  const defaultSubheadline =
-    property.highlights[1] ??
-    [property.location, property.city].filter(Boolean).join(" · ");
 
   const [persistedCampaignId, setPersistedCampaignId] = useState(
     campaignData?.id,
@@ -163,61 +155,70 @@ export function CampaignBuilder({
     useState<InstagramCampaignFormat>("feed");
   const [adjusting, setAdjusting] = useState(false);
   const [templateId, setTemplateId] = useState<CampaignTemplateId>(() =>
-    normalizeCampaignTemplate(campaignData?.visualStyle),
+    normalizeCampaignTemplate(
+      campaignData?.visualStyle ?? recommendation.style,
+    ),
   );
   const [headline, setHeadline] = useState(
-    campaignData?.headline ?? property.highlights[0] ?? property.title,
+    campaignData?.headline ?? recommendation.headline,
   );
   const [subheadline, setSubheadline] = useState(
-    campaignData?.subheadline ?? defaultSubheadline,
+    campaignData?.subheadline ?? recommendation.subheadline,
   );
   const [cta, setCta] = useState(
-    campaignData?.cta ?? "Fale comigo no WhatsApp",
+    campaignData?.cta ?? recommendation.cta,
   );
   const [storyTemplateId, setStoryTemplateId] =
     useState<VerticalTemplateId>(() =>
-      normalizeVerticalTemplate(campaignData?.instagramStory?.templateId),
+      normalizeVerticalTemplate(
+        campaignData?.instagramStory?.templateId ??
+          recommendation.instagramStory.templateId,
+      ),
     );
   const [storyHeadline, setStoryHeadline] = useState(
     campaignData?.instagramStory?.headline ??
-      property.highlights[0] ??
-      property.title,
+      recommendation.instagramStory.headline,
   );
   const [storySubheadline, setStorySubheadline] = useState(
-    campaignData?.instagramStory?.subheadline ?? defaultSubheadline,
+    campaignData?.instagramStory?.subheadline ??
+      recommendation.instagramStory.subheadline,
   );
   const [storyCta, setStoryCta] = useState(
-    campaignData?.instagramStory?.cta ?? "Fale comigo",
+    campaignData?.instagramStory?.cta ?? recommendation.instagramStory.cta,
   );
   const [tiktokTemplateId, setTiktokTemplateId] =
     useState<VerticalTemplateId>(() =>
-      normalizeVerticalTemplate(campaignData?.tiktokVertical?.templateId),
+      normalizeVerticalTemplate(
+        campaignData?.tiktokVertical?.templateId ??
+          recommendation.tiktokVertical.templateId,
+      ),
     );
   const [tiktokHeadline, setTiktokHeadline] = useState(
     campaignData?.tiktokVertical?.headline ??
-      property.highlights[0] ??
-      property.title,
+      recommendation.tiktokVertical.headline,
   );
   const [tiktokSubheadline, setTiktokSubheadline] = useState(
-    campaignData?.tiktokVertical?.subheadline ?? defaultSubheadline,
+    campaignData?.tiktokVertical?.subheadline ??
+      recommendation.tiktokVertical.subheadline,
   );
   const [tiktokCta, setTiktokCta] = useState(
-    campaignData?.tiktokVertical?.cta ?? "Veja mais detalhes",
+    campaignData?.tiktokVertical?.cta ?? recommendation.tiktokVertical.cta,
   );
   const [carouselModelId, setCarouselModelId] =
     useState<CarouselModelId>(() =>
       normalizeCarouselModel(
-        campaignData?.instagramCarousel?.modelId,
+        campaignData?.instagramCarousel?.modelId ??
+          recommendation.instagramCarousel.modelId,
         property.purpose,
       ),
     );
   const [carouselHeadline, setCarouselHeadline] = useState(
     campaignData?.instagramCarousel?.headline ??
-      property.highlights[0] ??
-      property.title,
+      recommendation.instagramCarousel.headline,
   );
   const [carouselCta, setCarouselCta] = useState(
-    campaignData?.instagramCarousel?.cta ?? "Fale comigo no WhatsApp",
+    campaignData?.instagramCarousel?.cta ??
+      recommendation.instagramCarousel.cta,
   );
   const [blockPositions, setBlockPositions] = useState({
     instagramFeed: normalizeBlockPosition(
@@ -232,11 +233,13 @@ export function CampaignBuilder({
   });
   const [captions, setCaptions] = useState<Record<SocialChannel, string>>({
     instagram:
-      campaignData?.captions?.instagram ?? generatedCaptions.instagram,
+      campaignData?.captions?.instagram ?? recommendation.captions.instagram,
     facebook:
-      campaignData?.captions?.facebook ?? generatedCaptions.facebook,
-    tiktok: campaignData?.captions?.tiktok ?? generatedCaptions.tiktok,
-    google: campaignData?.captions?.google ?? generatedCaptions.google,
+      campaignData?.captions?.facebook ?? recommendation.captions.facebook,
+    tiktok:
+      campaignData?.captions?.tiktok ?? recommendation.captions.tiktok,
+    google:
+      campaignData?.captions?.google ?? recommendation.captions.google,
   });
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduledFor, setScheduledFor] = useState(
