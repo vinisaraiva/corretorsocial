@@ -28,6 +28,13 @@ export type CampaignDraftInput = {
     subheadline: string;
     cta: string;
   };
+  blockPositions: {
+    instagramFeed: "auto" | "left" | "right";
+    instagramStory: "auto" | "left" | "right";
+    facebook: "auto" | "left" | "right";
+    tiktok: "auto" | "left" | "right";
+    google: "auto" | "left" | "right";
+  };
 };
 
 const variants = [
@@ -125,6 +132,7 @@ async function persistCampaign(input: CampaignDraftInput) {
       visual_style: string;
       source: string;
       subheadline: string;
+      block_position: "auto" | "left" | "right";
     };
   }> = variants.map((variant) => ({
     campaign_id: campaignId!,
@@ -137,6 +145,12 @@ async function persistCampaign(input: CampaignDraftInput) {
       visual_style: input.visualStyle,
       source: "deterministic_preview_v0_2",
       subheadline: input.subheadline.trim(),
+      block_position:
+        variant.key === "instagram"
+          ? input.blockPositions.instagramFeed
+          : variant.key === "facebook"
+            ? input.blockPositions.facebook
+            : input.blockPositions.google,
     },
   }));
 
@@ -151,6 +165,7 @@ async function persistCampaign(input: CampaignDraftInput) {
       visual_style: input.instagramStory.templateId,
       source: "deterministic_vertical_v0_1",
       subheadline: input.instagramStory.subheadline.trim(),
+      block_position: input.blockPositions.instagramStory,
     },
   });
 
@@ -165,6 +180,7 @@ async function persistCampaign(input: CampaignDraftInput) {
       visual_style: input.tiktokVertical.templateId,
       source: "deterministic_vertical_v0_1",
       subheadline: input.tiktokVertical.subheadline.trim(),
+      block_position: input.blockPositions.tiktok,
     },
   });
 
