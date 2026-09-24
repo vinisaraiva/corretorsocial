@@ -8,6 +8,7 @@ export const verticalTemplates = [
     headlineLimit: 46,
     subheadlineLimit: 64,
     ctaLimit: 28,
+    supportsBlockPosition: true,
   },
   {
     id: "vertical-commercial",
@@ -18,6 +19,7 @@ export const verticalTemplates = [
     headlineLimit: 42,
     subheadlineLimit: 0,
     ctaLimit: 28,
+    supportsBlockPosition: true,
   },
   {
     id: "vertical-opportunity",
@@ -28,6 +30,7 @@ export const verticalTemplates = [
     headlineLimit: 36,
     subheadlineLimit: 0,
     ctaLimit: 24,
+    supportsBlockPosition: false,
   },
   {
     id: "vertical-branding",
@@ -38,6 +41,7 @@ export const verticalTemplates = [
     headlineLimit: 44,
     subheadlineLimit: 60,
     ctaLimit: 28,
+    supportsBlockPosition: true,
   },
 ] as const;
 
