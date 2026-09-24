@@ -155,3 +155,60 @@ export async function createCampaignAssetSignedUrls(paths: string[]) {
       url: item.signedUrl!,
     }));
 }
+
+
+export async function removeCampaignAssetPaths(paths: string[]) {
+  if (paths.length === 0) return;
+
+  const supabase = createClient();
+  const { error } = await supabase.storage
+    .from("campaign-assets")
+    .remove(paths);
+
+  if (error) {
+    console.error("Failed to remove rendered campaign assets", error);
+  }
+}
+
+export async function cleanupCampaignAssetFolder(input: {
+  campaignId: string;
+  provider: RenderProvider;
+  format: string;
+  keepPaths: string[];
+}) {
+  const supabase = createClient();
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) return;
+
+  const folder =
+    `${user.id}/${input.campaignId}/${input.provider}-${input.format}`;
+
+  const { data, error } = await supabase.storage
+    .from("campaign-assets")
+    .list(folder, {
+      limit: 100,
+      sortBy: { column: "created_at", order: "desc" },
+    });
+
+  if (error || !data) {
+    if (error) {
+      console.error("Failed to list rendered campaign assets", error);
+    }
+    return;
+  }
+
+  const keep = new Set(input.keepPaths);
+  const obsolete = data
+    .filter((item) => item.name && item.id)
+    .map((item) => `${folder}/${item.name}`)
+    .filter((path) => !keep.has(path));
+
+  if (obsolete.length > 0) {
+    await removeCampaignAssetPaths(obsolete);
+  }
+}
