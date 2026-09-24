@@ -36,10 +36,10 @@ export type CampaignRecommendation = {
     cta: string;
   };
   media: {
-    feedCover?: string;
-    storyCover?: string;
-    tiktokCover?: string;
-    carousel: string[];
+    feedCover?: { id?: string; url: string };
+    storyCover?: { id?: string; url: string };
+    tiktokCover?: { id?: string; url: string };
+    carousel: Array<{ id?: string; url: string }>;
   };
 };
 
@@ -219,10 +219,28 @@ export function buildCampaignRecommendation(
       cta: "Fale comigo no WhatsApp",
     },
     media: {
-      feedCover: mediaSelection.feedCover?.url,
-      storyCover: mediaSelection.storyCover?.url,
-      tiktokCover: mediaSelection.tiktokCover?.url,
-      carousel: mediaSelection.carousel.map((item) => item.url),
+      feedCover: mediaSelection.feedCover
+        ? {
+            id: mediaSelection.feedCover.id,
+            url: mediaSelection.feedCover.url,
+          }
+        : undefined,
+      storyCover: mediaSelection.storyCover
+        ? {
+            id: mediaSelection.storyCover.id,
+            url: mediaSelection.storyCover.url,
+          }
+        : undefined,
+      tiktokCover: mediaSelection.tiktokCover
+        ? {
+            id: mediaSelection.tiktokCover.id,
+            url: mediaSelection.tiktokCover.url,
+          }
+        : undefined,
+      carousel: mediaSelection.carousel.map((item) => ({
+        id: item.id,
+        url: item.url,
+      })),
     },
   };
 }
