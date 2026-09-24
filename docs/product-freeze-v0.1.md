@@ -43,14 +43,23 @@ Instagram possui formatos independentes:
 - Carrossel 4:5 — fase posterior;
 - Reel/slideshow permanece fora desta etapa.
 
-Cada formato possui templates próprios. Feed, Stories e Carrossel não reutilizam a mesma arte apenas redimensionada.
+Feed e Carrossel possuem composições próprias. Instagram Stories e TikTok compartilham a família visual vertical 9:16, com adaptações de safe zone por plataforma. Nenhum formato é tratado apenas como redimensionamento automático da mesma arte.
 
 Ações principais: Publicar em todas, Agendar e Ajustar campanha.
 
 Especificação: `docs/instagram-formats-v0.1.md`.
 
 ### Ajustar campanha
-Escolha entre seis artes profissionais de estrutura fixa. O usuário edita headline, subheadline quando suportada, CTA e legenda por rede. Não há editor livre, arraste ou reposicionamento manual.
+O estilo visual é global para a campanha e nasce em **Clean Base** por padrão. Ao trocar o estilo, o sistema aplica automaticamente a composição equivalente aos formatos das demais redes.
+
+Ajustes de mídia permanecem independentes: headline/subheadline/CTA/legenda quando aplicável e, nos templates compatíveis, **Posição da chamada**.
+
+Posição da chamada aceita somente:
+- Automática;
+- Esquerda;
+- Direita, quando segura para a plataforma.
+
+A opção move o bloco completo de conteúdo. Não existe alinhamento livre, drag, coordenadas, margens ou reposicionamento manual. No TikTok, a direita permanece reservada para a interface da plataforma.
 
 ### Imóveis
 Grid/lista com status, campanhas e ações.
@@ -128,3 +137,16 @@ Ao confirmar um imóvel e escolher “Salvar e criar campanha”, o sistema prep
 Especificação: `docs/campaign-generation-v0.1.md`.
 
 A família visual 9:16 é compartilhada entre Instagram Stories e TikTok, com safe zones e comportamento específicos de cada plataforma.
+
+
+## Herança visual da campanha
+
+- estilo padrão: `clean-base`;
+- Clean Base / Clean Topo → Vertical Clean;
+- Comercial / Card Informativo → Vertical Comercial;
+- Oportunidade → Vertical Oportunidade;
+- Moldura Branding → Vertical Branding.
+
+A posição do bloco não é global. Cada variante salva sua própria posição em `campaign_variants.render_metadata.block_position`.
+
+`auto` usa a composição recomendada pelo template nesta versão do produto e poderá futuramente considerar análise automática da fotografia.
