@@ -102,6 +102,14 @@ export default async function CampaignDetailPage({
         cta: string;
       }
     | undefined;
+  let tiktokVertical:
+    | {
+        templateId: string;
+        headline: string;
+        subheadline: string;
+        cta: string;
+      }
+    | undefined;
 
   const metadata =
     campaign.generation_metadata &&
@@ -115,33 +123,53 @@ export default async function CampaignDetailPage({
   }
 
   for (const variant of variantsResult.data ?? []) {
-    if (variant.provider === "instagram" && variant.format === "story_9x16") {
-      const storyMetadata =
-        variant.render_metadata &&
-        typeof variant.render_metadata === "object" &&
-        !Array.isArray(variant.render_metadata)
-          ? (variant.render_metadata as Record<string, unknown>)
-          : null;
+    const variantMetadata =
+      variant.render_metadata &&
+      typeof variant.render_metadata === "object" &&
+      !Array.isArray(variant.render_metadata)
+        ? (variant.render_metadata as Record<string, unknown>)
+        : null;
 
+    if (variant.provider === "instagram" && variant.format === "story_9x16") {
       instagramStory = {
         templateId:
-          typeof storyMetadata?.visual_style === "string"
-            ? storyMetadata.visual_style
-            : "story-clean",
+          typeof variantMetadata?.visual_style === "string"
+            ? variantMetadata.visual_style
+            : "vertical-clean",
         headline: variant.headline ?? headline,
         subheadline:
-          typeof storyMetadata?.subheadline === "string"
-            ? storyMetadata.subheadline
+          typeof variantMetadata?.subheadline === "string"
+            ? variantMetadata.subheadline
             : subheadline,
         cta: variant.cta ?? cta,
       };
       continue;
     }
 
+    if (variant.provider === "tiktok" && variant.format === "vertical_video") {
+      if (variant.caption) captions.tiktok = variant.caption;
+      tiktokVertical = {
+        templateId:
+          typeof variantMetadata?.visual_style === "string"
+            ? variantMetadata.visual_style
+            : "vertical-clean",
+        headline: variant.headline ?? headline,
+        subheadline:
+          typeof variantMetadata?.subheadline === "string"
+            ? variantMetadata.subheadline
+            : subheadline,
+        cta: variant.cta ?? "Veja mais detalhes",
+      };
+      continue;
+    }
+
     const channel = providerToChannel[variant.provider];
     if (channel && variant.caption) captions[channel] = variant.caption;
-    if (variant.headline) headline = variant.headline;
-    if (variant.cta) cta = variant.cta;
+
+    if (variant.provider === "instagram" && variant.format === "feed_4x5") {
+      if (variant.headline) headline = variant.headline;
+      if (variant.cta) cta = variant.cta;
+    }
   }
 
   let logoUrl: string | null = null;
@@ -179,6 +207,7 @@ export default async function CampaignDetailPage({
           scheduledFor: campaign.scheduled_for,
           captions,
           instagramStory,
+          tiktokVertical,
         }}
       />
     </AppShell>
