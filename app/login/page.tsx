@@ -1,4 +1,5 @@
-import { login, signup } from "./actions";
+import Link from "next/link";
+import { login } from "./actions";
 
 export default async function LoginPage({
   searchParams,
@@ -25,13 +26,13 @@ export default async function LoginPage({
         </div>
 
         <section className="app-card p-5 sm:p-7">
-          <h1 className="text-2xl font-extrabold">Acesse sua conta</h1>
+          <h1 className="text-2xl font-extrabold">Entrar</h1>
           <p className="mt-2 text-sm text-[#667085]">
-            Entre ou crie sua conta para começar.
+            Acesse seus imóveis e campanhas.
           </p>
 
           {params.error && (
-            <div className="mt-5 rounded-xl bg-[#FEF3F2] p-4 text-sm font-semibold text-[#B42318]">
+            <div className="mt-5 rounded-xl bg-[#FEF3F2] p-4 text-sm font-semibold leading-6 text-[#B42318]">
               {params.error}
             </div>
           )}
@@ -63,28 +64,26 @@ export default async function LoginPage({
                 name="password"
                 type="password"
                 autoComplete="current-password"
-                minLength={8}
                 required
                 className="app-input mt-2"
-                placeholder="Mínimo de 8 caracteres"
+                placeholder="Sua senha"
               />
             </label>
 
             <button formAction={login} className="app-button-primary w-full">
               Entrar
             </button>
-
-            <button
-              formAction={signup}
-              className="app-button-secondary w-full"
-            >
-              Criar conta
-            </button>
           </form>
 
-          <p className="mt-5 text-center text-xs leading-5 text-[#667085]">
-            Sua conta protege imóveis, campanhas e configurações profissionais.
-          </p>
+          <div className="mt-6 border-t border-[#E4E7EC] pt-5 text-center">
+            <p className="text-sm text-[#667085]">Ainda não tem uma conta?</p>
+            <Link
+              href="/cadastro"
+              className="app-button-secondary mt-3 flex w-full items-center justify-center"
+            >
+              Criar conta
+            </Link>
+          </div>
         </section>
       </div>
     </main>
