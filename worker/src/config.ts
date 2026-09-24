@@ -22,4 +22,7 @@ export const config = {
   workerId: process.env.WORKER_ID?.trim() || "corretor-social-worker",
   pollIntervalMs: positiveInteger("POLL_INTERVAL_MS", 3000),
   staleJobMinutes: positiveInteger("STALE_JOB_MINUTES", 15),
+  openaiApiKey: required("OPENAI_API_KEY"),
+  openaiVisionModel:
+    process.env.OPENAI_VISION_MODEL?.trim() || "gpt-5.6-luna",
 };
