@@ -1,9 +1,10 @@
-import type { Tables } from "@/types/database";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database, Tables } from "@/types/database";
 import type { Property, PropertyStatus } from "@/types";
 
 type PropertyRow = Tables<"properties">;
 
-type MediaRow = Pick<
+export type PropertyMediaRow = Pick<
   Tables<"property_media">,
   "property_id" | "original_url" | "storage_path" | "is_cover" | "sort_order"
 >;
@@ -18,9 +19,39 @@ const statusMap: Record<PropertyRow["status"], PropertyStatus> = {
   archived: "arquivado",
 };
 
+export async function resolvePrivateMedia(
+  supabase: SupabaseClient<Database>,
+  media: PropertyMediaRow[],
+) {
+  const storagePaths = media
+    .map((item) => item.storage_path)
+    .filter((path): path is string => Boolean(path));
+
+  if (storagePaths.length === 0) return media;
+
+  const { data } = await supabase.storage
+    .from("property-media")
+    .createSignedUrls(storagePaths, 60 * 60);
+
+  const signedByPath = new Map<string, string>();
+
+  data?.forEach((entry) => {
+    if (entry.path && entry.signedUrl) {
+      signedByPath.set(entry.path, entry.signedUrl);
+    }
+  });
+
+  return media.map((item) => ({
+    ...item,
+    original_url:
+      item.original_url ??
+      (item.storage_path ? signedByPath.get(item.storage_path) ?? null : null),
+  }));
+}
+
 export function propertyToView(
   row: PropertyRow,
-  media: MediaRow[],
+  media: PropertyMediaRow[],
   campaigns: CampaignRow[],
 ): Property {
   const mediaForProperty = media
@@ -50,7 +81,10 @@ export function propertyToView(
     title: row.title,
     purpose: row.purpose === "rent" ? "Aluguel" : "Venda",
     price: Number(row.price ?? 0),
-    location: row.neighborhood ?? row.public_location ?? "Localização não informada",
+    location:
+      row.neighborhood ??
+      row.public_location ??
+      "Localização não informada",
     city: [row.city, row.state].filter(Boolean).join(" - "),
     bedrooms: row.bedrooms ?? 0,
     suites: row.suites ?? 0,
