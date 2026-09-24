@@ -57,3 +57,18 @@ O GitHub é a fonte de verdade do projeto.
 Framework oficial: **Next.js App Router + TypeScript + Tailwind CSS + shadcn/ui**. O Lovable pode ser usado como apoio visual, mas o GitHub é a fonte de verdade e o código não depende do runtime do Lovable.
 
 Backend, banco, autenticação real e integrações externas serão adicionados depois da validação visual/UX do frontend.
+
+
+## Hospedagem atual
+
+O frontend Next.js está sendo publicado na Hostinger Business a partir da branch `main` do GitHub.
+
+A arquitetura foi mantida portátil: o app não depende de serviços proprietários da Vercel.
+
+## Banco
+
+O schema Supabase está preparado em:
+
+`supabase/migrations/001_initial_schema.sql`
+
+Nenhum projeto Supabase dedicado ao Corretor Social foi criado ainda para evitar custo enquanto o limite gratuito de projetos estiver ocupado.
