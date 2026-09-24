@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { CampaignBuilder } from "@/components/campaign-builder";
 import { createClient } from "@/lib/supabase/server";
-import { propertyToView } from "@/lib/property-ui";
+import { propertyToView, resolvePrivateMedia } from "@/lib/property-ui";
 
 export const dynamic = "force-dynamic";
 
@@ -49,9 +49,14 @@ export default async function NewCampaignPage({
       .eq("property_id", row.id),
   ]);
 
+  const media = await resolvePrivateMedia(
+    supabase,
+    mediaResult.data ?? [],
+  );
+
   const property = propertyToView(
     row,
-    mediaResult.data ?? [],
+    media,
     campaignsResult.data ?? [],
   );
 
