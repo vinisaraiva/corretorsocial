@@ -110,6 +110,13 @@ export default async function CampaignDetailPage({
         cta: string;
       }
     | undefined;
+  let instagramCarousel:
+    | {
+        modelId: string;
+        headline: string;
+        cta: string;
+      }
+    | undefined;
 
   const blockPositions = {
     instagramFeed: "auto" as "auto" | "left" | "right",
@@ -185,6 +192,20 @@ export default async function CampaignDetailPage({
       continue;
     }
 
+    if (variant.provider === "instagram" && variant.format === "carousel_4x5") {
+      instagramCarousel = {
+        modelId:
+          typeof variantMetadata?.carousel_type === "string"
+            ? variantMetadata.carousel_type
+            : property.purpose === "Aluguel"
+              ? "rent-practical"
+              : "presentation",
+        headline: variant.headline ?? headline,
+        cta: variant.cta ?? cta,
+      };
+      continue;
+    }
+
     const channel = providerToChannel[variant.provider];
     if (channel && variant.caption) captions[channel] = variant.caption;
 
@@ -243,6 +264,7 @@ export default async function CampaignDetailPage({
           captions,
           instagramStory,
           tiktokVertical,
+          instagramCarousel,
           blockPositions,
         }}
       />
