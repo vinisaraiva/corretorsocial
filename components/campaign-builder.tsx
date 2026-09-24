@@ -27,12 +27,13 @@ import {
 } from "@/lib/campaign-templates";
 import { formatBRL } from "@/lib/utils";
 import {
-  getInstagramStoryTemplate,
-  normalizeInstagramStoryTemplate,
-  type InstagramStoryTemplateId,
-} from "@/lib/instagram-story-templates";
-import { InstagramStoryControls } from "@/components/instagram-story-controls";
-import { InstagramStoryPreview } from "@/components/instagram-story-preview";
+  getVerticalTemplate,
+  getVerticalTemplateName,
+  normalizeVerticalTemplate,
+  type VerticalTemplateId,
+} from "@/lib/vertical-templates";
+import { VerticalTemplateControls } from "@/components/vertical-template-controls";
+import { VerticalCreativePreview } from "@/components/vertical-creative-preview";
 import type { Property, SocialChannel } from "@/types";
 
 const allChannels: { id: SocialChannel; label: string }[] = [
@@ -145,8 +146,8 @@ export function CampaignBuilder({
     Boolean(campaignData?.instagramStory),
   );
   const [storyTemplateId, setStoryTemplateId] =
-    useState<InstagramStoryTemplateId>(() =>
-      normalizeInstagramStoryTemplate(campaignData?.instagramStory?.templateId),
+    useState<VerticalTemplateId>(() =>
+      normalizeVerticalTemplate(campaignData?.instagramStory?.templateId),
     );
   const [storyHeadline, setStoryHeadline] = useState(
     campaignData?.instagramStory?.headline ??
@@ -182,11 +183,11 @@ export function CampaignBuilder({
   const [stagingGenerated, setStagingGenerated] = useState(false);
 
   const selectedTemplate = getCampaignTemplate(templateId);
-  const selectedStoryTemplate = getInstagramStoryTemplate(storyTemplateId);
+  const selectedStoryTemplate = getVerticalTemplate(storyTemplateId);
   const isStoryView =
     channel === "instagram" && instagramFormat === "story";
   const activeArtName = isStoryView
-    ? selectedStoryTemplate.name
+    ? getVerticalTemplateName(storyTemplateId, "instagram_story")
     : selectedTemplate.name;
   const copy = captions[channel];
 
@@ -369,9 +370,10 @@ export function CampaignBuilder({
           )}
 
           {isStoryView ? (
-            <InstagramStoryPreview
+            <VerticalCreativePreview
               property={property}
               brand={brand}
+              platform="instagram_story"
               templateId={storyTemplateId}
               headline={storyHeadline}
               subheadline={storySubheadline}
@@ -415,9 +417,10 @@ export function CampaignBuilder({
 
               {isStoryView ? (
                 <>
-                  <InstagramStoryControls
+                  <VerticalTemplateControls
                     property={property}
                     brand={brand}
+                    platform="instagram_story"
                     templateId={storyTemplateId}
                     headline={storyHeadline}
                     subheadline={storySubheadline}
