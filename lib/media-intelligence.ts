@@ -99,15 +99,35 @@ export function selectCarouselMedia(
   return selected;
 }
 
-export function buildMediaSelection(media: PropertyMedia[]) {
+export function buildMediaSelection(
+  media: PropertyMedia[],
+  manualCoverSelected = false,
+) {
   const unique = Array.from(
     new Map(media.map((item) => [item.url, item])).values(),
   );
+
+  const manualCover = manualCoverSelected
+    ? unique.find((item) => item.isCover)
+    : undefined;
+
+  const carousel = selectCarouselMedia(unique, 6);
+
+  if (manualCover) {
+    const withoutCover = carousel.filter((item) => item.url !== manualCover.url);
+
+    return {
+      feedCover: manualCover,
+      storyCover: manualCover,
+      tiktokCover: manualCover,
+      carousel: [manualCover, ...withoutCover].slice(0, 6),
+    };
+  }
 
   return {
     feedCover: rankMediaForFormat(unique, "feed_4x5")[0],
     storyCover: rankMediaForFormat(unique, "story_9x16")[0],
     tiktokCover: rankMediaForFormat(unique, "tiktok_9x16")[0],
-    carousel: selectCarouselMedia(unique, 6),
+    carousel,
   };
 }
