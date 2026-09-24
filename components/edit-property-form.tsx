@@ -383,7 +383,8 @@ export function EditPropertyForm({
                 event.currentTarget.value = "";
               }}
             />
-          </label>
+            </label>
+          </div>
         </div>
 
         {media.length === 0 ? (
