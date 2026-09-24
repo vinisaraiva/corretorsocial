@@ -4,12 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Building2,
-  CheckCircle2,
   FilePenLine,
   ImagePlus,
   Link2,
   LoaderCircle,
-  Sparkles,
 } from "lucide-react";
 import {
   createProperty,
@@ -21,15 +19,7 @@ import { uploadPropertyPhotos } from "@/lib/supabase/uploads";
 import { formatBRL } from "@/lib/utils";
 
 type Mode = "link" | "fotos" | "manual";
-type Stage = "input" | "loading" | "review" | "saving" | "ai";
-
-const analysisSteps = [
-  "Organizando as informações do imóvel",
-  "Preparando os principais destaques",
-  "Criando a estrutura da campanha",
-  "Preparando os textos por rede",
-  "Montando a versão recomendada",
-];
+type Stage = "input" | "loading" | "review" | "saving";
 
 const emptyDraft: PropertyDraftInput = {
   title: "",
@@ -62,7 +52,6 @@ export function NewPropertyFlow() {
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(false);
   const [extractionMessage, setExtractionMessage] = useState("");
-  const [activeAnalysis, setActiveAnalysis] = useState(0);
   const [highlightsText, setHighlightsText] = useState("");
   const [draft, setDraft] = useState<PropertyDraftInput>(emptyDraft);
 
@@ -217,17 +206,8 @@ export function NewPropertyFlow() {
         return;
       }
 
-      setStage("ai");
-      setActiveAnalysis(0);
-
-      analysisSteps.forEach((_, index) => {
-        window.setTimeout(() => setActiveAnalysis(index), index * 450);
-      });
-
-      window.setTimeout(() => {
-        router.push(`/campanhas/nova?imovel=${id}`);
-        router.refresh();
-      }, analysisSteps.length * 450 + 350);
+      router.push(`/campanhas/nova?imovel=${id}`);
+      router.refresh();
     } catch (caught) {
       setStage("review");
       setError(
@@ -259,46 +239,6 @@ export function NewPropertyFlow() {
         <p className="mt-2 text-sm text-[#667085]">
           Guardando as informações na sua conta.
         </p>
-      </div>
-    );
-  }
-
-  if (stage === "ai") {
-    return (
-      <div className="app-card mx-auto max-w-2xl p-6 sm:p-8">
-        <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-full bg-[#E9F4F1] text-[#176B5B]">
-          <Sparkles size={24} />
-        </div>
-
-        <h2 className="text-center text-2xl font-extrabold">
-          Preparando sua campanha
-        </h2>
-        <p className="mt-2 text-center text-sm text-[#667085]">
-          Nesta fase a criação visual ainda é demonstrativa, mas o imóvel já foi
-          salvo de verdade.
-        </p>
-
-        <div className="mt-7 space-y-3">
-          {analysisSteps.map((step, index) => (
-            <div
-              key={step}
-              className="flex items-center gap-3 rounded-xl border border-[#E4E7EC] bg-white p-4"
-            >
-              {index <= activeAnalysis ? (
-                <CheckCircle2 size={20} className="shrink-0 text-[#067647]" />
-              ) : (
-                <div className="h-5 w-5 shrink-0 rounded-full border-2 border-[#D0D5DD]" />
-              )}
-              <span
-                className={
-                  index <= activeAnalysis ? "font-bold" : "text-[#667085]"
-                }
-              >
-                {step}
-              </span>
-            </div>
-          ))}
-        </div>
       </div>
     );
   }
