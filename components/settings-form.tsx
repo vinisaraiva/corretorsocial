@@ -1,5 +1,6 @@
 import { Save } from "lucide-react";
 import { saveSettings } from "@/app/configuracoes/actions";
+import { LogoUploader } from "@/components/logo-uploader";
 
 type ProfileSettings = {
   professional_name: string | null;
@@ -33,9 +34,11 @@ const networkLabels = {
 export function SettingsForm({
   profile,
   connections,
+  logoUrl,
 }: {
   profile: ProfileSettings;
   connections: Connection[];
+  logoUrl?: string | null;
 }) {
   const statusByProvider = new Map(
     connections.map((connection) => [connection.provider, connection.status]),
@@ -155,8 +158,8 @@ export function SettingsForm({
           </label>
         </div>
 
-        <div className="mt-4 rounded-xl border border-dashed border-[#D0D5DD] bg-[#F9FAFB] p-4 text-sm text-[#667085]">
-          Upload de logo será conectado ao Supabase Storage na próxima etapa.
+        <div className="mt-4">
+          <LogoUploader initialUrl={logoUrl} />
         </div>
       </Section>
 
