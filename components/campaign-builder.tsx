@@ -30,6 +30,7 @@ import {
   campaignTemplateToVertical,
   normalizeBlockPosition,
   resolveBlockPosition,
+  suggestedBlockPositionFromTags,
   type BlockPosition,
 } from "@/lib/campaign-layout";
 import { BlockPositionControl } from "@/components/block-position-control";
@@ -272,10 +273,20 @@ export function CampaignBuilder({
       .map((item) => [item.id!, item]),
   );
 
+  type PreviewMedia = {
+    id?: string;
+    url: string;
+    aiTags?: string[];
+  };
+
   const resolveSavedMedia = (
     id: string | undefined,
-    fallback: { id?: string; url: string } | undefined,
-  ) => (id ? mediaById.get(id) ?? fallback : fallback);
+    fallback: PreviewMedia | undefined,
+  ): PreviewMedia | undefined => {
+    if (id) return mediaById.get(id) ?? fallback;
+    if (fallback?.id) return mediaById.get(fallback.id) ?? fallback;
+    return fallback;
+  };
 
   const feedMedia = resolveSavedMedia(
     campaignData?.mediaSelection?.instagramFeed,
@@ -593,6 +604,9 @@ export function CampaignBuilder({
               subheadline={storySubheadline}
               cta={storyCta}
               blockPosition={blockPositions.instagramStory}
+              suggestedBlockPosition={suggestedBlockPositionFromTags(
+                storyMedia?.aiTags,
+              )}
             />
           ) : isCarouselView ? (
             <InstagramCarouselPreview
@@ -613,6 +627,9 @@ export function CampaignBuilder({
               subheadline={tiktokSubheadline}
               cta={tiktokCta}
               blockPosition={blockPositions.tiktok}
+              suggestedBlockPosition={suggestedBlockPositionFromTags(
+                tiktokMedia?.aiTags,
+              )}
             />
           ) : (
             <CreativePreview
@@ -624,6 +641,9 @@ export function CampaignBuilder({
               copy={copy}
               cta={cta}
               blockPosition={activeNonVerticalPosition}
+              suggestedBlockPosition={suggestedBlockPositionFromTags(
+                feedMedia?.aiTags,
+              )}
             />
           )}
         </div>
@@ -1178,6 +1198,7 @@ function CreativePreview({
   copy,
   cta,
   blockPosition,
+  suggestedBlockPosition,
 }: {
   property: Property;
   brand: CampaignBrand;
@@ -1187,6 +1208,7 @@ function CreativePreview({
   copy: string;
   cta: string;
   blockPosition: BlockPosition;
+  suggestedBlockPosition?: "left" | "right" | null;
 }) {
   const brandColor = safeBrandColor(brand.primaryColor);
   const brandText = contrastText(brandColor);
@@ -1196,7 +1218,7 @@ function CreativePreview({
   const features = featureItems(property);
   const price = priceText(property);
   const resolvedPosition = selectedTemplateSupportsPosition(templateId)
-    ? resolveBlockPosition(blockPosition)
+    ? resolveBlockPosition(blockPosition, undefined, suggestedBlockPosition)
     : "left";
   const sideClass =
     resolvedPosition === "right"
