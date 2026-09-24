@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useMemo, useState } from "react";
 import {
   Building2,
@@ -174,11 +173,11 @@ export function CampaignBuilder({
           <div className="mx-auto max-w-[430px] overflow-hidden rounded-2xl border border-[#E4E7EC] bg-white">
             <div className="relative aspect-[4/5] bg-[#EAECF0]">
               {property.image ? (
-                <Image
+                <img
                   src={property.image}
                   alt={property.title}
-                  fill
-                  className="object-cover"
+                  className="absolute inset-0 h-full w-full object-cover"
+                  referrerPolicy="no-referrer"
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-[#98A2B3]">
@@ -406,11 +405,11 @@ export function CampaignBuilder({
                 ORIGINAL
               </div>
               <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
-                <Image
+                <img
                   src={property.image}
                   alt="Foto original do imóvel"
-                  fill
-                  className="object-cover"
+                  className="absolute inset-0 h-full w-full object-cover"
+                  referrerPolicy="no-referrer"
                 />
               </div>
             </div>
@@ -422,11 +421,11 @@ export function CampaignBuilder({
               <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl bg-[#F2F4F7]">
                 {stagingGenerated ? (
                   <>
-                    <Image
+                    <img
                       src={property.image}
                       alt="Simulação de ambientação virtual"
-                      fill
-                      className="object-cover opacity-90"
+                      className="absolute inset-0 h-full w-full object-cover opacity-90"
+                      referrerPolicy="no-referrer"
                     />
                     <div className="absolute inset-x-3 bottom-3 rounded-lg bg-white/95 p-2 text-center text-xs font-bold">
                       Ambientação virtual gerada por IA · {stagingStyle}
