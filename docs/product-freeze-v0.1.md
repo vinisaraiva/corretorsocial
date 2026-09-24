@@ -5,8 +5,8 @@
 1. Configuração inicial do corretor.
 2. Colar URL do imóvel, enviar fotos ou cadastrar manualmente.
 3. Revisar informações extraídas.
-4. Gerar campanha.
-5. Revisar previews por rede.
+4. Gerar automaticamente as variantes recomendadas para todas as redes suportadas.
+5. Revisar previews por rede apenas se desejar.
 6. Publicar, agendar ou ajustar.
 
 ## Navegação
@@ -122,3 +122,9 @@ Virtual staging:
 ## Regra de UX
 
 O usuário não deve precisar configurar tudo antes de gerar. Defaults inteligentes primeiro; ajustes ficam atrás de “Ajustar campanha”.
+
+Ao confirmar um imóvel e escolher “Salvar e criar campanha”, o sistema prepara automaticamente as variantes suportadas para Instagram, Facebook, TikTok e Google. O corretor não monta cada rede separadamente. A edição por canal é opcional.
+
+Especificação: `docs/campaign-generation-v0.1.md`.
+
+A família visual 9:16 é compartilhada entre Instagram Stories e TikTok, com safe zones e comportamento específicos de cada plataforma.
