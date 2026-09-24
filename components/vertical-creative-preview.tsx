@@ -2,10 +2,15 @@ import { Building2 } from "lucide-react";
 import type { Property } from "@/types";
 import { formatBRL } from "@/lib/utils";
 import {
+  getVerticalTemplate,
   type VerticalPlatform,
   type VerticalTemplateId,
   verticalSafeZones,
 } from "@/lib/vertical-templates";
+import {
+  resolveBlockPosition,
+  type BlockPosition,
+} from "@/lib/campaign-layout";
 
 type VerticalBrand = {
   professionalName: string;
@@ -129,6 +134,7 @@ export function VerticalCreativePreview({
   headline,
   subheadline,
   cta,
+  blockPosition,
 }: {
   property: Property;
   brand: VerticalBrand;
@@ -137,6 +143,7 @@ export function VerticalCreativePreview({
   headline: string;
   subheadline: string;
   cta: string;
+  blockPosition: BlockPosition;
 }) {
   const brandColor = safeBrandColor(brand.primaryColor);
   const brandText = contrastText(brandColor);
@@ -145,8 +152,18 @@ export function VerticalCreativePreview({
     .filter(Boolean)
     .join(" · ");
   const safeZone = verticalSafeZones[platform];
-  const contentRightPadding =
-    platform === "tiktok" ? "pr-[20%]" : "";
+  const template = getVerticalTemplate(templateId);
+  const resolvedPosition = template.supportsBlockPosition
+    ? resolveBlockPosition(blockPosition, platform)
+    : "left";
+  const contentWidth =
+    platform === "tiktok" ? "max-w-[72%]" : "max-w-[82%]";
+  const blockPlacement =
+    resolvedPosition === "right"
+      ? `right-5 left-auto ${contentWidth} text-right`
+      : `left-5 right-auto ${contentWidth} text-left`;
+  const ctaJustify =
+    resolvedPosition === "right" ? "justify-end" : "justify-start";
 
   return (
     <div className="mx-auto w-full max-w-[330px] overflow-hidden rounded-2xl border border-[#E4E7EC] bg-[#EAECF0] shadow-sm">
@@ -159,7 +176,7 @@ export function VerticalCreativePreview({
             <div className="absolute inset-x-5 top-[12%]">
               <BrandMark brand={brand} inverse />
             </div>
-            <div className={`absolute inset-x-5 bottom-[19%] text-white ${contentRightPadding}`}>
+            <div className={`absolute bottom-[19%] ${blockPlacement} text-white`}>
               <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/75">
                 {locality}
               </div>
@@ -172,7 +189,7 @@ export function VerticalCreativePreview({
                 </div>
               )}
             </div>
-            <div className={`absolute inset-x-5 bottom-[11%] ${contentRightPadding}`}>
+            <div className={`absolute bottom-[11%] flex ${blockPlacement} ${ctaJustify}`}>
               <div className="inline-flex rounded-full bg-white px-4 py-2 text-xs font-black text-[#18202A] shadow">
                 {cta}
               </div>
@@ -189,7 +206,7 @@ export function VerticalCreativePreview({
             >
               {property.purpose}
             </div>
-            <div className={`absolute inset-x-5 bottom-[17%] rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur ${contentRightPadding}`}>
+            <div className={`absolute bottom-[17%] ${blockPlacement} rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur`}>
               <div className="text-xl font-black leading-tight text-[#18202A]">
                 {headline}
               </div>
@@ -216,7 +233,7 @@ export function VerticalCreativePreview({
             <div className="absolute left-0 top-[13%] rounded-r-full bg-[#F79009] px-5 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow">
               Oportunidade
             </div>
-            <div className={`absolute inset-x-5 bottom-[18%] text-white ${contentRightPadding}`}>
+            <div className={`absolute bottom-[18%] ${blockPlacement} text-white`}>
               <div className="text-2xl font-black leading-tight">{headline}</div>
               <FeaturePills items={verticalFeatures(property, 2)} inverse />
               <div className="mt-4 text-4xl font-black leading-none text-[#FDB022]">
@@ -238,7 +255,7 @@ export function VerticalCreativePreview({
             <div className="absolute left-6 top-[12%] rounded-xl bg-white/95 px-3 py-2 shadow">
               <BrandMark brand={brand} />
             </div>
-            <div className={`absolute inset-x-6 bottom-[16%] rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur ${contentRightPadding}`}>
+            <div className={`absolute bottom-[16%] ${resolvedPosition === "right" ? "right-6 left-auto" : "left-6 right-auto"} ${contentWidth} rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur ${resolvedPosition === "right" ? "text-right" : "text-left"}`}>
               <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#667085]">
                 {locality}
               </div>
