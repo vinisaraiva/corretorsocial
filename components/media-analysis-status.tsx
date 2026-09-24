@@ -16,6 +16,7 @@ type JobStatus =
 export function MediaAnalysisStatus({ jobId }: { jobId?: string | null }) {
   const router = useRouter();
   const refreshed = useRef(false);
+  const lastTriggeredStatus = useRef<JobStatus | null>(null);
   const [status, setStatus] = useState<JobStatus | null>(
     jobId ? "queued" : null,
   );
@@ -43,6 +44,23 @@ export function MediaAnalysisStatus({ jobId }: { jobId?: string | null }) {
 
       const next = data.status as JobStatus;
       setStatus(next);
+
+      if (
+        (next === "queued" || next === "retrying") &&
+        lastTriggeredStatus.current !== next
+      ) {
+        lastTriggeredStatus.current = next;
+
+        void supabase.functions
+          .invoke("media-analysis", {
+            body: {
+              job_id: jobId,
+            },
+          })
+          .catch(() => {
+            // Polling continues; a later retry can trigger the function again.
+          });
+      }
 
       if (next === "completed") {
         if (!refreshed.current) {
