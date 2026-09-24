@@ -96,11 +96,9 @@ export async function uploadPropertyPhotos(
   propertyId: string,
   files: File[],
 ) {
-  const selected = files.slice(0, 20);
+  if (files.length === 0) return [];
 
-  if (selected.length === 0) return [];
-
-  selected.forEach((file) => assertImage(file, 12 * 1024 * 1024));
+  files.forEach((file) => assertImage(file, 12 * 1024 * 1024));
 
   const supabase = createClient();
   const {
@@ -111,6 +109,30 @@ export async function uploadPropertyPhotos(
   if (userError || !user) {
     throw new Error("Sua sessão expirou. Entre novamente.");
   }
+
+  const { data: existingMedia, error: existingMediaError } = await supabase
+    .from("property_media")
+    .select("id,sort_order,is_cover")
+    .eq("property_id", propertyId)
+    .order("sort_order", { ascending: true });
+
+  if (existingMediaError) {
+    throw new Error("Não foi possível verificar a galeria atual.");
+  }
+
+  const remainingSlots = Math.max(0, 20 - (existingMedia?.length ?? 0));
+
+  if (remainingSlots === 0) {
+    throw new Error("Este imóvel já possui o limite de 20 fotos.");
+  }
+
+  const selected = files.slice(0, remainingSlots);
+  const startOrder =
+    (existingMedia ?? []).reduce(
+      (max, item) => Math.max(max, item.sort_order),
+      -1,
+    ) + 1;
+  const hasCover = (existingMedia ?? []).some((item) => item.is_cover);
 
   const uploadedPaths: string[] = [];
 
@@ -139,8 +161,8 @@ export async function uploadPropertyPhotos(
           property_id: propertyId,
           storage_path: path,
           media_type: "image",
-          sort_order: index,
-          is_cover: index === 0,
+          sort_order: startOrder + index,
+          is_cover: !hasCover && index === 0,
           width: dimensions.width,
           height: dimensions.height,
         });
