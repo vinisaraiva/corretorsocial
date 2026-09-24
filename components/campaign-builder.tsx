@@ -41,6 +41,13 @@ import {
 } from "@/lib/vertical-templates";
 import { VerticalTemplateControls } from "@/components/vertical-template-controls";
 import { VerticalCreativePreview } from "@/components/vertical-creative-preview";
+import {
+  getCarouselModel,
+  normalizeCarouselModel,
+  type CarouselModelId,
+} from "@/lib/carousel-templates";
+import { InstagramCarouselPreview } from "@/components/instagram-carousel-preview";
+import { InstagramCarouselControls } from "@/components/instagram-carousel-controls";
 import type { Property, SocialChannel } from "@/types";
 
 const allChannels: { id: SocialChannel; label: string }[] = [
@@ -106,6 +113,11 @@ type InitialCampaign = {
     templateId: string;
     headline: string;
     subheadline: string;
+    cta: string;
+  };
+  instagramCarousel?: {
+    modelId: string;
+    headline: string;
     cta: string;
   };
   blockPositions?: {
@@ -192,6 +204,21 @@ export function CampaignBuilder({
   const [tiktokCta, setTiktokCta] = useState(
     campaignData?.tiktokVertical?.cta ?? "Veja mais detalhes",
   );
+  const [carouselModelId, setCarouselModelId] =
+    useState<CarouselModelId>(() =>
+      normalizeCarouselModel(
+        campaignData?.instagramCarousel?.modelId,
+        property.purpose,
+      ),
+    );
+  const [carouselHeadline, setCarouselHeadline] = useState(
+    campaignData?.instagramCarousel?.headline ??
+      property.highlights[0] ??
+      property.title,
+  );
+  const [carouselCta, setCarouselCta] = useState(
+    campaignData?.instagramCarousel?.cta ?? "Fale comigo no WhatsApp",
+  );
   const [blockPositions, setBlockPositions] = useState({
     instagramFeed: normalizeBlockPosition(
       campaignData?.blockPositions?.instagramFeed,
@@ -228,15 +255,22 @@ export function CampaignBuilder({
   const selectedTemplate = getCampaignTemplate(templateId);
   const selectedStoryTemplate = getVerticalTemplate(storyTemplateId);
   const selectedTiktokTemplate = getVerticalTemplate(tiktokTemplateId);
+  const selectedCarouselModel = getCarouselModel(carouselModelId);
+  const imageCount = property.images?.length ?? (property.image ? 1 : 0);
+  const carouselEligible = imageCount >= 3;
   const isStoryView =
     channel === "instagram" && instagramFormat === "story";
+  const isCarouselView =
+    channel === "instagram" && instagramFormat === "carousel";
   const isTiktokView = channel === "tiktok";
   const isVerticalView = isStoryView || isTiktokView;
   const activeArtName = isStoryView
     ? getVerticalTemplateName(storyTemplateId, "instagram_story")
-    : isTiktokView
-      ? getVerticalTemplateName(tiktokTemplateId, "tiktok")
-      : selectedTemplate.name;
+    : isCarouselView
+      ? `Carrossel · ${selectedCarouselModel.name}`
+      : isTiktokView
+        ? getVerticalTemplateName(tiktokTemplateId, "tiktok")
+        : selectedTemplate.name;
   const copy = captions[channel];
   const activeNonVerticalPosition =
     channel === "facebook"
@@ -294,6 +328,14 @@ export function CampaignBuilder({
         subheadline: tiktokSubheadline,
         cta: tiktokCta,
       },
+      instagramCarousel: carouselEligible
+        ? {
+            modelId: carouselModelId,
+            headline: carouselHeadline,
+            cta: carouselCta,
+            slideCount: selectedCarouselModel.slideCount,
+          }
+        : undefined,
       blockPositions,
     };
   }
@@ -439,11 +481,22 @@ export function CampaignBuilder({
               </button>
               <button
                 type="button"
-                disabled
-                title="Carrossel será a próxima fase"
-                className="min-h-10 flex-1 rounded-lg px-3 text-sm font-bold text-[#98A2B3] opacity-70"
+                disabled={!carouselEligible}
+                title={
+                  carouselEligible
+                    ? "Ver Carrossel"
+                    : "Adicione pelo menos 3 fotos ao imóvel"
+                }
+                onClick={() => setInstagramFormat("carousel")}
+                className={`min-h-10 flex-1 rounded-lg px-3 text-sm font-bold transition ${
+                  instagramFormat === "carousel"
+                    ? "bg-white text-[#18202A] shadow-sm"
+                    : carouselEligible
+                      ? "text-[#667085] hover:text-[#18202A]"
+                      : "text-[#98A2B3] opacity-60"
+                }`}
               >
-                Carrossel · em breve
+                {carouselEligible ? "Carrossel" : "Carrossel · + fotos"}
               </button>
             </div>
           )}
@@ -458,6 +511,15 @@ export function CampaignBuilder({
               subheadline={storySubheadline}
               cta={storyCta}
               blockPosition={blockPositions.instagramStory}
+            />
+          ) : isCarouselView ? (
+            <InstagramCarouselPreview
+              property={property}
+              brand={brand}
+              templateId={templateId}
+              modelId={carouselModelId}
+              headline={carouselHeadline}
+              cta={carouselCta}
             />
           ) : isTiktokView ? (
             <VerticalCreativePreview
@@ -560,7 +622,45 @@ export function CampaignBuilder({
                 </div>
               </div>
 
-              {isVerticalView ? (
+              {isCarouselView ? (
+                <>
+                  <InstagramCarouselControls
+                    purpose={property.purpose}
+                    modelId={carouselModelId}
+                    headline={carouselHeadline}
+                    cta={carouselCta}
+                    onModelChange={(value) => {
+                      setCarouselModelId(value);
+                      markChanged();
+                    }}
+                    onHeadlineChange={(value) => {
+                      setCarouselHeadline(value);
+                      markChanged();
+                    }}
+                    onCtaChange={(value) => {
+                      setCarouselCta(value);
+                      markChanged();
+                    }}
+                  />
+
+                  <div className="mt-5 border-t border-[#E4E7EC] pt-5">
+                    <label className="block text-sm font-bold">
+                      Legenda — Instagram
+                      <textarea
+                        className="app-input mt-2 min-h-28 py-3"
+                        value={captions.instagram}
+                        onChange={(event) => {
+                          setCaptions((current) => ({
+                            ...current,
+                            instagram: event.target.value,
+                          }));
+                          markChanged();
+                        }}
+                      />
+                    </label>
+                  </div>
+                </>
+              ) : isVerticalView ? (
                 <>
                   <VerticalTemplateControls
                     platform={isStoryView ? "instagram_story" : "tiktok"}
@@ -735,21 +835,31 @@ export function CampaignBuilder({
               <div className="text-xs font-bold uppercase tracking-wide text-[#667085]">
                 {isStoryView
                   ? "Story selecionado"
-                  : isTiktokView
-                    ? "TikTok selecionado"
-                    : "Arte selecionada"}
+                  : isCarouselView
+                    ? "Carrossel selecionado"
+                    : isTiktokView
+                      ? "TikTok selecionado"
+                      : "Arte selecionada"}
               </div>
               <p className="mt-2 font-extrabold">{activeArtName}</p>
               <p className="mt-1 text-sm leading-5 text-[#667085]">
                 {isStoryView
                   ? selectedStoryTemplate.description
-                  : isTiktokView
-                    ? selectedTiktokTemplate.description
-                    : selectedTemplate.useCase}
+                  : isCarouselView
+                    ? selectedCarouselModel.description
+                    : isTiktokView
+                      ? selectedTiktokTemplate.description
+                      : selectedTemplate.useCase}
               </p>
 
               <div className="mt-4 flex flex-wrap gap-1.5">
-                {isVerticalView ? (
+                {isCarouselView ? (
+                  <>
+                    <MiniBadge label="4:5" />
+                    <MiniBadge label={`${selectedCarouselModel.slideCount} páginas`} />
+                    <MiniBadge label="Narrativa fixa" />
+                  </>
+                ) : isVerticalView ? (
                   <>
                     <MiniBadge label="9:16" />
                     <MiniBadge label="Headline" />
