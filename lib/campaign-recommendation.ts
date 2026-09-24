@@ -10,6 +10,7 @@ import {
 import { campaignTemplateToVertical } from "@/lib/campaign-layout";
 import type { VerticalTemplateId } from "@/lib/vertical-templates";
 import { formatBRL } from "@/lib/utils";
+import { buildMediaSelection } from "@/lib/media-intelligence";
 
 export type CampaignRecommendation = {
   style: CampaignTemplateId;
@@ -35,7 +36,9 @@ export type CampaignRecommendation = {
     cta: string;
   };
   media: {
-    cover?: string;
+    feedCover?: string;
+    storyCover?: string;
+    tiktokCover?: string;
     carousel: string[];
   };
 };
@@ -159,16 +162,6 @@ function googleCaption(property: Property) {
   );
 }
 
-function uniqueImages(property: Property) {
-  return Array.from(
-    new Set(
-      [...(property.images ?? []), ...(property.image ? [property.image] : [])]
-        .map((item) => item.trim())
-        .filter(Boolean),
-    ),
-  );
-}
-
 export function buildCampaignRecommendation(
   property: Property,
 ): CampaignRecommendation {
@@ -176,7 +169,21 @@ export function buildCampaignRecommendation(
   const verticalTemplate = campaignTemplateToVertical(style);
   const headline = truncate(strongestHeadline(property), 60);
   const subheadline = truncate(supportLine(property), 80);
-  const images = uniqueImages(property);
+  const fallbackMedia = Array.from(
+    new Set(
+      [...(property.images ?? []), ...(property.image ? [property.image] : [])]
+        .map((item) => item.trim())
+        .filter(Boolean),
+    ),
+  ).map((url, index) => ({
+    url,
+    isCover: index === 0,
+    sortOrder: index,
+  }));
+
+  const mediaSelection = buildMediaSelection(
+    property.media?.length ? property.media : fallbackMedia,
+  );
 
   return {
     style,
@@ -212,8 +219,10 @@ export function buildCampaignRecommendation(
       cta: "Fale comigo no WhatsApp",
     },
     media: {
-      cover: images[0],
-      carousel: images.slice(0, 6),
+      feedCover: mediaSelection.feedCover?.url,
+      storyCover: mediaSelection.storyCover?.url,
+      tiktokCover: mediaSelection.tiktokCover?.url,
+      carousel: mediaSelection.carousel.map((item) => item.url),
     },
   };
 }
