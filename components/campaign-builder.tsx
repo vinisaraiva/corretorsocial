@@ -708,7 +708,7 @@ function CreativePreview({
 
         {templateId === "clean-top" && (
           <>
-            <div className="absolute inset-x-4 top-4 rounded-2xl bg-white/94 p-4 shadow-sm backdrop-blur">
+            <div className="absolute inset-x-4 top-4 rounded-2xl bg-white/95 p-4 shadow-sm backdrop-blur">
               <BrandMark brand={brand} compact />
               <div className="mt-3 text-2xl font-black leading-tight text-[#18202A]">
                 {headline}
@@ -734,7 +734,7 @@ function CreativePreview({
             >
               {property.purpose}
             </div>
-            <div className="absolute inset-x-4 bottom-4 rounded-2xl bg-white/96 p-4 shadow-xl backdrop-blur">
+            <div className="absolute inset-x-4 bottom-4 rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur">
               <div className="text-xl font-black leading-tight text-[#18202A]">
                 {headline}
               </div>
@@ -806,10 +806,10 @@ function CreativePreview({
               className="absolute inset-0 border-[10px]"
               style={{ borderColor: brandColor }}
             />
-            <div className="absolute left-5 top-5 rounded-xl bg-white/94 px-3 py-2 shadow backdrop-blur">
+            <div className="absolute left-5 top-5 rounded-xl bg-white/95 px-3 py-2 shadow backdrop-blur">
               <BrandMark brand={brand} compact />
             </div>
-            <div className="absolute inset-x-5 bottom-5 rounded-2xl bg-white/94 p-4 shadow-xl backdrop-blur">
+            <div className="absolute inset-x-5 bottom-5 rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur">
               <div className="text-2xl font-black leading-tight text-[#18202A]">
                 {headline}
               </div>
