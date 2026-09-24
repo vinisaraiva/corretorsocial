@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { Building2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { StatusBadge } from "@/components/status-badge";
+import { PropertyActions } from "@/components/property-actions";
 import { formatBRL } from "@/lib/utils";
 import { propertyToView, resolvePrivateMedia } from "@/lib/property-ui";
 import { createClient } from "@/lib/supabase/server";
@@ -65,12 +66,22 @@ export default async function PropertyDetailPage({
         .filter(Boolean)
         .join(" · ")}
       action={
-        <Link
-          href={`/campanhas/nova?imovel=${property.id}`}
-          className="app-button-primary text-sm"
-        >
-          Criar nova campanha
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          {property.status !== "arquivado" && (
+            <Link
+              href={`/campanhas/nova?imovel=${property.id}`}
+              className="app-button-primary text-sm"
+            >
+              Criar nova campanha
+            </Link>
+          )}
+          <PropertyActions
+            propertyId={property.id}
+            propertyTitle={property.title}
+            status={property.status}
+            campaignCount={property.campaigns}
+          />
+        </div>
       }
     >
       <section className="app-card overflow-hidden">
