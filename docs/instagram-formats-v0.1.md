@@ -20,10 +20,10 @@ O Corretor Social continua sem editor livre. O usuário escolhe uma composição
 Status: em implementação/consolidação.
 
 ### Fase 2 — Stories
-Próximo formato a ser implementado.
+Implementado com família vertical compartilhada.
 
 ### Fase 3 — Carrossel
-Implementado somente depois de Stories estar estável.
+Implementado como preview/persistência estruturados, condicionado a pelo menos 3 fotos distintas.
 
 Essa ordem evita transformar o MVP em um editor complexo antes de validar o fluxo principal.
 
@@ -333,7 +333,9 @@ A IA poderá classificar:
 A IA escolhe entre fotos reais do imóvel. Nunca cria ou substitui características do imóvel nessa etapa.
 
 ## Caso haja poucas fotos
-O sistema deve reduzir a quantidade de slides ou reutilizar layout informativo sem inventar imagens.
+Com menos de 3 fotos distintas, o Carrossel não é gerado no MVP. A interface informa que são necessárias mais fotos.
+
+A decisão é deliberada: não criar um carrossel visualmente fraco apenas para manter paridade de formatos.
 
 Nunca:
 - usar foto de outro imóvel;
@@ -344,11 +346,12 @@ Nunca:
 ## Edição pelo usuário
 
 No primeiro carrossel, o usuário pode:
-- escolher o modelo;
+- escolher o modelo narrativo compatível com Venda/Aluguel;
 - editar headline principal;
 - editar CTA;
-- editar legenda do post;
-- escolher entre fotos disponíveis se quiser substituir uma seleção automática.
+- editar legenda do post.
+
+A troca manual de foto por slide fica para uma fase posterior. No MVP a seleção segue a ordem real da galeria.
 
 O usuário não pode:
 - criar slide arbitrário;
