@@ -318,3 +318,46 @@ export async function scheduleCampaignDraft(
 
   return campaignId;
 }
+
+
+export async function deleteCampaign(campaignId: string) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  const { data: campaign, error: readError } = await supabase
+    .from("campaigns")
+    .select("id,status")
+    .eq("id", campaignId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (readError || !campaign) {
+    throw new Error("Campanha não encontrada.");
+  }
+
+  if (campaign.status === "publishing") {
+    throw new Error(
+      "A campanha está sendo publicada. Aguarde a conclusão antes de excluí-la.",
+    );
+  }
+
+  const { error } = await supabase
+    .from("campaigns")
+    .delete()
+    .eq("id", campaign.id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    throw new Error("Não foi possível excluir a campanha.");
+  }
+
+  revalidatePath("/campanhas");
+  revalidatePath("/imoveis");
+
+  return { deleted: true };
+}
