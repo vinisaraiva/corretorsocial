@@ -4,7 +4,7 @@ import { Building2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { StatusBadge } from "@/components/status-badge";
 import { formatBRL } from "@/lib/utils";
-import { propertyToView } from "@/lib/property-ui";
+import { propertyToView, resolvePrivateMedia } from "@/lib/property-ui";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -47,9 +47,14 @@ export default async function PropertyDetailPage({
       .eq("property_id", row.id),
   ]);
 
+  const media = await resolvePrivateMedia(
+    supabase,
+    mediaResult.data ?? [],
+  );
+
   const property = propertyToView(
     row,
-    mediaResult.data ?? [],
+    media,
     campaignsResult.data ?? [],
   );
 
