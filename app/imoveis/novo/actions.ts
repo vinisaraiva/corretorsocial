@@ -546,3 +546,76 @@ export async function deletePropertyDraft(propertyId: string) {
     throw new Error("Não foi possível desfazer o cadastro incompleto.");
   }
 }
+
+
+export async function queuePropertyMediaAnalysis(propertyId: string) {
+  if (process.env.MEDIA_ANALYSIS_ENABLED !== "true") {
+    return null;
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data: property } = await supabase
+    .from("properties")
+    .select("id")
+    .eq("id", propertyId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!property) {
+    throw new Error("Imóvel não encontrado para análise de fotos.");
+  }
+
+  const { data: media } = await supabase
+    .from("property_media")
+    .select("id")
+    .eq("property_id", property.id)
+    .eq("media_type", "image")
+    .limit(1);
+
+  if (!media || media.length === 0) {
+    return null;
+  }
+
+  const { data: existing } = await supabase
+    .from("jobs")
+    .select("id,status")
+    .eq("user_id", user.id)
+    .eq("type", "media_analysis")
+    .in("status", ["queued", "processing", "retrying"])
+    .contains("payload", { property_id: property.id })
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existing) {
+    return existing.id;
+  }
+
+  const { data: job, error } = await supabase
+    .from("jobs")
+    .insert({
+      user_id: user.id,
+      type: "media_analysis",
+      priority: 80,
+      payload: {
+        property_id: property.id,
+      },
+      max_attempts: 3,
+    })
+    .select("id")
+    .single();
+
+  if (error || !job) {
+    throw new Error("Não foi possível iniciar a análise das fotos.");
+  }
+
+  return job.id;
+}
