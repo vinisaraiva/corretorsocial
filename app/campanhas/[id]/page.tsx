@@ -64,7 +64,7 @@ export default async function CampaignDetailPage({
         .eq("property_id", campaign.property_id),
       supabase
         .from("campaign_variants")
-        .select("provider,headline,caption,cta")
+        .select("provider,format,headline,caption,cta,render_metadata")
         .eq("campaign_id", campaign.id),
       supabase
         .from("profiles")
@@ -94,6 +94,14 @@ export default async function CampaignDetailPage({
   let subheadline = [property.location, property.city]
     .filter(Boolean)
     .join(" · ");
+  let instagramStory:
+    | {
+        templateId: string;
+        headline: string;
+        subheadline: string;
+        cta: string;
+      }
+    | undefined;
 
   const metadata =
     campaign.generation_metadata &&
@@ -107,6 +115,29 @@ export default async function CampaignDetailPage({
   }
 
   for (const variant of variantsResult.data ?? []) {
+    if (variant.provider === "instagram" && variant.format === "story_9x16") {
+      const storyMetadata =
+        variant.render_metadata &&
+        typeof variant.render_metadata === "object" &&
+        !Array.isArray(variant.render_metadata)
+          ? (variant.render_metadata as Record<string, unknown>)
+          : null;
+
+      instagramStory = {
+        templateId:
+          typeof storyMetadata?.visual_style === "string"
+            ? storyMetadata.visual_style
+            : "story-clean",
+        headline: variant.headline ?? headline,
+        subheadline:
+          typeof storyMetadata?.subheadline === "string"
+            ? storyMetadata.subheadline
+            : subheadline,
+        cta: variant.cta ?? cta,
+      };
+      continue;
+    }
+
     const channel = providerToChannel[variant.provider];
     if (channel && variant.caption) captions[channel] = variant.caption;
     if (variant.headline) headline = variant.headline;
@@ -147,6 +178,7 @@ export default async function CampaignDetailPage({
           status: campaign.status,
           scheduledFor: campaign.scheduled_for,
           captions,
+          instagramStory,
         }}
       />
     </AppShell>
