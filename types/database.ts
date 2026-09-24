@@ -577,7 +577,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      remove_property_media: {
+        Args: {
+          p_media_id: string
+          p_property_id: string
+        }
+        Returns: string
+      }
+      reorder_property_media: {
+        Args: {
+          p_media_ids: string[]
+          p_property_id: string
+        }
+        Returns: undefined
+      }
+      set_property_cover: {
+        Args: {
+          p_media_id: string
+          p_property_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       campaign_status:
