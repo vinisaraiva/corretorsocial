@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Building2, MapPin, Megaphone } from "lucide-react";
 import { StatusBadge } from "@/components/status-badge";
@@ -10,12 +9,12 @@ export function PropertyCard({ property }: { property: Property }) {
     <article className="app-card overflow-hidden">
       <div className="relative aspect-[16/9] bg-[#EAECF0]">
         {property.image ? (
-          <Image
+          <img
             src={property.image}
             alt={property.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 33vw"
+            className="h-full w-full object-cover"
+            loading="lazy"
+            referrerPolicy="no-referrer"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-[#98A2B3]">
