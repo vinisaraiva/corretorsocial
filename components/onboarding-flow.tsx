@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
   ChevronLeft,
@@ -29,6 +30,7 @@ export function OnboardingFlow({
   reviewMode?: boolean;
   initialProfile?: InitialProfile;
 }) {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
