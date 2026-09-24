@@ -56,7 +56,7 @@ export default async function CampaignDetailPage({
         .maybeSingle(),
       supabase
         .from("property_media")
-        .select("property_id,original_url,storage_path,is_cover,sort_order,width,height,ai_score,ai_tags")
+        .select("id,property_id,original_url,storage_path,is_cover,sort_order,width,height,ai_score,ai_tags")
         .eq("property_id", campaign.property_id),
       supabase
         .from("campaigns")
