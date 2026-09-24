@@ -62,9 +62,15 @@ export function propertyToView(
       return a.sort_order - b.sort_order;
     });
 
-  const image =
-    mediaForProperty.find((item) => item.original_url)?.original_url ??
-    undefined;
+  const images = Array.from(
+    new Set(
+      mediaForProperty
+        .map((item) => item.original_url)
+        .filter((value): value is string => Boolean(value)),
+    ),
+  );
+
+  const image = images[0];
 
   const propertyCampaigns = campaigns.filter(
     (campaign) => campaign.property_id === row.id,
@@ -94,6 +100,7 @@ export function propertyToView(
     description: row.description ?? "",
     highlights: row.highlights ?? [],
     image,
+    images,
     status: statusMap[row.status],
     campaigns: propertyCampaigns.length,
     lastPublished: lastPublished
