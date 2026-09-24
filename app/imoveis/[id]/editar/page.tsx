@@ -69,11 +69,7 @@ export default async function EditPropertyPage({
 
   const initialMedia = resolvedMedia
     .filter((item) => Boolean(item.original_url))
-    .sort((a, b) => {
-      if (a.is_cover && !b.is_cover) return -1;
-      if (!a.is_cover && b.is_cover) return 1;
-      return a.sort_order - b.sort_order;
-    })
+    .sort((a, b) => a.sort_order - b.sort_order)
     .map((item) => ({
       id: item.id,
       url: item.original_url!,
