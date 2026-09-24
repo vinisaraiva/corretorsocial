@@ -596,6 +596,24 @@ export async function queuePropertyMediaAnalysis(propertyId: string) {
     .maybeSingle();
 
   if (existing) {
+    if (existing.status !== "processing") {
+      const { error: invokeError } = await supabase.functions.invoke(
+        "media-analysis",
+        {
+          body: {
+            job_id: existing.id,
+          },
+        },
+      );
+
+      if (invokeError) {
+        console.error(
+          "Failed to re-invoke media-analysis Edge Function",
+          invokeError,
+        );
+      }
+    }
+
     return existing.id;
   }
 
