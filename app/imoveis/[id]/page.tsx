@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Building2 } from "lucide-react";
@@ -73,11 +72,11 @@ export default async function PropertyDetailPage({
         <div className="grid lg:grid-cols-[1.1fr_1fr]">
           <div className="relative min-h-80 bg-[#EAECF0]">
             {property.image ? (
-              <Image
+              <img
                 src={property.image}
                 alt={property.title}
-                fill
-                className="object-cover"
+                className="h-full min-h-80 w-full object-cover"
+                referrerPolicy="no-referrer"
               />
             ) : (
               <div className="flex h-full min-h-80 items-center justify-center text-[#98A2B3]">
