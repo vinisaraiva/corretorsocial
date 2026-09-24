@@ -273,6 +273,7 @@ export type Database = {
       properties: {
         Row: {
           area_m2: number | null
+          archived_from_status: Database["public"]["Enums"]["property_status"] | null
           bathrooms: number | null
           bedrooms: number | null
           city: string | null
@@ -302,6 +303,7 @@ export type Database = {
         }
         Insert: {
           area_m2?: number | null
+          archived_from_status?: Database["public"]["Enums"]["property_status"] | null
           bathrooms?: number | null
           bedrooms?: number | null
           city?: string | null
@@ -331,6 +333,7 @@ export type Database = {
         }
         Update: {
           area_m2?: number | null
+          archived_from_status?: Database["public"]["Enums"]["property_status"] | null
           bathrooms?: number | null
           bedrooms?: number | null
           city?: string | null
