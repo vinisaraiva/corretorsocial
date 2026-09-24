@@ -109,7 +109,19 @@ async function persistCampaign(input: CampaignDraftInput) {
     campaignId = data.id;
   }
 
-  const variantRows = variants.map((variant) => ({
+  const variantRows: Array<{
+    campaign_id: string;
+    provider: "instagram" | "facebook" | "tiktok" | "google_business";
+    format: string;
+    headline: string | null;
+    caption: string | null;
+    cta: string | null;
+    render_metadata: {
+      visual_style: string;
+      source: string;
+      subheadline: string;
+    };
+  }> = variants.map((variant) => ({
     campaign_id: campaignId!,
     provider: variant.provider,
     format: variant.format,
