@@ -6,11 +6,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import {
-  saveOnboarding,
-  type OnboardingInput,
-} from "@/app/onboarding/actions";
 import { LogoUploader } from "@/components/logo-uploader";
+import { createClient } from "@/lib/supabase/client";
 
 type InitialProfile = {
   professionalName?: string;
@@ -34,6 +31,7 @@ export function OnboardingFlow({
 }) {
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [form, setForm] = useState({
     name: initialProfile?.professionalName ?? "",
     creci: initialProfile?.creci ?? "",
@@ -50,26 +48,68 @@ export function OnboardingFlow({
 
   async function next() {
     if (step < 4) {
+      setSaveError("");
       setStep((current) => current + 1);
       return;
     }
 
     setSaving(true);
+    setSaveError("");
 
-    const input: OnboardingInput = {
-      professionalName: form.name,
-      creci: form.creci,
-      whatsapp: form.whatsapp,
-      website: form.site,
-      city: form.city,
-      serviceRegions: regions
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
-      primaryColor: form.color,
-    };
+    try {
+      const supabase = createClient();
 
-    await saveOnboarding(input, reviewMode);
+      const timeout = new Promise<never>((_, reject) => {
+        window.setTimeout(
+          () => reject(new Error("O salvamento demorou mais que o esperado. Tente novamente.")),
+          15_000,
+        );
+      });
+
+      const save = (async () => {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+          throw new Error("Sua sessão expirou. Entre novamente.");
+        }
+
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            professional_name: form.name.trim(),
+            creci: form.creci.trim() || null,
+            whatsapp: form.whatsapp.trim() || null,
+            website: form.site.trim() || null,
+            city: form.city.trim() || null,
+            service_regions: regions
+              .split(",")
+              .map((item) => item.trim())
+              .filter(Boolean),
+            primary_color: form.color,
+            onboarding_completed: true,
+          })
+          .eq("user_id", user.id);
+
+        if (error) {
+          throw new Error("Não foi possível salvar sua configuração.");
+        }
+      })();
+
+      await Promise.race([save, timeout]);
+
+      router.replace(reviewMode ? "/configuracoes" : "/");
+      router.refresh();
+    } catch (caught) {
+      setSaveError(
+        caught instanceof Error
+          ? caught.message
+          : "Não foi possível salvar sua configuração.",
+      );
+      setSaving(false);
+    }
   }
 
   return (
@@ -209,6 +249,12 @@ export function OnboardingFlow({
                 </div>
               ))}
             </div>
+
+            {saveError && (
+              <div className="mt-6 rounded-xl bg-[#FEF3F2] p-4 text-sm font-semibold leading-6 text-[#B42318]">
+                {saveError}
+              </div>
+            )}
 
             <div className="mt-6 flex items-start gap-3 rounded-xl bg-[#E9F4F1] p-4 text-sm text-[#176B5B]">
               <CheckCircle2 size={19} className="mt-0.5 shrink-0" />
