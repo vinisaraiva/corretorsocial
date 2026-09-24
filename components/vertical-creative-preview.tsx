@@ -135,6 +135,7 @@ export function VerticalCreativePreview({
   subheadline,
   cta,
   blockPosition,
+  suggestedBlockPosition,
 }: {
   property: Property;
   brand: VerticalBrand;
@@ -144,6 +145,7 @@ export function VerticalCreativePreview({
   subheadline: string;
   cta: string;
   blockPosition: BlockPosition;
+  suggestedBlockPosition?: "left" | "right" | null;
 }) {
   const brandColor = safeBrandColor(brand.primaryColor);
   const brandText = contrastText(brandColor);
@@ -154,7 +156,7 @@ export function VerticalCreativePreview({
   const safeZone = verticalSafeZones[platform];
   const template = getVerticalTemplate(templateId);
   const resolvedPosition = template.supportsBlockPosition
-    ? resolveBlockPosition(blockPosition, platform)
+    ? resolveBlockPosition(blockPosition, platform, suggestedBlockPosition)
     : "left";
   const contentWidth =
     platform === "tiktok" ? "w-[72%]" : "w-[82%]";
