@@ -5,8 +5,8 @@ import { AppShell } from "@/components/app-shell";
 import { HomeCreate } from "@/components/home-create";
 import { PropertyCard } from "@/components/property-card";
 import { StatCard } from "@/components/stat-card";
-import { properties } from "@/data/mock";
 import { createClient } from "@/lib/supabase/server";
+import { propertyToView, resolvePrivateMedia } from "@/lib/property-ui";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +30,73 @@ export default async function HomePage() {
   if (!profile?.onboarding_completed) {
     redirect("/onboarding");
   }
+
+  const [
+    propertyCountResult,
+    campaignCountResult,
+    trackingResult,
+    recentResult,
+  ] = await Promise.all([
+    supabase
+      .from("properties")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id),
+    supabase
+      .from("campaigns")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id),
+    supabase
+      .from("tracking_links")
+      .select("clicks")
+      .eq("user_id", user.id),
+    supabase
+      .from("properties")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(3),
+  ]);
+
+  const recentRows = recentResult.data ?? [];
+  const recentIds = recentRows.map((property) => property.id);
+
+  let media: Array<{
+    property_id: string;
+    original_url: string | null;
+    storage_path: string | null;
+    is_cover: boolean;
+    sort_order: number;
+  }> = [];
+
+  let propertyCampaigns: Array<{
+    property_id: string;
+    published_at: string | null;
+  }> = [];
+
+  if (recentIds.length > 0) {
+    const [mediaResult, propertyCampaignResult] = await Promise.all([
+      supabase
+        .from("property_media")
+        .select("property_id,original_url,storage_path,is_cover,sort_order")
+        .in("property_id", recentIds),
+      supabase
+        .from("campaigns")
+        .select("property_id,published_at")
+        .in("property_id", recentIds),
+    ]);
+
+    media = await resolvePrivateMedia(supabase, mediaResult.data ?? []);
+    propertyCampaigns = propertyCampaignResult.data ?? [];
+  }
+
+  const recentProperties = recentRows.map((row) =>
+    propertyToView(row, media, propertyCampaigns),
+  );
+
+  const clicks = (trackingResult.data ?? []).reduce(
+    (total, item) => total + item.clicks,
+    0,
+  );
 
   const firstName =
     profile.professional_name?.trim().split(/\s+/)[0] || "corretor";
@@ -58,22 +125,22 @@ export default async function HomePage() {
 
       <div className="mt-5 grid gap-4 sm:grid-cols-3">
         <StatCard
-          label="Imóveis este mês"
-          value="12"
+          label="Imóveis"
+          value={String(propertyCountResult.count ?? 0)}
           icon={Building2}
-          helper="+3 em relação ao mês passado"
+          helper="Salvos na sua conta"
         />
         <StatCard
-          label="Publicações"
-          value="46"
+          label="Campanhas"
+          value={String(campaignCountResult.count ?? 0)}
           icon={Megaphone}
-          helper="4 redes previstas"
+          helper="Rascunhos e agendamentos"
         />
         <StatCard
           label="Cliques no WhatsApp"
-          value="83"
+          value={String(clicks)}
           icon={MessageCircle}
-          helper="Dados demonstrativos"
+          helper="Tracking acumulado"
         />
       </div>
 
@@ -82,8 +149,7 @@ export default async function HomePage() {
           <div>
             <h2 className="text-lg font-extrabold">Imóveis recentes</h2>
             <p className="mt-1 text-sm text-[#667085]">
-              Os dados abaixo ainda são demonstrativos até ligarmos o cadastro
-              real de imóveis.
+              Continue uma campanha sem cadastrar tudo novamente.
             </p>
           </div>
           <Link
@@ -94,11 +160,26 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {properties.slice(0, 3).map((property) => (
-            <PropertyCard key={property.id} property={property} />
-          ))}
-        </div>
+        {recentProperties.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {recentProperties.map((property) => (
+              <PropertyCard key={property.id} property={property} />
+            ))}
+          </div>
+        ) : (
+          <div className="app-card p-8 text-center">
+            <h3 className="font-extrabold">Nenhum imóvel cadastrado</h3>
+            <p className="mt-2 text-sm text-[#667085]">
+              Cole o link de um imóvel ou faça o primeiro cadastro manual.
+            </p>
+            <Link
+              href="/imoveis/novo"
+              className="app-button-primary mt-5 inline-flex"
+            >
+              Cadastrar imóvel
+            </Link>
+          </div>
+        )}
       </section>
     </AppShell>
   );
