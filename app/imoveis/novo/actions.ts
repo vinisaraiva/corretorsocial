@@ -242,7 +242,7 @@ function parseMoney(value: unknown) {
 
   const cleaned = value
     .replace(/[^0-9.,]/g, "")
-    .replace(/.(?=\d{3}(?:\D|$))/g, "")
+    .replace(/\.(?=\d{3}(?:\D|$))/g, "")
     .replace(",", ".");
 
   const number = Number(cleaned);
