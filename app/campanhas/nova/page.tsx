@@ -38,6 +38,10 @@ export default async function NewCampaignPage({
     notFound();
   }
 
+  if (row.status === "archived") {
+    redirect(`/imoveis/${row.id}`);
+  }
+
   const [mediaResult, campaignsResult, profileResult] = await Promise.all([
     supabase
       .from("property_media")
