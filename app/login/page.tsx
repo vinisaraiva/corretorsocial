@@ -3,9 +3,14 @@ import { login, signup } from "./actions";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    success?: string;
+    next?: string;
+  }>;
 }) {
   const params = await searchParams;
+  const next = params.next?.startsWith("/") ? params.next : "/";
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#F7F8FA] px-5 py-10">
@@ -38,6 +43,8 @@ export default async function LoginPage({
           )}
 
           <form className="mt-6 space-y-4">
+            <input type="hidden" name="next" value={next} />
+
             <label className="block text-sm font-bold">
               E-mail
               <input
@@ -76,8 +83,7 @@ export default async function LoginPage({
           </form>
 
           <p className="mt-5 text-center text-xs leading-5 text-[#667085]">
-            Durante a fase de desenvolvimento, o acesso ao dashboard continua
-            liberado enquanto validamos o frontend.
+            Sua conta protege imóveis, campanhas e configurações profissionais.
           </p>
         </section>
       </div>
