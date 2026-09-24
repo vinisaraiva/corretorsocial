@@ -10,7 +10,7 @@ const items = [
   { href: "/imoveis", label: "Imóveis", icon: Building2 },
   { href: "/imoveis/novo", label: "Novo", icon: Plus },
   { href: "/campanhas", label: "Campanhas", icon: Megaphone },
-  { href: "/configuracoes", label: "Mais", icon: Menu },
+  { href: "/mais", label: "Mais", icon: Menu },
 ];
 
 export function MobileNav() {
