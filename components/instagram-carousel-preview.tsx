@@ -156,15 +156,11 @@ function buildSlides(
       kind: "facts",
       title: "Destaques do imóvel",
       items: [...highlights, ...facts].slice(0, 4),
-    },
-    {
-      kind: "photo",
-      title: "Ambientes para conhecer",
       image: images[1],
     },
     {
       kind: "photo",
-      title: "Mais um olhar sobre o imóvel",
+      title: "Ambientes para conhecer",
       image: images[2],
     },
     {
@@ -172,6 +168,12 @@ function buildSlides(
       title: "Localização e características",
       items: [location, ...facts].filter(Boolean).slice(0, 4),
       image: images[3],
+    },
+    {
+      kind: "photo",
+      title: "Mais um olhar sobre o imóvel",
+      subtitle: location,
+      image: images[4],
     },
     {
       kind: "cta",
