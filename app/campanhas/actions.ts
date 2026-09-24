@@ -28,6 +28,12 @@ export type CampaignDraftInput = {
     subheadline: string;
     cta: string;
   };
+  instagramCarousel?: {
+    modelId: string;
+    headline: string;
+    cta: string;
+    slideCount: number;
+  };
   blockPositions: {
     instagramFeed: "auto" | "left" | "right";
     instagramStory: "auto" | "left" | "right";
@@ -133,6 +139,8 @@ async function persistCampaign(input: CampaignDraftInput) {
       source: string;
       subheadline: string;
       block_position: "auto" | "left" | "right";
+      carousel_type?: string;
+      slide_count?: number;
     };
   }> = variants.map((variant) => ({
     campaign_id: campaignId!,
@@ -183,6 +191,25 @@ async function persistCampaign(input: CampaignDraftInput) {
       block_position: input.blockPositions.tiktok,
     },
   });
+
+  if (input.instagramCarousel) {
+    variantRows.push({
+      campaign_id: campaignId!,
+      provider: "instagram",
+      format: "carousel_4x5",
+      headline: input.instagramCarousel.headline.trim() || null,
+      caption: input.captions.instagram.trim() || null,
+      cta: input.instagramCarousel.cta.trim() || null,
+      render_metadata: {
+        visual_style: input.visualStyle,
+        source: "deterministic_carousel_v0_1",
+        subheadline: "",
+        block_position: "auto",
+        carousel_type: input.instagramCarousel.modelId,
+        slide_count: input.instagramCarousel.slideCount,
+      },
+    });
+  }
 
   const { error: variantsError } = await supabase
     .from("campaign_variants")
