@@ -16,6 +16,12 @@ export type CampaignDraftInput = {
     tiktok: string;
     google: string;
   };
+  instagramStory?: {
+    templateId: string;
+    headline: string;
+    subheadline: string;
+    cta: string;
+  };
 };
 
 const variants = [
@@ -103,26 +109,41 @@ async function persistCampaign(input: CampaignDraftInput) {
     campaignId = data.id;
   }
 
+  const variantRows = variants.map((variant) => ({
+    campaign_id: campaignId!,
+    provider: variant.provider,
+    format: variant.format,
+    headline: input.headline.trim() || null,
+    caption: input.captions[variant.key].trim() || null,
+    cta: input.cta.trim() || null,
+    render_metadata: {
+      visual_style: input.visualStyle,
+      source: "deterministic_preview_v0_2",
+      subheadline: input.subheadline.trim(),
+    },
+  }));
+
+  if (input.instagramStory) {
+    variantRows.push({
+      campaign_id: campaignId!,
+      provider: "instagram",
+      format: "story_9x16",
+      headline: input.instagramStory.headline.trim() || null,
+      caption: input.captions.instagram.trim() || null,
+      cta: input.instagramStory.cta.trim() || null,
+      render_metadata: {
+        visual_style: input.instagramStory.templateId,
+        source: "deterministic_story_v0_1",
+        subheadline: input.instagramStory.subheadline.trim(),
+      },
+    });
+  }
+
   const { error: variantsError } = await supabase
     .from("campaign_variants")
-    .upsert(
-      variants.map((variant) => ({
-        campaign_id: campaignId!,
-        provider: variant.provider,
-        format: variant.format,
-        headline: input.headline.trim() || null,
-        caption: input.captions[variant.key].trim() || null,
-        cta: input.cta.trim() || null,
-        render_metadata: {
-          visual_style: input.visualStyle,
-          source: "deterministic_preview_v0_2",
-          subheadline: input.subheadline.trim(),
-        },
-      })),
-      {
-        onConflict: "campaign_id,provider,format",
-      },
-    );
+    .upsert(variantRows, {
+      onConflict: "campaign_id,provider,format",
+    });
 
   if (variantsError) {
     throw new Error("A campanha foi criada, mas não conseguimos salvar suas versões.");
