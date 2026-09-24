@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Megaphone } from "lucide-react";
+import { Building2, MapPin, Megaphone } from "lucide-react";
 import { StatusBadge } from "@/components/status-badge";
 import { formatBRL } from "@/lib/utils";
 import type { Property } from "@/types";
@@ -9,14 +9,24 @@ export function PropertyCard({ property }: { property: Property }) {
   return (
     <article className="app-card overflow-hidden">
       <div className="relative aspect-[16/9] bg-[#EAECF0]">
-        <Image
-          src={property.image}
-          alt={property.title}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, 33vw"
-        />
+        {property.image ? (
+          <Image
+            src={property.image}
+            alt={property.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-[#98A2B3]">
+            <div className="text-center">
+              <Building2 size={34} className="mx-auto" />
+              <div className="mt-2 text-xs font-semibold">Sem foto de capa</div>
+            </div>
+          </div>
+        )}
       </div>
+
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -28,17 +38,20 @@ export function PropertyCard({ property }: { property: Property }) {
           </div>
           <StatusBadge status={property.status} />
         </div>
+
         <p className="mt-3 text-lg font-extrabold">
-          {formatBRL(property.price)}
-          {property.purpose === "Aluguel" && (
+          {property.price > 0 ? formatBRL(property.price) : "Preço sob consulta"}
+          {property.purpose === "Aluguel" && property.price > 0 && (
             <span className="text-xs font-medium text-[#667085]">/mês</span>
           )}
         </p>
+
         <div className="mt-3 flex items-center gap-2 text-xs text-[#667085]">
           <Megaphone size={15} />
           {property.campaigns} campanha{property.campaigns === 1 ? "" : "s"}
           {property.lastPublished && <span>· {property.lastPublished}</span>}
         </div>
+
         <div className="mt-4 grid grid-cols-2 gap-2">
           <Link
             href={`/imoveis/${property.id}`}
