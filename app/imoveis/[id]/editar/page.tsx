@@ -97,6 +97,7 @@ export default async function EditPropertyPage({
         propertyId={property.id}
         initialDraft={initialDraft}
         initialMedia={initialMedia}
+        initialCoverManuallySelected={property.cover_manually_selected}
       />
     </AppShell>
   );
