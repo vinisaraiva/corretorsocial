@@ -19,6 +19,12 @@ import {
   scheduleCampaignDraft,
   type CampaignDraftInput,
 } from "@/app/campanhas/actions";
+import {
+  campaignTemplates,
+  getCampaignTemplate,
+  normalizeCampaignTemplate,
+  type CampaignTemplateId,
+} from "@/lib/campaign-templates";
 import { formatBRL } from "@/lib/utils";
 import type { Property, SocialChannel } from "@/types";
 
@@ -28,13 +34,6 @@ const allChannels: { id: SocialChannel; label: string }[] = [
   { id: "tiktok", label: "TikTok" },
   { id: "google", label: "Google" },
 ];
-
-const styles = [
-  ["Essencial", "Limpo, claro e universal"],
-  ["Destaque", "Foto em primeiro plano"],
-  ["Oportunidade", "Preço em evidência"],
-  ["Alto padrão", "Minimalista e sofisticado"],
-] as const;
 
 const stagingStyles = [
   "Moderno",
@@ -51,10 +50,31 @@ function toLocalDateTimeInput(value?: string | null) {
   return local.toISOString().slice(0, 16);
 }
 
+function safeBrandColor(value: string) {
+  return /^#[0-9A-F]{6}$/i.test(value) ? value : "#176B5B";
+}
+
+function contrastText(hex: string) {
+  const color = hex.replace("#", "");
+  const r = Number.parseInt(color.slice(0, 2), 16);
+  const g = Number.parseInt(color.slice(2, 4), 16);
+  const b = Number.parseInt(color.slice(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  return luminance > 0.62 ? "#18202A" : "#FFFFFF";
+}
+
+type CampaignBrand = {
+  professionalName: string;
+  logoUrl?: string | null;
+  primaryColor: string;
+};
+
 type InitialCampaign = {
   id: string;
   visualStyle: string;
   headline: string;
+  subheadline: string;
   cta: string;
   status: string;
   scheduledFor?: string | null;
@@ -63,12 +83,15 @@ type InitialCampaign = {
 
 export function CampaignBuilder({
   propertyData,
+  brand,
   campaignData,
 }: {
   propertyData: Property;
+  brand: CampaignBrand;
   campaignData?: InitialCampaign;
 }) {
   const property = propertyData;
+  const brandColor = safeBrandColor(brand.primaryColor);
 
   const generatedCaptions = useMemo(
     () => ({
@@ -80,14 +103,23 @@ export function CampaignBuilder({
     [property],
   );
 
+  const defaultSubheadline =
+    property.highlights[1] ??
+    [property.location, property.city].filter(Boolean).join(" · ");
+
   const [persistedCampaignId, setPersistedCampaignId] = useState(
     campaignData?.id,
   );
   const [channel, setChannel] = useState<SocialChannel>("instagram");
   const [adjusting, setAdjusting] = useState(false);
-  const [style, setStyle] = useState(campaignData?.visualStyle ?? "Destaque");
+  const [templateId, setTemplateId] = useState<CampaignTemplateId>(() =>
+    normalizeCampaignTemplate(campaignData?.visualStyle),
+  );
   const [headline, setHeadline] = useState(
     campaignData?.headline ?? property.highlights[0] ?? property.title,
+  );
+  const [subheadline, setSubheadline] = useState(
+    campaignData?.subheadline ?? defaultSubheadline,
   );
   const [cta, setCta] = useState(
     campaignData?.cta ?? "Fale comigo no WhatsApp",
@@ -114,6 +146,7 @@ export function CampaignBuilder({
     useState<(typeof stagingStyles)[number]>("Moderno");
   const [stagingGenerated, setStagingGenerated] = useState(false);
 
+  const selectedTemplate = getCampaignTemplate(templateId);
   const copy = captions[channel];
 
   function markChanged() {
@@ -125,8 +158,9 @@ export function CampaignBuilder({
     return {
       campaignId: persistedCampaignId,
       propertyId: property.id,
-      visualStyle: style,
+      visualStyle: templateId,
       headline,
+      subheadline,
       cta,
       captions,
     };
@@ -188,16 +222,16 @@ export function CampaignBuilder({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-[#FFFAEB] p-4 text-sm text-[#B54708]">
-        <strong>Prévia determinística.</strong> Os ajustes abaixo já alteram a
-        peça em tempo real. IA e publicação nas redes entram nas próximas
-        integrações.
+      <div className="rounded-xl bg-[#E9F4F1] p-4 text-sm text-[#176B5B]">
+        <strong>Seis artes profissionais, sem editor livre.</strong> Escolha a
+        composição que melhor valoriza o imóvel e edite apenas os textos.
       </div>
 
       {dirty && (
         <div className="flex items-center gap-2 rounded-xl border border-[#FEDF89] bg-[#FFFAEB] p-4 text-sm font-bold text-[#B54708]">
           <Sparkles size={17} />
-          Alterações não salvas. Confira a prévia e clique em “Salvar campanha”.
+          Alterações não salvas. Confira a prévia e clique em “Salvar
+          alterações”.
         </div>
       )}
 
@@ -214,7 +248,7 @@ export function CampaignBuilder({
         </div>
       )}
 
-      <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_390px]">
         <div className="app-card p-4 sm:p-6">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -226,7 +260,7 @@ export function CampaignBuilder({
 
             <span className="inline-flex items-center gap-1 rounded-full bg-[#E9F4F1] px-3 py-1.5 text-xs font-bold text-[#176B5B]">
               <Sparkles size={14} />
-              Estilo {style}
+              {selectedTemplate.name}
             </span>
           </div>
 
@@ -249,8 +283,10 @@ export function CampaignBuilder({
 
           <CreativePreview
             property={property}
-            style={style}
+            brand={brand}
+            templateId={templateId}
             headline={headline}
+            subheadline={subheadline}
             copy={copy}
             cta={cta}
           />
@@ -261,11 +297,12 @@ export function CampaignBuilder({
             <div className="app-card p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="font-extrabold">Ajustar campanha</div>
+                  <div className="font-extrabold">Escolha a arte</div>
                   <p className="mt-1 text-xs leading-5 text-[#667085]">
-                    Tudo aqui altera a prévia ao lado em tempo real.
+                    A estrutura é fixa para preservar a qualidade visual.
                   </p>
                 </div>
+
                 <button
                   type="button"
                   onClick={() => setAdjusting(false)}
@@ -276,106 +313,153 @@ export function CampaignBuilder({
                 </button>
               </div>
 
-              <div className="mt-5 space-y-4">
-                <label className="block text-sm font-bold">
-                  Headline da arte
-                  <input
-                    className="app-input mt-2"
-                    value={headline}
-                    onChange={(event) => {
-                      setHeadline(event.target.value);
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                {campaignTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    aria-pressed={templateId === template.id}
+                    onClick={() => {
+                      setTemplateId(template.id);
                       markChanged();
                     }}
-                  />
-                  <span className="mt-1 block text-xs font-normal text-[#667085]">
-                    Aparece sobre a imagem.
-                  </span>
-                </label>
+                    className={`overflow-hidden rounded-xl border text-left transition ${
+                      templateId === template.id
+                        ? "border-[#176B5B] ring-2 ring-[#176B5B]/10"
+                        : "border-[#E4E7EC] hover:border-[#98A2B3]"
+                    }`}
+                  >
+                    <TemplateThumbnail
+                      property={property}
+                      brand={brand}
+                      templateId={template.id}
+                    />
+                    <div className="p-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-extrabold">
+                          {template.name}
+                        </span>
+                        {templateId === template.id && (
+                          <Check size={14} className="text-[#176B5B]" />
+                        )}
+                      </div>
+                      <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-[#667085]">
+                        {template.description}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
 
-                <label className="block text-sm font-bold">
-                  Chamada para ação
-                  <input
-                    className="app-input mt-2"
-                    value={cta}
-                    onChange={(event) => {
-                      setCta(event.target.value);
-                      markChanged();
-                    }}
-                  />
-                  <span className="mt-1 block text-xs font-normal text-[#667085]">
-                    Aparece abaixo da legenda.
-                  </span>
-                </label>
+              <div className="mt-5 border-t border-[#E4E7EC] pt-5">
+                <div className="mb-4">
+                  <div className="text-sm font-extrabold">
+                    Textos desta arte
+                  </div>
+                  <p className="mt-1 text-xs leading-5 text-[#667085]">
+                    Sem posição, tamanho ou blocos livres.
+                  </p>
+                </div>
 
-                <label className="block text-sm font-bold">
-                  Legenda — {allChannels.find((item) => item.id === channel)?.label}
-                  <textarea
-                    className="app-input mt-2 min-h-28 py-3"
-                    value={captions[channel]}
-                    onChange={(event) => {
-                      setCaptions((current) => ({
-                        ...current,
-                        [channel]: event.target.value,
-                      }));
-                      markChanged();
-                    }}
-                  />
-                  <span className="mt-1 block text-xs font-normal text-[#667085]">
-                    Troque de rede acima para editar a legenda de cada canal.
-                  </span>
-                </label>
+                <div className="space-y-4">
+                  <label className="block text-sm font-bold">
+                    Headline
+                    <input
+                      className="app-input mt-2"
+                      maxLength={60}
+                      value={headline}
+                      onChange={(event) => {
+                        setHeadline(event.target.value);
+                        markChanged();
+                      }}
+                    />
+                    <span className="mt-1 block text-right text-[10px] font-normal text-[#98A2B3]">
+                      {headline.length}/60
+                    </span>
+                  </label>
 
-                <div>
-                  <div className="mb-2 text-sm font-bold">Estilo visual</div>
-                  <div className="grid gap-2">
-                    {styles.map(([name, description]) => (
-                      <button
-                        key={name}
-                        type="button"
-                        aria-pressed={style === name}
-                        onClick={() => {
-                          setStyle(name);
+                  {selectedTemplate.supportsSubheadline && (
+                    <label className="block text-sm font-bold">
+                      Subheadline
+                      <input
+                        className="app-input mt-2"
+                        maxLength={80}
+                        value={subheadline}
+                        onChange={(event) => {
+                          setSubheadline(event.target.value);
                           markChanged();
                         }}
-                        className={`flex items-center justify-between rounded-xl border p-3 text-left transition ${
-                          style === name
-                            ? "border-[#176B5B] bg-[#E9F4F1]"
-                            : "border-[#E4E7EC] bg-white hover:border-[#98A2B3] hover:bg-[#F9FAFB]"
-                        }`}
-                      >
-                        <span>
-                          <span className="block font-extrabold">{name}</span>
-                          <span className="mt-0.5 block text-xs text-[#667085]">
-                            {description}
-                          </span>
-                        </span>
-                        {style === name && (
-                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#176B5B] text-white">
-                            <Check size={15} />
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                      />
+                      <span className="mt-1 block text-right text-[10px] font-normal text-[#98A2B3]">
+                        {subheadline.length}/80
+                      </span>
+                    </label>
+                  )}
+
+                  <label className="block text-sm font-bold">
+                    CTA
+                    <input
+                      className="app-input mt-2"
+                      maxLength={36}
+                      value={cta}
+                      onChange={(event) => {
+                        setCta(event.target.value);
+                        markChanged();
+                      }}
+                    />
+                    <span className="mt-1 block text-xs font-normal text-[#667085]">
+                      {selectedTemplate.showsCtaOnArt
+                        ? "Nesta arte, o CTA também aparece dentro da peça."
+                        : "Usado na publicação; esta arte não coloca CTA sobre a foto."}
+                    </span>
+                  </label>
+
+                  <label className="block text-sm font-bold">
+                    Legenda —{" "}
+                    {allChannels.find((item) => item.id === channel)?.label}
+                    <textarea
+                      className="app-input mt-2 min-h-28 py-3"
+                      value={captions[channel]}
+                      onChange={(event) => {
+                        setCaptions((current) => ({
+                          ...current,
+                          [channel]: event.target.value,
+                        }));
+                        markChanged();
+                      }}
+                    />
+                    <span className="mt-1 block text-xs font-normal text-[#667085]">
+                      Troque de rede no topo para editar cada legenda.
+                    </span>
+                  </label>
                 </div>
               </div>
             </div>
           ) : (
             <div className="app-card p-4">
               <div className="text-xs font-bold uppercase tracking-wide text-[#667085]">
-                Estado da campanha
+                Arte selecionada
               </div>
-              <p className="mt-2 font-extrabold">
-                {status === "scheduled"
-                  ? "Agendada"
-                  : persistedCampaignId
-                    ? "Salva"
-                    : "Ainda não salva"}
+              <p className="mt-2 font-extrabold">{selectedTemplate.name}</p>
+              <p className="mt-1 text-sm leading-5 text-[#667085]">
+                {selectedTemplate.useCase}
               </p>
-              <p className="mt-1 text-sm text-[#667085]">
-                Use “Ajustar campanha” para mudar texto, legenda e composição
-                visual.
-              </p>
+
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {selectedTemplate.showsLogo && (
+                  <MiniBadge label="Logo" />
+                )}
+                <MiniBadge label="Headline" />
+                {selectedTemplate.supportsSubheadline && (
+                  <MiniBadge label="Subheadline" />
+                )}
+                {selectedTemplate.showsPrice && (
+                  <MiniBadge label="Preço" />
+                )}
+                {selectedTemplate.showsFeatures && (
+                  <MiniBadge label="Características" />
+                )}
+              </div>
             </div>
           )}
 
@@ -384,7 +468,7 @@ export function CampaignBuilder({
             onClick={() => setAdjusting((value) => !value)}
             className="app-button-secondary w-full"
           >
-            {adjusting ? "Fechar ajustes" : "Ajustar campanha"}
+            {adjusting ? "Fechar ajustes" : "Escolher/ajustar arte"}
           </button>
 
           <button
@@ -448,8 +532,8 @@ export function CampaignBuilder({
         <section className="app-card p-5 sm:p-6">
           <h3 className="text-lg font-extrabold">Agendar campanha</h3>
           <p className="mt-1 text-sm text-[#667085]">
-            O agendamento já é salvo no banco. A execução automática começa
-            quando o worker de publicação estiver conectado.
+            O agendamento já é salvo. A publicação automática começa quando o
+            worker e as conexões sociais estiverem ativos.
           </p>
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -580,125 +664,181 @@ export function CampaignBuilder({
 
 function CreativePreview({
   property,
-  style,
+  brand,
+  templateId,
   headline,
+  subheadline,
   copy,
   cta,
 }: {
   property: Property;
-  style: string;
+  brand: CampaignBrand;
+  templateId: CampaignTemplateId;
   headline: string;
+  subheadline: string;
   copy: string;
   cta: string;
 }) {
+  const brandColor = safeBrandColor(brand.primaryColor);
+  const brandText = contrastText(brandColor);
   const locality = [property.location, property.city]
     .filter(Boolean)
     .join(" · ");
-
-  const featureLine = [
-    property.bedrooms ? `${property.bedrooms} quartos` : null,
-    property.suites ? `${property.suites} suítes` : null,
-    property.area ? `${property.area} m²` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-
-  const price =
-    property.price > 0
-      ? `${formatBRL(property.price)}${property.purpose === "Aluguel" ? "/mês" : ""}`
-      : "Preço sob consulta";
+  const features = featureItems(property);
+  const price = priceText(property);
 
   return (
     <div className="mx-auto max-w-[430px] overflow-hidden rounded-2xl border border-[#E4E7EC] bg-white shadow-sm">
       <div className="relative aspect-[4/5] overflow-hidden bg-[#EAECF0]">
         <PropertyImage property={property} />
 
-        {style === "Essencial" && (
-          <>
-            <div className="absolute inset-x-0 bottom-0 bg-white p-5 text-[#18202A]">
-              <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#176B5B]">
-                {locality}
-              </div>
-              <div className="mt-2 text-2xl font-black leading-tight">
-                {headline}
-              </div>
-              {featureLine && (
-                <div className="mt-2 text-sm font-semibold text-[#667085]">
-                  {featureLine}
-                </div>
-              )}
-              <div className="mt-3 text-xl font-black text-[#176B5B]">
-                {price}
-              </div>
-            </div>
-          </>
-        )}
-
-        {style === "Destaque" && (
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-5 pt-24 text-white">
-            <div className="text-xs font-bold uppercase tracking-wider">
+        {templateId === "clean-base" && (
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/55 to-transparent p-5 pt-28 text-white">
+            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/75">
               {locality}
             </div>
-            <div className="mt-2 text-2xl font-black leading-tight">
+            <div className="mt-2 text-3xl font-black leading-[1.05]">
               {headline}
             </div>
-            {featureLine && (
-              <div className="mt-2 text-sm font-semibold">{featureLine}</div>
-            )}
-            <div className="mt-3 text-xl font-black">{price}</div>
+            <div className="mt-4 inline-flex rounded-full bg-white/95 px-3 py-1.5 text-sm font-black text-[#18202A]">
+              {price}
+            </div>
           </div>
         )}
 
-        {style === "Oportunidade" && (
+        {templateId === "clean-top" && (
           <>
-            <div className="absolute left-4 top-4 rounded-full bg-[#F79009] px-3 py-1.5 text-xs font-black uppercase tracking-wide text-white shadow">
-              Oportunidade
-            </div>
-            <div className="absolute inset-x-4 bottom-4 rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur">
-              <div className="text-3xl font-black leading-none text-[#176B5B]">
-                {price}
-              </div>
-              <div className="mt-3 text-lg font-black leading-tight text-[#18202A]">
+            <div className="absolute inset-x-4 top-4 rounded-2xl bg-white/94 p-4 shadow-sm backdrop-blur">
+              <BrandMark brand={brand} compact />
+              <div className="mt-3 text-2xl font-black leading-tight text-[#18202A]">
                 {headline}
               </div>
-              <div className="mt-2 text-xs font-bold uppercase tracking-wide text-[#667085]">
-                {locality}
+              <div className="mt-1.5 text-sm leading-5 text-[#667085]">
+                {subheadline}
               </div>
-              {featureLine && (
-                <div className="mt-2 text-sm font-semibold text-[#475467]">
-                  {featureLine}
-                </div>
-              )}
+            </div>
+            <div
+              className="absolute bottom-4 right-4 rounded-xl px-4 py-2 text-base font-black shadow"
+              style={{ backgroundColor: brandColor, color: brandText }}
+            >
+              {price}
             </div>
           </>
         )}
 
-        {style === "Alto padrão" && (
+        {templateId === "commercial" && (
           <>
-            <div className="absolute inset-0 bg-black/35" />
-            <div className="absolute inset-4 border border-white/55" />
-            <div className="absolute inset-x-8 bottom-10 text-center text-white">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-white/80">
-                {locality}
-              </div>
-              <div className="mt-4 font-serif text-3xl leading-tight">
+            <div
+              className="absolute left-4 top-4 rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] shadow"
+              style={{ backgroundColor: brandColor, color: brandText }}
+            >
+              {property.purpose}
+            </div>
+            <div className="absolute inset-x-4 bottom-4 rounded-2xl bg-white/96 p-4 shadow-xl backdrop-blur">
+              <div className="text-xl font-black leading-tight text-[#18202A]">
                 {headline}
               </div>
-              <div className="mx-auto mt-4 h-px w-12 bg-white/70" />
-              <div className="mt-4 text-base font-semibold tracking-wide">
+              <div
+                className="mt-3 text-3xl font-black"
+                style={{ color: brandColor }}
+              >
                 {price}
               </div>
-              {featureLine && (
-                <div className="mt-2 text-xs tracking-wide text-white/80">
-                  {featureLine}
+              <FeatureRow features={features} />
+            </div>
+          </>
+        )}
+
+        {templateId === "opportunity" && (
+          <>
+            <div className="absolute inset-x-0 top-5 flex justify-start">
+              <div className="rounded-r-full bg-[#F79009] px-5 py-2 text-xs font-black uppercase tracking-[0.16em] text-white shadow">
+                Oportunidade
+              </div>
+            </div>
+            <div className="absolute inset-x-0 bottom-0">
+              <div className="bg-black/72 px-5 py-4 text-white backdrop-blur-sm">
+                <div className="text-xl font-black leading-tight">
+                  {headline}
                 </div>
-              )}
+                <FeatureRow features={features} inverse />
+              </div>
+              <div className="bg-[#F79009] px-5 py-3 text-center text-3xl font-black text-white">
+                {price}
+              </div>
+            </div>
+          </>
+        )}
+
+        {templateId === "info-card" && (
+          <>
+            <div className="absolute inset-x-0 top-0 h-[57%]" />
+            <div className="absolute inset-x-0 bottom-0 min-h-[43%] bg-white p-5 text-[#18202A]">
+              <div className="flex items-center justify-between gap-3">
+                <BrandMark brand={brand} compact />
+                <span
+                  className="text-lg font-black"
+                  style={{ color: brandColor }}
+                >
+                  {price}
+                </span>
+              </div>
+              <div className="mt-3 text-xl font-black leading-tight">
+                {headline}
+              </div>
+              <div className="mt-1 text-sm text-[#667085]">
+                {subheadline}
+              </div>
+              <FeatureRow features={features} />
+              <div
+                className="mt-4 rounded-xl px-3 py-2 text-center text-sm font-black"
+                style={{ backgroundColor: brandColor, color: brandText }}
+              >
+                {cta}
+              </div>
+            </div>
+          </>
+        )}
+
+        {templateId === "brand-frame" && (
+          <>
+            <div
+              className="absolute inset-0 border-[10px]"
+              style={{ borderColor: brandColor }}
+            />
+            <div className="absolute left-5 top-5 rounded-xl bg-white/94 px-3 py-2 shadow backdrop-blur">
+              <BrandMark brand={brand} compact />
+            </div>
+            <div className="absolute inset-x-5 bottom-5 rounded-2xl bg-white/94 p-4 shadow-xl backdrop-blur">
+              <div className="text-2xl font-black leading-tight text-[#18202A]">
+                {headline}
+              </div>
+              <div className="mt-1 text-sm text-[#667085]">
+                {subheadline}
+              </div>
+              <div className="mt-3 flex items-end justify-between gap-3">
+                <div
+                  className="text-xl font-black"
+                  style={{ color: brandColor }}
+                >
+                  {price}
+                </div>
+                <div
+                  className="rounded-full px-3 py-1.5 text-[11px] font-black"
+                  style={{ backgroundColor: brandColor, color: brandText }}
+                >
+                  {cta}
+                </div>
+              </div>
             </div>
           </>
         )}
       </div>
 
       <div className="p-4">
+        <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[#98A2B3]">
+          Legenda — prévia
+        </div>
         <p className="text-sm leading-6 text-[#475467]">{copy}</p>
         <p className="mt-3 text-sm font-bold text-[#176B5B]">
           #Imóveis #
@@ -712,6 +852,172 @@ function CreativePreview({
       </div>
     </div>
   );
+}
+
+function TemplateThumbnail({
+  property,
+  brand,
+  templateId,
+}: {
+  property: Property;
+  brand: CampaignBrand;
+  templateId: CampaignTemplateId;
+}) {
+  const brandColor = safeBrandColor(brand.primaryColor);
+
+  return (
+    <div className="relative aspect-[4/5] overflow-hidden bg-[#EAECF0]">
+      {property.image ? (
+        <img
+          src={property.image}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          referrerPolicy="no-referrer"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-[#D0D5DD]" />
+      )}
+
+      {templateId === "clean-base" && (
+        <div className="absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-black/90 to-transparent p-2">
+          <div className="mt-7 h-2 w-3/4 rounded bg-white" />
+          <div className="mt-1.5 h-2 w-1/2 rounded bg-white/80" />
+        </div>
+      )}
+
+      {templateId === "clean-top" && (
+        <>
+          <div className="absolute inset-x-2 top-2 rounded bg-white/95 p-2">
+            <div className="h-1.5 w-1/3 rounded" style={{ backgroundColor: brandColor }} />
+            <div className="mt-1.5 h-2 w-4/5 rounded bg-[#18202A]" />
+            <div className="mt-1 h-1.5 w-2/3 rounded bg-[#98A2B3]" />
+          </div>
+          <div className="absolute bottom-2 right-2 h-4 w-1/3 rounded" style={{ backgroundColor: brandColor }} />
+        </>
+      )}
+
+      {templateId === "commercial" && (
+        <>
+          <div className="absolute left-2 top-2 h-4 w-1/4 rounded" style={{ backgroundColor: brandColor }} />
+          <div className="absolute inset-x-2 bottom-2 rounded bg-white/95 p-2">
+            <div className="h-2 w-3/4 rounded bg-[#18202A]" />
+            <div className="mt-1.5 h-3 w-1/2 rounded" style={{ backgroundColor: brandColor }} />
+            <div className="mt-2 flex gap-1">
+              <div className="h-2 flex-1 rounded bg-[#EAECF0]" />
+              <div className="h-2 flex-1 rounded bg-[#EAECF0]" />
+              <div className="h-2 flex-1 rounded bg-[#EAECF0]" />
+            </div>
+          </div>
+        </>
+      )}
+
+      {templateId === "opportunity" && (
+        <>
+          <div className="absolute left-0 top-3 h-4 w-1/2 rounded-r-full bg-[#F79009]" />
+          <div className="absolute inset-x-0 bottom-5 h-10 bg-black/70 p-2">
+            <div className="h-2 w-3/4 rounded bg-white" />
+          </div>
+          <div className="absolute inset-x-0 bottom-0 h-5 bg-[#F79009]" />
+        </>
+      )}
+
+      {templateId === "info-card" && (
+        <div className="absolute inset-x-0 bottom-0 h-[43%] bg-white p-2">
+          <div className="h-1.5 w-1/3 rounded" style={{ backgroundColor: brandColor }} />
+          <div className="mt-2 h-2 w-4/5 rounded bg-[#18202A]" />
+          <div className="mt-1 h-1.5 w-2/3 rounded bg-[#98A2B3]" />
+          <div className="mt-2 h-4 rounded" style={{ backgroundColor: brandColor }} />
+        </div>
+      )}
+
+      {templateId === "brand-frame" && (
+        <>
+          <div className="absolute inset-0 border-[5px]" style={{ borderColor: brandColor }} />
+          <div className="absolute left-2 top-2 h-4 w-1/3 rounded bg-white/95" />
+          <div className="absolute inset-x-2 bottom-2 rounded bg-white/95 p-2">
+            <div className="h-2 w-4/5 rounded bg-[#18202A]" />
+            <div className="mt-1.5 h-2 w-1/2 rounded" style={{ backgroundColor: brandColor }} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function BrandMark({
+  brand,
+  compact = false,
+}: {
+  brand: CampaignBrand;
+  compact?: boolean;
+}) {
+  if (brand.logoUrl) {
+    return (
+      <img
+        src={brand.logoUrl}
+        alt={brand.professionalName}
+        className={compact ? "max-h-7 max-w-28 object-contain" : "max-h-10 max-w-36 object-contain"}
+      />
+    );
+  }
+
+  return (
+    <span className="text-xs font-black uppercase tracking-wide text-[#18202A]">
+      {brand.professionalName}
+    </span>
+  );
+}
+
+function FeatureRow({
+  features,
+  inverse = false,
+}: {
+  features: string[];
+  inverse?: boolean;
+}) {
+  if (features.length === 0) return null;
+
+  return (
+    <div className="mt-3 flex flex-wrap gap-1.5">
+      {features.map((feature) => (
+        <span
+          key={feature}
+          className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
+            inverse
+              ? "bg-white/15 text-white"
+              : "bg-[#F2F4F7] text-[#475467]"
+          }`}
+        >
+          {feature}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function MiniBadge({ label }: { label: string }) {
+  return (
+    <span className="rounded-full bg-[#F2F4F7] px-2.5 py-1 text-[10px] font-bold text-[#475467]">
+      {label}
+    </span>
+  );
+}
+
+function featureItems(property: Property) {
+  return [
+    property.bedrooms ? `${property.bedrooms} quartos` : null,
+    property.suites ? `${property.suites} suítes` : null,
+    property.area ? `${property.area} m²` : null,
+    property.parking ? `${property.parking} vagas` : null,
+  ]
+    .filter((item): item is string => Boolean(item))
+    .slice(0, 3);
+}
+
+function priceText(property: Property) {
+  if (property.price <= 0) return "Preço sob consulta";
+
+  return `${formatBRL(property.price)}${property.purpose === "Aluguel" ? "/mês" : ""}`;
 }
 
 function PropertyImage({ property }: { property: Property }) {
