@@ -111,6 +111,14 @@ export default async function CampaignDetailPage({
       }
     | undefined;
 
+  const blockPositions = {
+    instagramFeed: "auto" as "auto" | "left" | "right",
+    instagramStory: "auto" as "auto" | "left" | "right",
+    facebook: "auto" as "auto" | "left" | "right",
+    tiktok: "auto" as "auto" | "left" | "right",
+    google: "auto" as "auto" | "left" | "right",
+  };
+
   const metadata =
     campaign.generation_metadata &&
     typeof campaign.generation_metadata === "object" &&
@@ -131,6 +139,13 @@ export default async function CampaignDetailPage({
         : null;
 
     if (variant.provider === "instagram" && variant.format === "story_9x16") {
+      if (
+        variantMetadata?.block_position === "left" ||
+        variantMetadata?.block_position === "right"
+      ) {
+        blockPositions.instagramStory = variantMetadata.block_position;
+      }
+
       instagramStory = {
         templateId:
           typeof variantMetadata?.visual_style === "string"
@@ -148,6 +163,13 @@ export default async function CampaignDetailPage({
 
     if (variant.provider === "tiktok" && variant.format === "vertical_video") {
       if (variant.caption) captions.tiktok = variant.caption;
+      if (
+        variantMetadata?.block_position === "left" ||
+        variantMetadata?.block_position === "right"
+      ) {
+        blockPositions.tiktok = variantMetadata.block_position;
+      }
+
       tiktokVertical = {
         templateId:
           typeof variantMetadata?.visual_style === "string"
@@ -165,6 +187,19 @@ export default async function CampaignDetailPage({
 
     const channel = providerToChannel[variant.provider];
     if (channel && variant.caption) captions[channel] = variant.caption;
+
+    if (
+      variantMetadata?.block_position === "left" ||
+      variantMetadata?.block_position === "right"
+    ) {
+      if (variant.provider === "instagram" && variant.format === "feed_4x5") {
+        blockPositions.instagramFeed = variantMetadata.block_position;
+      } else if (variant.provider === "facebook") {
+        blockPositions.facebook = variantMetadata.block_position;
+      } else if (variant.provider === "google_business") {
+        blockPositions.google = variantMetadata.block_position;
+      }
+    }
 
     if (variant.provider === "instagram" && variant.format === "feed_4x5") {
       if (variant.headline) headline = variant.headline;
@@ -208,6 +243,7 @@ export default async function CampaignDetailPage({
           captions,
           instagramStory,
           tiktokVertical,
+          blockPositions,
         }}
       />
     </AppShell>
