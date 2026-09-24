@@ -26,6 +26,13 @@ import {
   type CampaignTemplateId,
 } from "@/lib/campaign-templates";
 import { formatBRL } from "@/lib/utils";
+import {
+  getInstagramStoryTemplate,
+  normalizeInstagramStoryTemplate,
+  type InstagramStoryTemplateId,
+} from "@/lib/instagram-story-templates";
+import { InstagramStoryControls } from "@/components/instagram-story-controls";
+import { InstagramStoryPreview } from "@/components/instagram-story-preview";
 import type { Property, SocialChannel } from "@/types";
 
 const allChannels: { id: SocialChannel; label: string }[] = [
@@ -34,6 +41,8 @@ const allChannels: { id: SocialChannel; label: string }[] = [
   { id: "tiktok", label: "TikTok" },
   { id: "google", label: "Google" },
 ];
+
+type InstagramCampaignFormat = "feed" | "story" | "carousel";
 
 const stagingStyles = [
   "Moderno",
@@ -79,6 +88,12 @@ type InitialCampaign = {
   status: string;
   scheduledFor?: string | null;
   captions?: Partial<Record<SocialChannel, string>>;
+  instagramStory?: {
+    templateId: string;
+    headline: string;
+    subheadline: string;
+    cta: string;
+  };
 };
 
 export function CampaignBuilder({
@@ -111,6 +126,8 @@ export function CampaignBuilder({
     campaignData?.id,
   );
   const [channel, setChannel] = useState<SocialChannel>("instagram");
+  const [instagramFormat, setInstagramFormat] =
+    useState<InstagramCampaignFormat>("feed");
   const [adjusting, setAdjusting] = useState(false);
   const [templateId, setTemplateId] = useState<CampaignTemplateId>(() =>
     normalizeCampaignTemplate(campaignData?.visualStyle),
@@ -123,6 +140,24 @@ export function CampaignBuilder({
   );
   const [cta, setCta] = useState(
     campaignData?.cta ?? "Fale comigo no WhatsApp",
+  );
+  const [storyConfigured, setStoryConfigured] = useState(
+    Boolean(campaignData?.instagramStory),
+  );
+  const [storyTemplateId, setStoryTemplateId] =
+    useState<InstagramStoryTemplateId>(() =>
+      normalizeInstagramStoryTemplate(campaignData?.instagramStory?.templateId),
+    );
+  const [storyHeadline, setStoryHeadline] = useState(
+    campaignData?.instagramStory?.headline ??
+      property.highlights[0] ??
+      property.title,
+  );
+  const [storySubheadline, setStorySubheadline] = useState(
+    campaignData?.instagramStory?.subheadline ?? defaultSubheadline,
+  );
+  const [storyCta, setStoryCta] = useState(
+    campaignData?.instagramStory?.cta ?? "Fale comigo",
   );
   const [captions, setCaptions] = useState<Record<SocialChannel, string>>({
     instagram:
@@ -147,6 +182,12 @@ export function CampaignBuilder({
   const [stagingGenerated, setStagingGenerated] = useState(false);
 
   const selectedTemplate = getCampaignTemplate(templateId);
+  const selectedStoryTemplate = getInstagramStoryTemplate(storyTemplateId);
+  const isStoryView =
+    channel === "instagram" && instagramFormat === "story";
+  const activeArtName = isStoryView
+    ? selectedStoryTemplate.name
+    : selectedTemplate.name;
   const copy = captions[channel];
 
   function markChanged() {
@@ -163,6 +204,14 @@ export function CampaignBuilder({
       subheadline,
       cta,
       captions,
+      instagramStory: storyConfigured
+        ? {
+            templateId: storyTemplateId,
+            headline: storyHeadline,
+            subheadline: storySubheadline,
+            cta: storyCta,
+          }
+        : undefined,
     };
   }
 
@@ -260,11 +309,11 @@ export function CampaignBuilder({
 
             <span className="inline-flex items-center gap-1 rounded-full bg-[#E9F4F1] px-3 py-1.5 text-xs font-bold text-[#176B5B]">
               <Sparkles size={14} />
-              {selectedTemplate.name}
+              {activeArtName}
             </span>
           </div>
 
-          <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
+          <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
             {allChannels.map((item) => (
               <button
                 key={item.id}
@@ -281,15 +330,64 @@ export function CampaignBuilder({
             ))}
           </div>
 
-          <CreativePreview
-            property={property}
-            brand={brand}
-            templateId={templateId}
-            headline={headline}
-            subheadline={subheadline}
-            copy={copy}
-            cta={cta}
-          />
+          {channel === "instagram" && (
+            <div className="mb-5 flex gap-2 rounded-xl bg-[#F2F4F7] p-1.5">
+              <button
+                type="button"
+                onClick={() => setInstagramFormat("feed")}
+                className={`min-h-10 flex-1 rounded-lg px-3 text-sm font-bold transition ${
+                  instagramFormat === "feed"
+                    ? "bg-white text-[#18202A] shadow-sm"
+                    : "text-[#667085] hover:text-[#18202A]"
+                }`}
+              >
+                Feed
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setInstagramFormat("story");
+                  setStoryConfigured(true);
+                }}
+                className={`min-h-10 flex-1 rounded-lg px-3 text-sm font-bold transition ${
+                  instagramFormat === "story"
+                    ? "bg-white text-[#18202A] shadow-sm"
+                    : "text-[#667085] hover:text-[#18202A]"
+                }`}
+              >
+                Stories
+              </button>
+              <button
+                type="button"
+                disabled
+                title="Carrossel será a próxima fase"
+                className="min-h-10 flex-1 rounded-lg px-3 text-sm font-bold text-[#98A2B3] opacity-70"
+              >
+                Carrossel · em breve
+              </button>
+            </div>
+          )}
+
+          {isStoryView ? (
+            <InstagramStoryPreview
+              property={property}
+              brand={brand}
+              templateId={storyTemplateId}
+              headline={storyHeadline}
+              subheadline={storySubheadline}
+              cta={storyCta}
+            />
+          ) : (
+            <CreativePreview
+              property={property}
+              brand={brand}
+              templateId={templateId}
+              headline={headline}
+              subheadline={subheadline}
+              copy={copy}
+              cta={cta}
+            />
+          )}
         </div>
 
         <aside className="space-y-3">
@@ -297,9 +395,11 @@ export function CampaignBuilder({
             <div className="app-card p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="font-extrabold">Escolha a arte</div>
+                  <div className="font-extrabold">
+                    {isStoryView ? "Escolha o Story" : "Escolha a arte"}
+                  </div>
                   <p className="mt-1 text-xs leading-5 text-[#667085]">
-                    A estrutura é fixa para preservar a qualidade visual.
+                    Estrutura fixa para preservar qualidade e consistência.
                   </p>
                 </div>
 
@@ -313,151 +413,219 @@ export function CampaignBuilder({
                 </button>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                {campaignTemplates.map((template) => (
-                  <button
-                    key={template.id}
-                    type="button"
-                    aria-pressed={templateId === template.id}
-                    onClick={() => {
-                      setTemplateId(template.id);
+              {isStoryView ? (
+                <>
+                  <InstagramStoryControls
+                    property={property}
+                    brand={brand}
+                    templateId={storyTemplateId}
+                    headline={storyHeadline}
+                    subheadline={storySubheadline}
+                    cta={storyCta}
+                    onTemplateChange={(value) => {
+                      setStoryTemplateId(value);
+                      setStoryConfigured(true);
                       markChanged();
                     }}
-                    className={`overflow-hidden rounded-xl border text-left transition ${
-                      templateId === template.id
-                        ? "border-[#176B5B] ring-2 ring-[#176B5B]/10"
-                        : "border-[#E4E7EC] hover:border-[#98A2B3]"
-                    }`}
-                  >
-                    <TemplateThumbnail
-                      property={property}
-                      brand={brand}
-                      templateId={template.id}
-                    />
-                    <div className="p-2.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-extrabold">
-                          {template.name}
-                        </span>
-                        {templateId === template.id && (
-                          <Check size={14} className="text-[#176B5B]" />
-                        )}
-                      </div>
-                      <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-[#667085]">
-                        {template.description}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </div>
+                    onHeadlineChange={(value) => {
+                      setStoryHeadline(value);
+                      setStoryConfigured(true);
+                      markChanged();
+                    }}
+                    onSubheadlineChange={(value) => {
+                      setStorySubheadline(value);
+                      setStoryConfigured(true);
+                      markChanged();
+                    }}
+                    onCtaChange={(value) => {
+                      setStoryCta(value);
+                      setStoryConfigured(true);
+                      markChanged();
+                    }}
+                  />
 
-              <div className="mt-5 border-t border-[#E4E7EC] pt-5">
-                <div className="mb-4">
-                  <div className="text-sm font-extrabold">
-                    Textos desta arte
-                  </div>
-                  <p className="mt-1 text-xs leading-5 text-[#667085]">
-                    Sem posição, tamanho ou blocos livres.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <label className="block text-sm font-bold">
-                    Headline
-                    <input
-                      className="app-input mt-2"
-                      maxLength={60}
-                      value={headline}
-                      onChange={(event) => {
-                        setHeadline(event.target.value);
-                        markChanged();
-                      }}
-                    />
-                    <span className="mt-1 block text-right text-[10px] font-normal text-[#98A2B3]">
-                      {headline.length}/60
-                    </span>
-                  </label>
-
-                  {selectedTemplate.supportsSubheadline && (
+                  <div className="mt-5 border-t border-[#E4E7EC] pt-5">
                     <label className="block text-sm font-bold">
-                      Subheadline
-                      <input
-                        className="app-input mt-2"
-                        maxLength={80}
-                        value={subheadline}
+                      Legenda do Instagram
+                      <textarea
+                        className="app-input mt-2 min-h-28 py-3"
+                        value={captions.instagram}
                         onChange={(event) => {
-                          setSubheadline(event.target.value);
+                          setCaptions((current) => ({
+                            ...current,
+                            instagram: event.target.value,
+                          }));
                           markChanged();
                         }}
                       />
-                      <span className="mt-1 block text-right text-[10px] font-normal text-[#98A2B3]">
-                        {subheadline.length}/80
+                      <span className="mt-1 block text-xs font-normal text-[#667085]">
+                        A legenda é da publicação; não aparece dentro da arte do
+                        Story.
                       </span>
                     </label>
-                  )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    {campaignTemplates.map((template) => (
+                      <button
+                        key={template.id}
+                        type="button"
+                        aria-pressed={templateId === template.id}
+                        onClick={() => {
+                          setTemplateId(template.id);
+                          markChanged();
+                        }}
+                        className={`overflow-hidden rounded-xl border text-left transition ${
+                          templateId === template.id
+                            ? "border-[#176B5B] ring-2 ring-[#176B5B]/10"
+                            : "border-[#E4E7EC] hover:border-[#98A2B3]"
+                        }`}
+                      >
+                        <TemplateThumbnail
+                          property={property}
+                          brand={brand}
+                          templateId={template.id}
+                        />
+                        <div className="p-2.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-extrabold">
+                              {template.name}
+                            </span>
+                            {templateId === template.id && (
+                              <Check size={14} className="text-[#176B5B]" />
+                            )}
+                          </div>
+                          <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-[#667085]">
+                            {template.description}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
 
-                  <label className="block text-sm font-bold">
-                    CTA
-                    <input
-                      className="app-input mt-2"
-                      maxLength={36}
-                      value={cta}
-                      onChange={(event) => {
-                        setCta(event.target.value);
-                        markChanged();
-                      }}
-                    />
-                    <span className="mt-1 block text-xs font-normal text-[#667085]">
-                      {selectedTemplate.showsCtaOnArt
-                        ? "Nesta arte, o CTA também aparece dentro da peça."
-                        : "Usado na publicação; esta arte não coloca CTA sobre a foto."}
-                    </span>
-                  </label>
+                  <div className="mt-5 border-t border-[#E4E7EC] pt-5">
+                    <div className="mb-4">
+                      <div className="text-sm font-extrabold">
+                        Textos desta arte
+                      </div>
+                      <p className="mt-1 text-xs leading-5 text-[#667085]">
+                        Sem posição, tamanho ou blocos livres.
+                      </p>
+                    </div>
 
-                  <label className="block text-sm font-bold">
-                    Legenda —{" "}
-                    {allChannels.find((item) => item.id === channel)?.label}
-                    <textarea
-                      className="app-input mt-2 min-h-28 py-3"
-                      value={captions[channel]}
-                      onChange={(event) => {
-                        setCaptions((current) => ({
-                          ...current,
-                          [channel]: event.target.value,
-                        }));
-                        markChanged();
-                      }}
-                    />
-                    <span className="mt-1 block text-xs font-normal text-[#667085]">
-                      Troque de rede no topo para editar cada legenda.
-                    </span>
-                  </label>
-                </div>
-              </div>
+                    <div className="space-y-4">
+                      <label className="block text-sm font-bold">
+                        Headline
+                        <input
+                          className="app-input mt-2"
+                          maxLength={60}
+                          value={headline}
+                          onChange={(event) => {
+                            setHeadline(event.target.value);
+                            markChanged();
+                          }}
+                        />
+                        <span className="mt-1 block text-right text-[10px] font-normal text-[#98A2B3]">
+                          {headline.length}/60
+                        </span>
+                      </label>
+
+                      {selectedTemplate.supportsSubheadline && (
+                        <label className="block text-sm font-bold">
+                          Subheadline
+                          <input
+                            className="app-input mt-2"
+                            maxLength={80}
+                            value={subheadline}
+                            onChange={(event) => {
+                              setSubheadline(event.target.value);
+                              markChanged();
+                            }}
+                          />
+                          <span className="mt-1 block text-right text-[10px] font-normal text-[#98A2B3]">
+                            {subheadline.length}/80
+                          </span>
+                        </label>
+                      )}
+
+                      <label className="block text-sm font-bold">
+                        CTA
+                        <input
+                          className="app-input mt-2"
+                          maxLength={36}
+                          value={cta}
+                          onChange={(event) => {
+                            setCta(event.target.value);
+                            markChanged();
+                          }}
+                        />
+                        <span className="mt-1 block text-xs font-normal text-[#667085]">
+                          {selectedTemplate.showsCtaOnArt
+                            ? "Nesta arte, o CTA também aparece dentro da peça."
+                            : "Usado na publicação; esta arte não coloca CTA sobre a foto."}
+                        </span>
+                      </label>
+
+                      <label className="block text-sm font-bold">
+                        Legenda —{" "}
+                        {allChannels.find((item) => item.id === channel)?.label}
+                        <textarea
+                          className="app-input mt-2 min-h-28 py-3"
+                          value={captions[channel]}
+                          onChange={(event) => {
+                            setCaptions((current) => ({
+                              ...current,
+                              [channel]: event.target.value,
+                            }));
+                            markChanged();
+                          }}
+                        />
+                        <span className="mt-1 block text-xs font-normal text-[#667085]">
+                          Troque de rede no topo para editar cada legenda.
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <div className="app-card p-4">
               <div className="text-xs font-bold uppercase tracking-wide text-[#667085]">
-                Arte selecionada
+                {isStoryView ? "Story selecionado" : "Arte selecionada"}
               </div>
-              <p className="mt-2 font-extrabold">{selectedTemplate.name}</p>
+              <p className="mt-2 font-extrabold">{activeArtName}</p>
               <p className="mt-1 text-sm leading-5 text-[#667085]">
-                {selectedTemplate.useCase}
+                {isStoryView
+                  ? selectedStoryTemplate.description
+                  : selectedTemplate.useCase}
               </p>
 
               <div className="mt-4 flex flex-wrap gap-1.5">
-                {selectedTemplate.showsLogo && (
-                  <MiniBadge label="Logo" />
-                )}
-                <MiniBadge label="Headline" />
-                {selectedTemplate.supportsSubheadline && (
-                  <MiniBadge label="Subheadline" />
-                )}
-                {selectedTemplate.showsPrice && (
-                  <MiniBadge label="Preço" />
-                )}
-                {selectedTemplate.showsFeatures && (
-                  <MiniBadge label="Características" />
+                {isStoryView ? (
+                  <>
+                    <MiniBadge label="9:16" />
+                    <MiniBadge label="Headline" />
+                    {selectedStoryTemplate.supportsSubheadline && (
+                      <MiniBadge label="Subheadline" />
+                    )}
+                    <MiniBadge label="CTA" />
+                    <MiniBadge label="Área segura" />
+                  </>
+                ) : (
+                  <>
+                    {selectedTemplate.showsLogo && <MiniBadge label="Logo" />}
+                    <MiniBadge label="Headline" />
+                    {selectedTemplate.supportsSubheadline && (
+                      <MiniBadge label="Subheadline" />
+                    )}
+                    {selectedTemplate.showsPrice && <MiniBadge label="Preço" />}
+                    {selectedTemplate.showsFeatures && (
+                      <MiniBadge label="Características" />
+                    )}
+                  </>
                 )}
               </div>
             </div>
