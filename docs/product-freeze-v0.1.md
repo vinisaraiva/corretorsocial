@@ -36,8 +36,18 @@ Preço, localização, características, descrição, diferenciais e galeria edi
 
 ### Campanha pronta
 Tabs Instagram, Facebook, TikTok e Google.
-Formatos: Feed 4:5, Carrossel, Story 9:16 e Reel/slideshow.
+
+Instagram possui formatos independentes:
+- Feed 4:5 — MVP atual;
+- Stories 9:16 — próxima fase;
+- Carrossel 4:5 — fase posterior;
+- Reel/slideshow permanece fora desta etapa.
+
+Cada formato possui templates próprios. Feed, Stories e Carrossel não reutilizam a mesma arte apenas redimensionada.
+
 Ações principais: Publicar em todas, Agendar e Ajustar campanha.
+
+Especificação: `docs/instagram-formats-v0.1.md`.
 
 ### Ajustar campanha
 Escolha entre seis artes profissionais de estrutura fixa. O usuário edita headline, subheadline quando suportada, CTA e legenda por rede. Não há editor livre, arraste ou reposicionamento manual.
@@ -57,7 +67,7 @@ Publicações, cliques no WhatsApp, melhor campanha e melhor rede.
 ### Configurações
 Perfil, contato, marca, área de atuação, redes e preferências.
 
-## Artes visuais do MVP
+## Artes visuais do MVP — Instagram Feed
 
 1. Clean Base
 2. Clean Topo
@@ -67,6 +77,26 @@ Perfil, contato, marca, área de atuação, redes e preferências.
 6. Moldura Branding
 
 Especificação detalhada em `docs/creative-templates-v0.1.md`.
+
+## Instagram — roadmap de formatos
+
+### Feed 4:5
+6 artes fixas. Formato atual.
+
+### Stories 9:16
+4 artes próprias:
+1. Story Clean
+2. Story Comercial
+3. Story Oportunidade
+4. Story Branding
+
+### Carrossel 4:5
+3 modelos narrativos:
+1. Apresentação
+2. Venda Direta
+3. Aluguel Prático
+
+Stories e Carrossel não usam editor livre. Estrutura detalhada em `docs/instagram-formats-v0.1.md`.
 
 ## Premium
 
