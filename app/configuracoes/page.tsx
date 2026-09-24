@@ -20,7 +20,7 @@ export default async function SettingsPage() {
     supabase
       .from("profiles")
       .select(
-        "professional_name,agency_name,creci,email,whatsapp,phone,website,city,service_regions,primary_color,secondary_color,communication_tone,default_cta,review_before_publish",
+        "professional_name,agency_name,creci,email,whatsapp,phone,website,city,service_regions,primary_color,secondary_color,communication_tone,default_cta,review_before_publish,logo_path",
       )
       .eq("user_id", user.id)
       .maybeSingle(),
@@ -34,6 +34,16 @@ export default async function SettingsPage() {
     redirect("/onboarding");
   }
 
+  let logoUrl: string | null = null;
+
+  if (profile.logo_path) {
+    const { data } = await supabase.storage
+      .from("profile-assets")
+      .createSignedUrl(profile.logo_path, 60 * 60);
+
+    logoUrl = data?.signedUrl ?? null;
+  }
+
   return (
     <AppShell
       title="Configurações"
@@ -42,6 +52,7 @@ export default async function SettingsPage() {
       <SettingsForm
         profile={profile}
         connections={connections ?? []}
+        logoUrl={logoUrl}
       />
     </AppShell>
   );
