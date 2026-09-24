@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarClock,
   Check,
+  ImageDown,
   CheckCircle2,
   ChevronDown,
   LoaderCircle,
@@ -15,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  registerRenderedAssets,
   saveCampaignDraft,
   scheduleCampaignDraft,
   type CampaignDraftInput,
@@ -51,6 +53,7 @@ import { InstagramCarouselPreview } from "@/components/instagram-carousel-previe
 import { InstagramCarouselControls } from "@/components/instagram-carousel-controls";
 import { buildCampaignRecommendation } from "@/lib/campaign-recommendation";
 import { MediaAnalysisStatus } from "@/components/media-analysis-status";
+import { renderAndUploadCampaignAssets } from "@/lib/campaign-renderer";
 import type { Property, SocialChannel } from "@/types";
 
 const allChannels: { id: SocialChannel; label: string }[] = [
@@ -258,7 +261,9 @@ export function CampaignBuilder({
     toLocalDateTimeInput(campaignData?.scheduledFor),
   );
   const [status, setStatus] = useState(campaignData?.status ?? "draft");
-  const [working, setWorking] = useState<"save" | "schedule" | null>(null);
+  const [working, setWorking] = useState<
+    "save" | "schedule" | "render" | null
+  >(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [dirty, setDirty] = useState(false);
@@ -479,6 +484,101 @@ export function CampaignBuilder({
         caught instanceof Error
           ? caught.message
           : "Não foi possível agendar a campanha.",
+      );
+    } finally {
+      setWorking(null);
+    }
+  }
+
+  async function renderCurrentCreative() {
+    if (isTiktokView) {
+      setError("O TikTok será exportado como vídeo em uma etapa própria.");
+      return;
+    }
+
+    if (!property.image) {
+      setError("Adicione pelo menos uma foto antes de gerar a arte.");
+      return;
+    }
+
+    setWorking("render");
+    setError("");
+    setMessage("");
+
+    try {
+      let campaignId = persistedCampaignId;
+
+      if (!campaignId || dirty) {
+        campaignId = await saveCampaignDraft(draftInput());
+        setPersistedCampaignId(campaignId);
+        setDirty(false);
+        setStatus((current) =>
+          current === "scheduled" ? "scheduled" : "ready",
+        );
+      }
+
+      const config = isStoryView
+        ? {
+            provider: "instagram" as const,
+            format: "story_9x16",
+            selector: '[data-render-target="story"]',
+            width: 1080,
+            height: 1920,
+          }
+        : isCarouselView
+          ? {
+              provider: "instagram" as const,
+              format: "carousel_4x5",
+              selector: '[data-render-carousel-slide="true"]',
+              width: 1080,
+              height: 1350,
+            }
+          : channel === "facebook"
+            ? {
+                provider: "facebook" as const,
+                format: "feed",
+                selector: '[data-render-target="feed"]',
+                width: 1080,
+                height: 1350,
+              }
+            : channel === "google"
+              ? {
+                  provider: "google_business" as const,
+                  format: "post",
+                  selector: '[data-render-target="feed"]',
+                  width: 1080,
+                  height: 1350,
+                }
+              : {
+                  provider: "instagram" as const,
+                  format: "feed_4x5",
+                  selector: '[data-render-target="feed"]',
+                  width: 1080,
+                  height: 1350,
+                };
+
+      const paths = await renderAndUploadCampaignAssets({
+        campaignId,
+        ...config,
+      });
+
+      await registerRenderedAssets({
+        campaignId,
+        provider: config.provider,
+        format: config.format,
+        paths,
+      });
+
+      setMessage(
+        paths.length > 1
+          ? `${paths.length} páginas do carrossel geradas em PNG.`
+          : "Arquivo PNG gerado e salvo na campanha.",
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Não foi possível gerar o arquivo da campanha.",
       );
     } finally {
       setWorking(null);
@@ -1032,6 +1132,35 @@ export function CampaignBuilder({
 
           <button
             type="button"
+            onClick={() => void renderCurrentCreative()}
+            disabled={
+              working !== null ||
+              !property.image ||
+              isTiktokView
+            }
+            title={
+              isTiktokView
+                ? "TikTok será gerado como vídeo/slideshow"
+                : "Gerar arquivo final desta mídia"
+            }
+            className="app-button-secondary flex w-full items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {working === "render" ? (
+              <LoaderCircle size={18} className="animate-spin" />
+            ) : (
+              <ImageDown size={18} />
+            )}
+            {isCarouselView
+              ? `Gerar ${selectedCarouselModel.slideCount} PNGs`
+              : isStoryView
+                ? "Gerar Story PNG"
+                : isTiktokView
+                  ? "TikTok · vídeo em breve"
+                  : "Gerar PNG"}
+          </button>
+
+          <button
+            type="button"
             onClick={() => setScheduleOpen((value) => !value)}
             disabled={working !== null}
             className="app-button-primary flex w-full items-center justify-center gap-2 disabled:opacity-60"
@@ -1229,7 +1358,10 @@ function CreativePreview({
 
   return (
     <div className="mx-auto max-w-[430px] overflow-hidden rounded-2xl border border-[#E4E7EC] bg-white shadow-sm">
-      <div className="relative aspect-[4/5] overflow-hidden bg-[#EAECF0]">
+      <div
+        className="relative aspect-[4/5] overflow-hidden bg-[#EAECF0]"
+        data-render-target="feed"
+      >
         <PropertyImage property={property} />
 
         {templateId === "clean-base" && (
