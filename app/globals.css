@@ -43,6 +43,17 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+button:not(:disabled),
+a[href],
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 :focus-visible {
   outline: 3px solid rgba(23, 107, 91, 0.28);
   outline-offset: 2px;
@@ -78,7 +89,18 @@ a {
   color: white;
   font-weight: 700;
   padding: 0 18px;
-  transition: background 160ms ease;
+  transition:
+    background 160ms ease,
+    transform 120ms ease,
+    box-shadow 160ms ease;
+}
+
+.app-button-primary:not(:disabled):hover {
+  box-shadow: 0 4px 12px rgba(23, 107, 91, 0.18);
+}
+
+.app-button-primary:not(:disabled):active {
+  transform: translateY(1px);
 }
 
 .app-button-primary:hover {
@@ -93,6 +115,19 @@ a {
   color: var(--foreground);
   font-weight: 650;
   padding: 0 18px;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 120ms ease;
+}
+
+.app-button-secondary:not(:disabled):hover {
+  background: #f9fafb;
+  border-color: #98a2b3;
+}
+
+.app-button-secondary:not(:disabled):active {
+  transform: translateY(1px);
 }
 
 .muted {
