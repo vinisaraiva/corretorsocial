@@ -157,7 +157,7 @@ export function VerticalCreativePreview({
     ? resolveBlockPosition(blockPosition, platform)
     : "left";
   const contentWidth =
-    platform === "tiktok" ? "max-w-[72%]" : "max-w-[82%]";
+    platform === "tiktok" ? "w-[72%]" : "w-[82%]";
   const blockPlacement =
     resolvedPosition === "right"
       ? `right-5 left-auto ${contentWidth} text-right`
