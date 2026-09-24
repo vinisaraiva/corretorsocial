@@ -362,3 +362,109 @@ export async function deleteCampaign(campaignId: string) {
 
   return { deleted: true };
 }
+
+
+export async function registerRenderedAssets(input: {
+  campaignId: string;
+  provider: "instagram" | "facebook" | "google_business";
+  format: string;
+  paths: string[];
+}) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  const uniquePaths = Array.from(new Set(input.paths)).filter((path) =>
+    path.startsWith(`${user.id}/`),
+  );
+
+  if (uniquePaths.length === 0) {
+    throw new Error("Nenhum arquivo renderizado válido foi informado.");
+  }
+
+  const { data: campaign } = await supabase
+    .from("campaigns")
+    .select("id")
+    .eq("id", input.campaignId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!campaign) {
+    throw new Error("Campanha não encontrada.");
+  }
+
+  const { data: variant, error: variantError } = await supabase
+    .from("campaign_variants")
+    .select("id,render_metadata,rendered_asset_path")
+    .eq("campaign_id", campaign.id)
+    .eq("provider", input.provider)
+    .eq("format", input.format)
+    .maybeSingle();
+
+  if (variantError || !variant) {
+    throw new Error("Versão da campanha não encontrada para esta mídia.");
+  }
+
+  const metadata =
+    variant.render_metadata &&
+    typeof variant.render_metadata === "object" &&
+    !Array.isArray(variant.render_metadata)
+      ? { ...variant.render_metadata }
+      : {};
+
+  const previousPaths = Array.isArray(
+    (metadata as Record<string, unknown>).rendered_asset_paths,
+  )
+    ? ((metadata as Record<string, unknown>).rendered_asset_paths as unknown[])
+        .filter((path): path is string => typeof path === "string")
+    : variant.rendered_asset_path
+      ? [variant.rendered_asset_path]
+      : [];
+
+  const { error: updateError } = await supabase
+    .from("campaign_variants")
+    .update({
+      rendered_asset_path: uniquePaths[0],
+      render_metadata: {
+        ...metadata,
+        rendered_asset_paths: uniquePaths,
+        rendered_at: new Date().toISOString(),
+        render_source: "client_dom_v0_1",
+      },
+    })
+    .eq("id", variant.id);
+
+  if (updateError) {
+    throw new Error("Não foi possível registrar os arquivos renderizados.");
+  }
+
+  const obsoletePaths = previousPaths.filter(
+    (path) =>
+      path.startsWith(`${user.id}/`) && !uniquePaths.includes(path),
+  );
+
+  if (obsoletePaths.length > 0) {
+    const { error: cleanupError } = await supabase.storage
+      .from("campaign-assets")
+      .remove(obsoletePaths);
+
+    if (cleanupError) {
+      console.error(
+        "Rendered assets were updated but old files could not be removed",
+        cleanupError,
+      );
+    }
+  }
+
+  revalidatePath(`/campanhas/${campaign.id}`);
+  revalidatePath("/campanhas");
+
+  return {
+    renderedAssetPath: uniquePaths[0],
+    renderedAssetPaths: uniquePaths,
+  };
+}
