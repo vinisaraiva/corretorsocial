@@ -224,8 +224,9 @@ function buildSlides(
     },
     {
       kind: "facts",
-      title: "Destaques do imóvel",
-      items: [...highlights, ...facts].slice(0, 4),
+      title: "Informações principais",
+      items: [],
+      structuredItems: structuredFacts.slice(0, 6),
       image: images[1],
     },
     {
@@ -235,8 +236,8 @@ function buildSlides(
     },
     {
       kind: "facts",
-      title: "Localização e características",
-      items: [location, ...facts].filter(Boolean).slice(0, 4),
+      title: "Localização e diferenciais",
+      items: [location, ...highlights].filter(Boolean).slice(0, 4),
       image: images[3],
     },
     {
