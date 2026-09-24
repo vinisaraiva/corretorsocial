@@ -279,6 +279,45 @@ async function persistCampaign(input: CampaignDraftInput) {
   return campaignId;
 }
 
+export async function ensureCampaignVariant(
+  input: CampaignDraftInput,
+  provider: "instagram" | "facebook" | "google_business",
+  format: string,
+) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  if (input.campaignId) {
+    const { data: campaign } = await supabase
+      .from("campaigns")
+      .select("id")
+      .eq("id", input.campaignId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (campaign) {
+      const { data: variant } = await supabase
+        .from("campaign_variants")
+        .select("id")
+        .eq("campaign_id", campaign.id)
+        .eq("provider", provider)
+        .eq("format", format)
+        .maybeSingle();
+
+      if (variant) {
+        return campaign.id;
+      }
+    }
+  }
+
+  return persistCampaign(input);
+}
+
 export async function saveCampaignDraft(input: CampaignDraftInput) {
   return persistCampaign(input);
 }
