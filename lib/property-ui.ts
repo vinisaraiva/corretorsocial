@@ -7,7 +7,13 @@ type PropertyRow = Tables<"properties">;
 export type PropertyMediaRow = Pick<
   Tables<"property_media">,
   "property_id" | "original_url" | "storage_path" | "is_cover" | "sort_order"
->;
+> &
+  Partial<
+    Pick<
+      Tables<"property_media">,
+      "width" | "height" | "ai_score" | "ai_tags"
+    >
+  >;
 
 type CampaignRow = Pick<Tables<"campaigns">, "property_id" | "published_at">;
 
@@ -72,6 +78,21 @@ export function propertyToView(
 
   const image = images[0];
 
+  const mediaView = mediaForProperty
+    .filter((item) => Boolean(item.original_url))
+    .map((item) => ({
+      url: item.original_url!,
+      width: item.width ?? null,
+      height: item.height ?? null,
+      aiScore:
+        item.ai_score === null || item.ai_score === undefined
+          ? null
+          : Number(item.ai_score),
+      aiTags: item.ai_tags ?? [],
+      isCover: item.is_cover,
+      sortOrder: item.sort_order,
+    }));
+
   const propertyCampaigns = campaigns.filter(
     (campaign) => campaign.property_id === row.id,
   );
@@ -101,6 +122,7 @@ export function propertyToView(
     highlights: row.highlights ?? [],
     image,
     images,
+    media: mediaView,
     status: statusMap[row.status],
     campaigns: propertyCampaigns.length,
     lastPublished: lastPublished
