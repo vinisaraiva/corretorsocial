@@ -92,7 +92,7 @@ export async function signup(formData: FormData) {
     email,
     password,
     options: {
-      emailRedirectTo: `${appUrl}/auth/confirm?next=/onboarding`,
+      emailRedirectTo: `${appUrl}/login?success=${encodeURIComponent("E-mail confirmado. Agora entre com sua senha.")}`,
     },
   });
 
@@ -138,7 +138,7 @@ export async function resendConfirmation(formData: FormData) {
     type: "signup",
     email,
     options: {
-      emailRedirectTo: `${appUrl}/auth/confirm?next=/onboarding`,
+      emailRedirectTo: `${appUrl}/login?success=${encodeURIComponent("E-mail confirmado. Agora entre com sua senha.")}`,
     },
   });
 
