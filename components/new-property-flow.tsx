@@ -53,7 +53,7 @@ export function NewPropertyFlow() {
     analysisSteps.forEach((_, index) => {
       setTimeout(() => setActiveAnalysis(index), index * 550);
     });
-    setTimeout(() => router.push("/campanhas/apt-taperapua"), analysisSteps.length * 550 + 500);
+    setTimeout(() => router.push("/campanhas/nova?imovel=apt-taperapua"), analysisSteps.length * 550 + 500);
   }
 
   if (stage === "loading") {
