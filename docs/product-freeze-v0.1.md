@@ -38,9 +38,9 @@ Preço, localização, características, descrição, diferenciais e galeria edi
 Tabs Instagram, Facebook, TikTok e Google.
 
 Instagram possui formatos independentes:
-- Feed 4:5 — MVP atual;
-- Stories 9:16 — próxima fase;
-- Carrossel 4:5 — fase posterior;
+- Feed 4:5;
+- Stories 9:16;
+- Carrossel 4:5 quando o imóvel possui pelo menos 3 fotos;
 - Reel/slideshow permanece fora desta etapa.
 
 Feed e Carrossel possuem composições próprias. Instagram Stories e TikTok compartilham a família visual vertical 9:16, com adaptações de safe zone por plataforma. Nenhum formato é tratado apenas como redimensionamento automático da mesma arte.
@@ -100,10 +100,14 @@ Especificação detalhada em `docs/creative-templates-v0.1.md`.
 4. Story Branding
 
 ### Carrossel 4:5
-3 modelos narrativos:
-1. Apresentação
-2. Venda Direta
-3. Aluguel Prático
+Disponível automaticamente quando existem pelo menos 3 fotos distintas.
+
+Modelos narrativos:
+1. Apresentação — padrão para Venda;
+2. Venda Direta — alternativa comercial para Venda;
+3. Aluguel Prático — padrão para Aluguel.
+
+O modelo narrativo não é um estilo visual independente: ele herda o estilo global da campanha.
 
 Stories e Carrossel não usam editor livre. Estrutura detalhada em `docs/instagram-formats-v0.1.md`.
 
@@ -150,3 +154,20 @@ A família visual 9:16 é compartilhada entre Instagram Stories e TikTok, com sa
 A posição do bloco não é global. Cada variante salva sua própria posição em `campaign_variants.render_metadata.block_position`.
 
 `auto` usa a composição recomendada pelo template nesta versão do produto e poderá futuramente considerar análise automática da fotografia.
+
+
+## Override de estilo por mídia
+
+Não faz parte do MVP.
+
+O usuário pode ajustar por mídia:
+- headline/subheadline/CTA quando aplicável;
+- legenda;
+- posição controlada do bloco;
+- modelo narrativo do Carrossel.
+
+O estilo visual permanece global para preservar consistência e reduzir decisões.
+
+A estrutura de `campaign_variants.render_metadata.visual_style` continua capaz de armazenar estilos específicos por variante. Portanto, se dados reais de uso mostrarem necessidade, pode-se adicionar futuramente um controle avançado **Seguir estilo da campanha / Personalizar esta versão** sem migração de banco.
+
+Não expor esse controle antes de haver evidência de uso suficiente.
