@@ -1,0 +1,7 @@
+-- Historical sync marker.
+-- This migration version was created when claim_job_by_id was applied
+-- directly to production through the Supabase management API after the
+-- equivalent repository migration 20260924150000 had already been committed.
+--
+-- Intentionally no-op: the function definition is owned by
+-- 20260924150000_claim_job_by_id.sql.
