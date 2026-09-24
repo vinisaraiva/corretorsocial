@@ -95,6 +95,12 @@ type InitialCampaign = {
     subheadline: string;
     cta: string;
   };
+  tiktokVertical?: {
+    templateId: string;
+    headline: string;
+    subheadline: string;
+    cta: string;
+  };
 };
 
 export function CampaignBuilder({
@@ -142,9 +148,6 @@ export function CampaignBuilder({
   const [cta, setCta] = useState(
     campaignData?.cta ?? "Fale comigo no WhatsApp",
   );
-  const [storyConfigured, setStoryConfigured] = useState(
-    Boolean(campaignData?.instagramStory),
-  );
   const [storyTemplateId, setStoryTemplateId] =
     useState<VerticalTemplateId>(() =>
       normalizeVerticalTemplate(campaignData?.instagramStory?.templateId),
@@ -159,6 +162,21 @@ export function CampaignBuilder({
   );
   const [storyCta, setStoryCta] = useState(
     campaignData?.instagramStory?.cta ?? "Fale comigo",
+  );
+  const [tiktokTemplateId, setTiktokTemplateId] =
+    useState<VerticalTemplateId>(() =>
+      normalizeVerticalTemplate(campaignData?.tiktokVertical?.templateId),
+    );
+  const [tiktokHeadline, setTiktokHeadline] = useState(
+    campaignData?.tiktokVertical?.headline ??
+      property.highlights[0] ??
+      property.title,
+  );
+  const [tiktokSubheadline, setTiktokSubheadline] = useState(
+    campaignData?.tiktokVertical?.subheadline ?? defaultSubheadline,
+  );
+  const [tiktokCta, setTiktokCta] = useState(
+    campaignData?.tiktokVertical?.cta ?? "Veja mais detalhes",
   );
   const [captions, setCaptions] = useState<Record<SocialChannel, string>>({
     instagram:
@@ -184,11 +202,16 @@ export function CampaignBuilder({
 
   const selectedTemplate = getCampaignTemplate(templateId);
   const selectedStoryTemplate = getVerticalTemplate(storyTemplateId);
+  const selectedTiktokTemplate = getVerticalTemplate(tiktokTemplateId);
   const isStoryView =
     channel === "instagram" && instagramFormat === "story";
+  const isTiktokView = channel === "tiktok";
+  const isVerticalView = isStoryView || isTiktokView;
   const activeArtName = isStoryView
     ? getVerticalTemplateName(storyTemplateId, "instagram_story")
-    : selectedTemplate.name;
+    : isTiktokView
+      ? getVerticalTemplateName(tiktokTemplateId, "tiktok")
+      : selectedTemplate.name;
   const copy = captions[channel];
 
   function markChanged() {
@@ -205,14 +228,18 @@ export function CampaignBuilder({
       subheadline,
       cta,
       captions,
-      instagramStory: storyConfigured
-        ? {
-            templateId: storyTemplateId,
-            headline: storyHeadline,
-            subheadline: storySubheadline,
-            cta: storyCta,
-          }
-        : undefined,
+      instagramStory: {
+        templateId: storyTemplateId,
+        headline: storyHeadline,
+        subheadline: storySubheadline,
+        cta: storyCta,
+      },
+      tiktokVertical: {
+        templateId: tiktokTemplateId,
+        headline: tiktokHeadline,
+        subheadline: tiktokSubheadline,
+        cta: tiktokCta,
+      },
     };
   }
 
@@ -346,10 +373,7 @@ export function CampaignBuilder({
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setInstagramFormat("story");
-                  setStoryConfigured(true);
-                }}
+                onClick={() => setInstagramFormat("story")}
                 className={`min-h-10 flex-1 rounded-lg px-3 text-sm font-bold transition ${
                   instagramFormat === "story"
                     ? "bg-white text-[#18202A] shadow-sm"
@@ -379,6 +403,16 @@ export function CampaignBuilder({
               subheadline={storySubheadline}
               cta={storyCta}
             />
+          ) : isTiktokView ? (
+            <VerticalCreativePreview
+              property={property}
+              brand={brand}
+              platform="tiktok"
+              templateId={tiktokTemplateId}
+              headline={tiktokHeadline}
+              subheadline={tiktokSubheadline}
+              cta={tiktokCta}
+            />
           ) : (
             <CreativePreview
               property={property}
@@ -398,7 +432,11 @@ export function CampaignBuilder({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="font-extrabold">
-                    {isStoryView ? "Escolha o Story" : "Escolha a arte"}
+                    {isStoryView
+                      ? "Escolha o Story"
+                      : isTiktokView
+                        ? "Escolha a arte do TikTok"
+                        : "Escolha a arte"}
                   </div>
                   <p className="mt-1 text-xs leading-5 text-[#667085]">
                     Estrutura fixa para preservar qualidade e consistência.
@@ -415,55 +453,74 @@ export function CampaignBuilder({
                 </button>
               </div>
 
-              {isStoryView ? (
+              {isVerticalView ? (
                 <>
                   <VerticalTemplateControls
                     property={property}
                     brand={brand}
-                    platform="instagram_story"
-                    templateId={storyTemplateId}
-                    headline={storyHeadline}
-                    subheadline={storySubheadline}
-                    cta={storyCta}
+                    platform={isStoryView ? "instagram_story" : "tiktok"}
+                    templateId={
+                      isStoryView ? storyTemplateId : tiktokTemplateId
+                    }
+                    headline={isStoryView ? storyHeadline : tiktokHeadline}
+                    subheadline={
+                      isStoryView ? storySubheadline : tiktokSubheadline
+                    }
+                    cta={isStoryView ? storyCta : tiktokCta}
                     onTemplateChange={(value) => {
-                      setStoryTemplateId(value);
-                      setStoryConfigured(true);
+                      if (isStoryView) {
+                        setStoryTemplateId(value);
+                      } else {
+                        setTiktokTemplateId(value);
+                      }
                       markChanged();
                     }}
                     onHeadlineChange={(value) => {
-                      setStoryHeadline(value);
-                      setStoryConfigured(true);
+                      if (isStoryView) {
+                        setStoryHeadline(value);
+                      } else {
+                        setTiktokHeadline(value);
+                      }
                       markChanged();
                     }}
                     onSubheadlineChange={(value) => {
-                      setStorySubheadline(value);
-                      setStoryConfigured(true);
+                      if (isStoryView) {
+                        setStorySubheadline(value);
+                      } else {
+                        setTiktokSubheadline(value);
+                      }
                       markChanged();
                     }}
                     onCtaChange={(value) => {
-                      setStoryCta(value);
-                      setStoryConfigured(true);
+                      if (isStoryView) {
+                        setStoryCta(value);
+                      } else {
+                        setTiktokCta(value);
+                      }
                       markChanged();
                     }}
                   />
 
                   <div className="mt-5 border-t border-[#E4E7EC] pt-5">
                     <label className="block text-sm font-bold">
-                      Legenda do Instagram
+                      Legenda — {isStoryView ? "Instagram" : "TikTok"}
                       <textarea
                         className="app-input mt-2 min-h-28 py-3"
-                        value={captions.instagram}
+                        value={
+                          isStoryView ? captions.instagram : captions.tiktok
+                        }
                         onChange={(event) => {
+                          const key = isStoryView ? "instagram" : "tiktok";
                           setCaptions((current) => ({
                             ...current,
-                            instagram: event.target.value,
+                            [key]: event.target.value,
                           }));
                           markChanged();
                         }}
                       />
                       <span className="mt-1 block text-xs font-normal text-[#667085]">
-                        A legenda é da publicação; não aparece dentro da arte do
-                        Story.
+                        A legenda é específica da rede e não precisa repetir o
+                        texto da arte.
                       </span>
                     </label>
                   </div>
@@ -597,21 +654,29 @@ export function CampaignBuilder({
           ) : (
             <div className="app-card p-4">
               <div className="text-xs font-bold uppercase tracking-wide text-[#667085]">
-                {isStoryView ? "Story selecionado" : "Arte selecionada"}
+                {isStoryView
+                  ? "Story selecionado"
+                  : isTiktokView
+                    ? "TikTok selecionado"
+                    : "Arte selecionada"}
               </div>
               <p className="mt-2 font-extrabold">{activeArtName}</p>
               <p className="mt-1 text-sm leading-5 text-[#667085]">
                 {isStoryView
                   ? selectedStoryTemplate.description
-                  : selectedTemplate.useCase}
+                  : isTiktokView
+                    ? selectedTiktokTemplate.description
+                    : selectedTemplate.useCase}
               </p>
 
               <div className="mt-4 flex flex-wrap gap-1.5">
-                {isStoryView ? (
+                {isVerticalView ? (
                   <>
                     <MiniBadge label="9:16" />
                     <MiniBadge label="Headline" />
-                    {selectedStoryTemplate.supportsSubheadline && (
+                    {(isStoryView
+                      ? selectedStoryTemplate.supportsSubheadline
+                      : selectedTiktokTemplate.supportsSubheadline) && (
                       <MiniBadge label="Subheadline" />
                     )}
                     <MiniBadge label="CTA" />
