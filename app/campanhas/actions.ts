@@ -34,6 +34,14 @@ export type CampaignDraftInput = {
     cta: string;
     slideCount: number;
   };
+  mediaSelection: {
+    instagramFeed?: string;
+    instagramStory?: string;
+    facebook?: string;
+    tiktok?: string;
+    google?: string;
+    carousel: string[];
+  };
   blockPositions: {
     instagramFeed: "auto" | "left" | "right";
     instagramStory: "auto" | "left" | "right";
@@ -70,6 +78,42 @@ async function persistCampaign(input: CampaignDraftInput) {
   if (!property) {
     throw new Error("O imóvel não pertence a esta conta.");
   }
+
+  const requestedMediaIds = Array.from(
+    new Set(
+      [
+        input.mediaSelection.instagramFeed,
+        input.mediaSelection.instagramStory,
+        input.mediaSelection.facebook,
+        input.mediaSelection.tiktok,
+        input.mediaSelection.google,
+        ...input.mediaSelection.carousel,
+      ].filter((id): id is string => Boolean(id)),
+    ),
+  );
+
+  const validMediaIds = new Set<string>();
+
+  if (requestedMediaIds.length > 0) {
+    const { data: mediaRows, error: mediaError } = await supabase
+      .from("property_media")
+      .select("id")
+      .eq("property_id", property.id)
+      .in("id", requestedMediaIds);
+
+    if (mediaError) {
+      throw new Error("Não foi possível validar as fotos da campanha.");
+    }
+
+    mediaRows?.forEach((row) => validMediaIds.add(row.id));
+  }
+
+  const validSingleMedia = (id?: string) =>
+    id && validMediaIds.has(id) ? [id] : [];
+
+  const validCarouselMedia = input.mediaSelection.carousel.filter((id) =>
+    validMediaIds.has(id),
+  );
 
   let campaignId = input.campaignId;
 
@@ -141,6 +185,7 @@ async function persistCampaign(input: CampaignDraftInput) {
       block_position: "auto" | "left" | "right";
       carousel_type?: string;
       slide_count?: number;
+      media_ids?: string[];
     };
   }> = variants.map((variant) => ({
     campaign_id: campaignId!,
@@ -159,6 +204,12 @@ async function persistCampaign(input: CampaignDraftInput) {
           : variant.key === "facebook"
             ? input.blockPositions.facebook
             : input.blockPositions.google,
+      media_ids:
+        variant.key === "instagram"
+          ? validSingleMedia(input.mediaSelection.instagramFeed)
+          : variant.key === "facebook"
+            ? validSingleMedia(input.mediaSelection.facebook)
+            : validSingleMedia(input.mediaSelection.google),
     },
   }));
 
@@ -174,6 +225,7 @@ async function persistCampaign(input: CampaignDraftInput) {
       source: "deterministic_vertical_v0_1",
       subheadline: input.instagramStory.subheadline.trim(),
       block_position: input.blockPositions.instagramStory,
+      media_ids: validSingleMedia(input.mediaSelection.instagramStory),
     },
   });
 
@@ -189,6 +241,7 @@ async function persistCampaign(input: CampaignDraftInput) {
       source: "deterministic_vertical_v0_1",
       subheadline: input.tiktokVertical.subheadline.trim(),
       block_position: input.blockPositions.tiktok,
+      media_ids: validSingleMedia(input.mediaSelection.tiktok),
     },
   });
 
@@ -207,6 +260,7 @@ async function persistCampaign(input: CampaignDraftInput) {
         block_position: "auto",
         carousel_type: input.instagramCarousel.modelId,
         slide_count: input.instagramCarousel.slideCount,
+        media_ids: validCarouselMedia,
       },
     });
   }
