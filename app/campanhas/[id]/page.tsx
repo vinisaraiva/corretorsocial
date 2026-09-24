@@ -41,8 +41,13 @@ export default async function CampaignDetailPage({
     notFound();
   }
 
-  const [{ data: row }, mediaResult, campaignsResult, variantsResult] =
-    await Promise.all([
+  const [
+    { data: row },
+    mediaResult,
+    campaignsResult,
+    variantsResult,
+    profileResult,
+  ] = await Promise.all([
       supabase
         .from("properties")
         .select("*")
@@ -61,6 +66,11 @@ export default async function CampaignDetailPage({
         .from("campaign_variants")
         .select("provider,headline,caption,cta")
         .eq("campaign_id", campaign.id),
+      supabase
+        .from("profiles")
+        .select("professional_name,logo_path,primary_color")
+        .eq("user_id", user.id)
+        .maybeSingle(),
     ]);
 
   if (!row) {
@@ -81,6 +91,20 @@ export default async function CampaignDetailPage({
   const captions: Partial<Record<SocialChannel, string>> = {};
   let headline = campaign.marketing_angle ?? property.title;
   let cta = "Fale comigo no WhatsApp";
+  let subheadline = [property.location, property.city]
+    .filter(Boolean)
+    .join(" · ");
+
+  const metadata =
+    campaign.generation_metadata &&
+    typeof campaign.generation_metadata === "object" &&
+    !Array.isArray(campaign.generation_metadata)
+      ? (campaign.generation_metadata as Record<string, unknown>)
+      : null;
+
+  if (typeof metadata?.subheadline === "string") {
+    subheadline = metadata.subheadline;
+  }
 
   for (const variant of variantsResult.data ?? []) {
     const channel = providerToChannel[variant.provider];
@@ -89,6 +113,23 @@ export default async function CampaignDetailPage({
     if (variant.cta) cta = variant.cta;
   }
 
+  let logoUrl: string | null = null;
+
+  if (profileResult.data?.logo_path) {
+    const { data } = await supabase.storage
+      .from("profile-assets")
+      .createSignedUrl(profileResult.data.logo_path, 60 * 60);
+
+    logoUrl = data?.signedUrl ?? null;
+  }
+
+  const brand = {
+    professionalName:
+      profileResult.data?.professional_name ?? "Corretor Social",
+    logoUrl,
+    primaryColor: profileResult.data?.primary_color ?? "#176B5B",
+  };
+
   return (
     <AppShell
       title="Campanha"
@@ -96,10 +137,12 @@ export default async function CampaignDetailPage({
     >
       <CampaignBuilder
         propertyData={property}
+        brand={brand}
         campaignData={{
           id: campaign.id,
           visualStyle: campaign.visual_style,
           headline,
+          subheadline,
           cta,
           status: campaign.status,
           scheduledFor: campaign.scheduled_for,
