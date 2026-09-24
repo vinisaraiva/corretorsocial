@@ -523,3 +523,26 @@ export async function createProperty(input: PropertyDraftInput) {
 
   return property.id;
 }
+
+
+export async function deletePropertyDraft(propertyId: string) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { error } = await supabase
+    .from("properties")
+    .delete()
+    .eq("id", propertyId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    throw new Error("Não foi possível desfazer o cadastro incompleto.");
+  }
+}
