@@ -86,7 +86,7 @@ Esses valores são regras internas de composição e podem ser ajustados quando 
 
 ## Templates de Stories
 
-### 2.1 Story Clean
+### 2.1 Vertical Clean / Story Clean
 **Objetivo:** valorizar fotografia forte.
 
 **Estrutura fixa:**
@@ -111,7 +111,7 @@ Esses valores são regras internas de composição e podem ser ajustados quando 
 - subheadline: 64;
 - CTA: 28.
 
-### 2.2 Story Comercial
+### 2.2 Vertical Comercial / Story Comercial
 **Objetivo:** leitura rápida de venda/aluguel.
 
 **Estrutura fixa:**
@@ -132,7 +132,7 @@ Esses valores são regras internas de composição e podem ser ajustados quando 
 - headline: 42 caracteres;
 - CTA: 28.
 
-### 2.3 Story Oportunidade
+### 2.3 Vertical Oportunidade / Story Oportunidade
 **Objetivo:** preço ou condição comercial como protagonista.
 
 **Estrutura fixa:**
@@ -150,7 +150,7 @@ Esses valores são regras internas de composição e podem ser ajustados quando 
 **Regra visual:**
 não usar excesso de selo, ícones ou múltiplas cores de chamada.
 
-### 2.4 Story Branding
+### 2.4 Vertical Branding / Story Branding
 **Objetivo:** feed/story com identidade visual consistente.
 
 **Estrutura fixa:**
@@ -472,3 +472,24 @@ Stories só deve ser considerado concluído quando:
 Carrossel só deve entrar depois disso.
 
 O produto deve ampliar a biblioteca de composições profissionais, não evoluir para um editor estilo Canva.
+
+
+---
+
+# 8. Família vertical compartilhada
+
+Instagram Stories e TikTok usam a mesma biblioteca estrutural 9:16:
+
+- Vertical Clean
+- Vertical Comercial
+- Vertical Oportunidade
+- Vertical Branding
+
+Na interface, os nomes podem ser adaptados ao canal (por exemplo, Story Clean ou TikTok Clean).
+
+A renderização final não é idêntica:
+- Instagram Stories usa safe zones próprias;
+- TikTok reserva também a coluna de ações à direita e uma área inferior maior;
+- TikTok poderá evoluir para vídeo/slideshow mantendo a mesma família visual.
+
+Os IDs internos usam `vertical-*`, evitando duplicação de templates.
