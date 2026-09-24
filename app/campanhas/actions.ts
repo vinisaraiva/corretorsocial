@@ -65,7 +65,6 @@ async function persistCampaign(input: CampaignDraftInput) {
       .update({
         visual_style: input.visualStyle,
         marketing_angle: input.headline,
-        status: "ready",
         generation_metadata: {
           source: "deterministic_preview_v0_1",
         },
