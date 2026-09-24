@@ -4,6 +4,35 @@ import { createClient } from "@/lib/supabase/client";
 
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
+async function readImageDimensions(file: File) {
+  try {
+    if (typeof createImageBitmap === "function") {
+      const bitmap = await createImageBitmap(file);
+      const dimensions = { width: bitmap.width, height: bitmap.height };
+      bitmap.close();
+      return dimensions;
+    }
+  } catch {
+    // Fall through to the Image element fallback.
+  }
+
+  return new Promise<{ width: number | null; height: number | null }>(
+    (resolve) => {
+      const objectUrl = URL.createObjectURL(file);
+      const image = new Image();
+
+      const finish = (width: number | null, height: number | null) => {
+        URL.revokeObjectURL(objectUrl);
+        resolve({ width, height });
+      };
+
+      image.onload = () => finish(image.naturalWidth || null, image.naturalHeight || null);
+      image.onerror = () => finish(null, null);
+      image.src = objectUrl;
+    },
+  );
+}
+
 function assertImage(file: File, maxBytes: number) {
   if (!allowedTypes.has(file.type)) {
     throw new Error("Use imagens JPG, PNG ou WebP.");
@@ -87,6 +116,7 @@ export async function uploadPropertyPhotos(
 
   try {
     for (const [index, file] of selected.entries()) {
+      const dimensions = await readImageDimensions(file);
       const path = `${user.id}/${propertyId}/${crypto.randomUUID()}`;
 
       const { error: uploadError } = await supabase.storage
@@ -111,6 +141,8 @@ export async function uploadPropertyPhotos(
           media_type: "image",
           sort_order: index,
           is_cover: index === 0,
+          width: dimensions.width,
+          height: dimensions.height,
         });
 
       if (rowError) {
