@@ -6,7 +6,7 @@ import { Check, ChevronLeft, ChevronRight, Upload } from "lucide-react";
 
 const networks = ["Instagram", "Facebook", "TikTok", "Google Business"];
 
-export function OnboardingFlow() {
+export function OnboardingFlow({ reviewMode = false }: { reviewMode?: boolean }) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [connected, setConnected] = useState<string[]>(["Instagram", "Facebook"]);
@@ -23,7 +23,7 @@ export function OnboardingFlow() {
 
   function next() {
     if (step < 4) setStep((current) => current + 1);
-    else router.push("/");
+    else router.push(reviewMode ? "/configuracoes" : "/");
   }
 
   return (
@@ -168,7 +168,7 @@ export function OnboardingFlow() {
               })}
             </div>
             <div className="mt-6 rounded-xl bg-[#E9F4F1] p-4 text-sm text-[#176B5B]">
-              <strong>Tudo pronto.</strong> Agora vamos divulgar seu primeiro imóvel.
+              {reviewMode ? (\n                <><strong>Alterações prontas.</strong> Elas serão usadas nas próximas campanhas.</>\n              ) : (\n                <><strong>Tudo pronto.</strong> Agora vamos divulgar seu primeiro imóvel.</>\n              )}
             </div>
           </>
         )}
@@ -188,7 +188,7 @@ export function OnboardingFlow() {
             onClick={next}
             className="app-button-primary inline-flex items-center gap-2"
           >
-            {step === 4 ? "Começar" : "Continuar"}
+            {step === 4 ? (reviewMode ? "Salvar alterações" : "Começar") : "Continuar"}
             <ChevronRight size={18} />
           </button>
         </div>
