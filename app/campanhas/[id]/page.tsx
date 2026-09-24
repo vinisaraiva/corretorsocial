@@ -118,6 +118,15 @@ export default async function CampaignDetailPage({
       }
     | undefined;
 
+  const mediaSelection = {
+    instagramFeed: undefined as string | undefined,
+    instagramStory: undefined as string | undefined,
+    facebook: undefined as string | undefined,
+    tiktok: undefined as string | undefined,
+    google: undefined as string | undefined,
+    carousel: [] as string[],
+  };
+
   const blockPositions = {
     instagramFeed: "auto" as "auto" | "left" | "right",
     instagramStory: "auto" as "auto" | "left" | "right",
@@ -145,6 +154,12 @@ export default async function CampaignDetailPage({
         ? (variant.render_metadata as Record<string, unknown>)
         : null;
 
+    const variantMediaIds = Array.isArray(variantMetadata?.media_ids)
+      ? variantMetadata.media_ids.filter(
+          (id): id is string => typeof id === "string",
+        )
+      : [];
+
     if (variant.provider === "instagram" && variant.format === "story_9x16") {
       if (
         variantMetadata?.block_position === "left" ||
@@ -152,6 +167,8 @@ export default async function CampaignDetailPage({
       ) {
         blockPositions.instagramStory = variantMetadata.block_position;
       }
+
+      mediaSelection.instagramStory = variantMediaIds[0];
 
       instagramStory = {
         templateId:
@@ -170,6 +187,7 @@ export default async function CampaignDetailPage({
 
     if (variant.provider === "tiktok" && variant.format === "vertical_video") {
       if (variant.caption) captions.tiktok = variant.caption;
+      mediaSelection.tiktok = variantMediaIds[0];
       if (
         variantMetadata?.block_position === "left" ||
         variantMetadata?.block_position === "right"
@@ -193,6 +211,8 @@ export default async function CampaignDetailPage({
     }
 
     if (variant.provider === "instagram" && variant.format === "carousel_4x5") {
+      mediaSelection.carousel = variantMediaIds;
+
       instagramCarousel = {
         modelId:
           typeof variantMetadata?.carousel_type === "string"
@@ -208,6 +228,14 @@ export default async function CampaignDetailPage({
 
     const channel = providerToChannel[variant.provider];
     if (channel && variant.caption) captions[channel] = variant.caption;
+
+    if (variant.provider === "instagram" && variant.format === "feed_4x5") {
+      mediaSelection.instagramFeed = variantMediaIds[0];
+    } else if (variant.provider === "facebook") {
+      mediaSelection.facebook = variantMediaIds[0];
+    } else if (variant.provider === "google_business") {
+      mediaSelection.google = variantMediaIds[0];
+    }
 
     if (
       variantMetadata?.block_position === "left" ||
@@ -265,6 +293,7 @@ export default async function CampaignDetailPage({
           instagramStory,
           tiktokVertical,
           instagramCarousel,
+          mediaSelection,
           blockPositions,
         }}
       />
