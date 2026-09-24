@@ -41,6 +41,14 @@ const stagingStyles = [
   "Praiano",
 ] as const;
 
+function toLocalDateTimeInput(value?: string | null) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
 type InitialCampaign = {
   id: string;
   visualStyle: string;
@@ -89,9 +97,7 @@ export function CampaignBuilder({
   });
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduledFor, setScheduledFor] = useState(
-    campaignData?.scheduledFor
-      ? new Date(campaignData.scheduledFor).toISOString().slice(0, 16)
-      : "",
+    toLocalDateTimeInput(campaignData?.scheduledFor),
   );
   const [status, setStatus] = useState(campaignData?.status ?? "draft");
   const [working, setWorking] = useState<"save" | "schedule" | null>(null);
@@ -134,7 +140,9 @@ export function CampaignBuilder({
     try {
       const id = await saveCampaignDraft(draftInput());
       setPersistedCampaignId(id);
-      setStatus("ready");
+      setStatus((current) =>
+        current === "scheduled" ? "scheduled" : "ready",
+      );
       setMessage("Campanha salva.");
     } catch (caught) {
       setError(
@@ -155,7 +163,10 @@ export function CampaignBuilder({
     setMessage("");
 
     try {
-      const id = await scheduleCampaignDraft(draftInput(), scheduledFor);
+      const id = await scheduleCampaignDraft(
+        draftInput(),
+        new Date(scheduledFor).toISOString(),
+      );
       setPersistedCampaignId(id);
       setStatus("scheduled");
       setScheduleOpen(false);
