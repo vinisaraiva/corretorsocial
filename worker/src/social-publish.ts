@@ -498,7 +498,7 @@ export async function handleSocialPublish(job: WorkerJob) {
         return { skipped: true, reason: "stale_immediate_publish" };
       }
     } else if (
-      campaign.status !== "scheduled" ||
+      (campaign.status !== "scheduled" && campaign.status !== "publishing") ||
       !Number.isFinite(scheduledAt) ||
       !Number.isFinite(expectedAt) ||
       scheduledAt !== expectedAt
@@ -722,22 +722,6 @@ export async function handleSocialPublish(job: WorkerJob) {
       publications: published,
     };
   } catch (error) {
-    if (job.attempts < job.max_attempts && payload.mode === "scheduled") {
-      const { error: retryStatusError } = await supabase
-        .from("campaigns")
-        .update({ status: "scheduled" })
-        .eq("id", payload.campaign_id)
-        .eq("user_id", job.user_id)
-        .eq("status", "publishing");
-
-      if (retryStatusError) {
-        console.error(
-          "Could not restore campaign status before retry",
-          retryStatusError.message,
-        );
-      }
-    }
-
     await markCampaignFailedIfFinalAttempt(job, payload.campaign_id);
     throw error;
   }
