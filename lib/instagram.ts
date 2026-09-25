@@ -120,18 +120,16 @@ async function parseInstagramResponse<T>(response: Response) {
 async function exchangeInstagramShortLivedToken(code: string) {
   const { appId, appSecret, redirectUri } = requiredInstagramEnv();
 
+  const form = new FormData();
+  form.set("client_id", appId);
+  form.set("client_secret", appSecret);
+  form.set("grant_type", "authorization_code");
+  form.set("redirect_uri", redirectUri);
+  form.set("code", code);
+
   const response = await fetch("https://api.instagram.com/oauth/access_token", {
     method: "POST",
-    headers: {
-      "content-type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      client_id: appId,
-      client_secret: appSecret,
-      grant_type: "authorization_code",
-      redirect_uri: redirectUri,
-      code,
-    }).toString(),
+    body: form,
     cache: "no-store",
   });
 
@@ -146,9 +144,7 @@ async function exchangeInstagramShortLivedToken(code: string) {
 
 async function exchangeInstagramLongLivedToken(shortLivedToken: string) {
   const { appSecret } = requiredInstagramEnv();
-  const url = new URL(
-    `https://graph.instagram.com/${graphVersion()}/access_token`,
-  );
+  const url = new URL("https://graph.instagram.com/access_token");
 
   url.searchParams.set("grant_type", "ig_exchange_token");
   url.searchParams.set("client_secret", appSecret);
