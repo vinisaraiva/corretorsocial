@@ -591,27 +591,65 @@ export function CampaignBuilder({
   async function schedule() {
     if (!scheduledFor) return;
 
+    if (!property.image) {
+      setError("Adicione pelo menos uma foto antes de agendar a campanha.");
+      return;
+    }
+
     setWorking("schedule");
     setError("");
     setMessage("");
+    setRenderedDownloads([]);
+    setRenderedLabel("");
 
     try {
+      const savedId = await saveCampaignDraft(draftInput());
+      setPersistedCampaignId(savedId);
+      setDirty(false);
+
+      const required = await getCampaignRenderRequirements(savedId);
+      const requiredKeys = new Set(
+        required.map((item) => `${item.provider}:${item.format}`),
+      );
+
+      const configs = staticRenderConfigs().filter((config) =>
+        requiredKeys.has(`${config.provider}:${config.format}`),
+      );
+
+      for (const [index, config] of configs.entries()) {
+        setMessage(
+          `Preparando arquivos finais (${index + 1}/${configs.length})…`,
+        );
+        await renderRegisteredAssets(savedId, config);
+      }
+
       const id = await scheduleCampaignDraft(
-        draftInput(),
+        {
+          ...draftInput(),
+          campaignId: savedId,
+        },
         new Date(scheduledFor).toISOString(),
       );
+
       setPersistedCampaignId(id);
       setStatus("scheduled");
       setScheduleOpen(false);
       setDirty(false);
-      setMessage(
-        `Campanha agendada para ${new Date(scheduledFor).toLocaleString("pt-BR")}.`,
-      );
+
+      if (configs.length > 0) {
+        setMessage(
+          `Campanha agendada e ${configs.length} formato${configs.length === 1 ? "" : "s"} atualizado${configs.length === 1 ? "" : "s"} automaticamente.`,
+        );
+      } else {
+        setMessage(
+          `Campanha agendada para ${new Date(scheduledFor).toLocaleString("pt-BR")}. Os arquivos já estavam atualizados.`,
+        );
+      }
     } catch (caught) {
       setError(
         caught instanceof Error
           ? caught.message
-          : "Não foi possível agendar a campanha.",
+          : "Não foi possível preparar e agendar a campanha.",
       );
     } finally {
       setWorking(null);
