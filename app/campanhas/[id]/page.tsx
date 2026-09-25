@@ -168,6 +168,19 @@ export default async function CampaignDetailPage({
       )
     : undefined;
 
+  const instagramPublishFormats = Array.isArray(
+    metadata?.publish_instagram_formats,
+  )
+    ? metadata.publish_instagram_formats.filter(
+        (
+          format,
+        ): format is "feed_4x5" | "story_9x16" | "carousel_4x5" =>
+          format === "feed_4x5" ||
+          format === "story_9x16" ||
+          format === "carousel_4x5",
+      )
+    : undefined;
+
   for (const variant of variantsResult.data ?? []) {
     const variantMetadata =
       variant.render_metadata &&
@@ -318,6 +331,7 @@ export default async function CampaignDetailPage({
           status: campaign.status,
           scheduledFor: campaign.scheduled_for,
           publishProviders,
+          instagramPublishFormats,
           captions,
           instagramStory,
           tiktokVertical,
