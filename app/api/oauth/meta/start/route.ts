@@ -6,6 +6,7 @@ import {
   metaIntegrationConfigured,
 } from "@/lib/meta";
 import { socialTokenEncryptionConfigured } from "@/lib/social-token-crypto";
+import { publicAppUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -17,12 +18,17 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(publicAppUrl(request, "/login"));
   }
 
   if (!metaIntegrationConfigured() || !socialTokenEncryptionConfigured()) {
+    console.error("Meta OAuth is missing server configuration", {
+      metaConfigured: metaIntegrationConfigured(),
+      encryptionConfigured: socialTokenEncryptionConfigured(),
+    });
+
     return NextResponse.redirect(
-      new URL("/configuracoes?meta=missing_config", request.url),
+      publicAppUrl(request, "/configuracoes?meta=missing_config"),
     );
   }
 
