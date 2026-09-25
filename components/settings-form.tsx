@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Save } from "lucide-react";
 import { saveSettings } from "@/app/configuracoes/actions";
 import {
@@ -216,14 +215,14 @@ export function SettingsForm({
             </div>
 
             <div className="mt-4 flex flex-col gap-2">
-              <Link
+              <a
                 href="/api/oauth/meta/start"
                 className="app-button-primary inline-flex min-h-11 items-center justify-center"
               >
                 {facebookConnected
                   ? "Reconectar Facebook"
                   : "Conectar Facebook"}
-              </Link>
+              </a>
               {facebookConnected ? (
                 <button
                   type="submit"
@@ -262,14 +261,14 @@ export function SettingsForm({
             </div>
 
             <div className="mt-4 flex flex-col gap-2">
-              <Link
+              <a
                 href="/api/oauth/instagram/start"
                 className="app-button-primary inline-flex min-h-11 items-center justify-center"
               >
                 {instagramConnected
                   ? "Reconectar Instagram"
                   : "Conectar Instagram"}
-              </Link>
+              </a>
               {instagramConnected ? (
                 <button
                   type="submit"
