@@ -28,7 +28,7 @@ export async function persistMetaPageConnection({
       expires_at: null,
     })
     .eq("user_id", userId)
-    .in("provider", ["facebook", "instagram"]);
+    .eq("provider", "facebook");
 
   if (disconnectError) {
     throw disconnectError;
