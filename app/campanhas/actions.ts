@@ -317,6 +317,127 @@ export async function saveCampaignDraft(input: CampaignDraftInput) {
   return persistCampaign(input);
 }
 
+export async function publishCampaignNow(input: CampaignDraftInput) {
+  const publishProviders = supportedPublishProviders(
+    input.publishProviders ?? [],
+  );
+
+  if (publishProviders.length === 0) {
+    return {
+      ok: false as const,
+      message: "Selecione pelo menos uma rede conectada para publicar.",
+    };
+  }
+
+  const campaignId = await persistCampaign(input);
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data: campaign, error: campaignError } = await supabase
+    .from("campaigns")
+    .select("id,status")
+    .eq("id", campaignId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (campaignError || !campaign) {
+    throw new Error("Campanha não encontrada.");
+  }
+
+  if (campaign.status === "publishing") {
+    return {
+      ok: false as const,
+      message: "Esta campanha já está sendo publicada.",
+    };
+  }
+
+  const { data: connections, error: connectionsError } = await supabase
+    .from("social_connections")
+    .select("provider,token_secret_ref")
+    .eq("user_id", user.id)
+    .eq("status", "connected")
+    .in("provider", publishProviders);
+
+  if (connectionsError) {
+    throw new Error("Não foi possível validar as redes conectadas.");
+  }
+
+  const connectedProviders = new Set(
+    (connections ?? [])
+      .filter((connection) => Boolean(connection.token_secret_ref))
+      .map((connection) => connection.provider),
+  );
+
+  if (
+    publishProviders.some((provider) => !connectedProviders.has(provider))
+  ) {
+    return {
+      ok: false as const,
+      message:
+        "Uma das redes selecionadas não está mais conectada. Revise as conexões antes de publicar.",
+    };
+  }
+
+  const queuedAt = new Date().toISOString();
+
+  const { error: statusError } = await supabase
+    .from("campaigns")
+    .update({
+      status: "publishing",
+      scheduled_for: null,
+      generation_metadata: campaignGenerationMetadata({
+        ...input,
+        publishProviders,
+      }),
+    })
+    .eq("id", campaignId)
+    .eq("user_id", user.id);
+
+  if (statusError) {
+    throw new Error("Não foi possível iniciar a publicação.");
+  }
+
+  const { error: jobError } = await supabase.from("jobs").insert({
+    user_id: user.id,
+    type: "social_publish",
+    priority: 20,
+    run_after: queuedAt,
+    max_attempts: 3,
+    payload: buildSocialPublishJobPayload({
+      campaignId,
+      scheduledFor: queuedAt,
+      providers: publishProviders,
+      mode: "immediate",
+    }),
+  });
+
+  if (jobError) {
+    await supabase
+      .from("campaigns")
+      .update({ status: "ready" })
+      .eq("id", campaignId)
+      .eq("user_id", user.id);
+
+    throw new Error(
+      "Não foi possível colocar a publicação na fila. Tente novamente.",
+    );
+  }
+
+  return {
+    ok: true as const,
+    campaignId,
+    queuedProviders: publishProviders,
+  };
+}
+
+
 export async function scheduleCampaignDraft(
   input: CampaignDraftInput,
   scheduledFor: string,
