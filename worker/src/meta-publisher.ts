@@ -38,7 +38,7 @@ export async function refreshInstagramLongLivedToken(
   accessToken: string,
 ) {
   const url = new URL(
-    `https://graph.instagram.com/${graphVersion()}/refresh_access_token`,
+    "https://graph.instagram.com/refresh_access_token",
   );
   url.searchParams.set("grant_type", "ig_refresh_token");
   url.searchParams.set("access_token", accessToken);
