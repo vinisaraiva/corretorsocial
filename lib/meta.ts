@@ -102,8 +102,10 @@ export function buildMetaAuthorizationUrl(state: string) {
   url.searchParams.set("response_type", "code");
 
   const configId = process.env.META_LOGIN_CONFIG_ID?.trim();
+  const useLoginConfiguration =
+    process.env.META_USE_LOGIN_CONFIG?.trim().toLowerCase() === "true";
 
-  if (configId) {
+  if (configId && useLoginConfiguration) {
     url.searchParams.set("config_id", configId);
     url.searchParams.set("override_default_response_type", "true");
   } else {
