@@ -7,22 +7,13 @@ export const META_OAUTH_SCOPES = [
   "pages_show_list",
   "pages_read_engagement",
   "pages_manage_posts",
-  "instagram_basic",
-  "instagram_content_publish",
 ] as const;
-
-export type MetaInstagramAccount = {
-  id: string;
-  username?: string;
-  name?: string;
-};
 
 export type MetaPageAccount = {
   id: string;
   name: string;
   access_token: string;
   tasks?: string[];
-  instagram_business_account?: MetaInstagramAccount;
 };
 
 type MetaTokenResponse = {
@@ -186,13 +177,7 @@ export function metaPageCanPublish(page: MetaPageAccount) {
 
 export async function listMetaPages(userAccessToken: string) {
   const version = metaGraphVersion();
-  const fields = [
-    "id",
-    "name",
-    "access_token",
-    "tasks",
-    "instagram_business_account{id,username,name}",
-  ].join(",");
+  const fields = ["id", "name", "access_token", "tasks"].join(",");
 
   const url = new URL(`https://graph.facebook.com/${version}/me/accounts`);
   url.searchParams.set("fields", fields);
