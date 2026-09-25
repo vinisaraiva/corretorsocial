@@ -222,7 +222,7 @@ export function SettingsForm({
             href="/api/oauth/meta/start"
             className="app-button-primary inline-flex min-h-11 items-center justify-center"
           >
-            {metaConnected ? "Reconectar Meta" : "Conectar Facebook e Instagram"}
+            {metaConnected ? "Reconectar Facebook" : "Conectar Facebook"}
           </Link>
           {metaConnected ? (
             <button
@@ -236,9 +236,10 @@ export function SettingsForm({
         </div>
 
         <p className="mt-3 text-xs leading-5 text-[#667085]">
-          A conexão Meta permite escolher explicitamente a Página do Facebook.
-          Se houver uma conta profissional do Instagram vinculada a essa Página,
-          ela também será conectada.
+          Entre com sua conta do Facebook. Se houver uma única Página apta,
+          conectamos automaticamente; se houver várias, perguntamos qual usar.
+          Um Instagram profissional vinculado à Página é detectado
+          automaticamente.
         </p>
       </Section>
 
