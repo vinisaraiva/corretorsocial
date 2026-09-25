@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CalendarClock,
   Check,
@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import {
   ensureCampaignVariant,
+  getCampaignPublicationState,
   getCampaignRenderRequirements,
   registerRenderedAssets,
   validateCampaignScheduleTime,
@@ -290,6 +291,51 @@ export function CampaignBuilder({
   const [stagingStyle, setStagingStyle] =
     useState<(typeof stagingStyles)[number]>("Moderno");
   const [stagingGenerated, setStagingGenerated] = useState(false);
+
+  useEffect(() => {
+    if (status !== "publishing" || !persistedCampaignId) return;
+
+    let active = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const poll = async () => {
+      try {
+        const publicationState =
+          await getCampaignPublicationState(persistedCampaignId);
+
+        if (!active) return;
+
+        if (publicationState.status === "published") {
+          setStatus("published");
+          setMessage("Campanha publicada com sucesso nas redes selecionadas.");
+          setError("");
+          return;
+        }
+
+        if (publicationState.status === "failed") {
+          setStatus("failed");
+          setError(
+            "A publicação não foi concluída após as tentativas automáticas. Revise as conexões e tente novamente.",
+          );
+          setMessage("");
+          return;
+        }
+      } catch {
+        // A falha de uma consulta de status não interrompe a publicação.
+      }
+
+      if (active) {
+        timer = setTimeout(poll, 3000);
+      }
+    };
+
+    timer = setTimeout(poll, 1500);
+
+    return () => {
+      active = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, [persistedCampaignId, status]);
 
   const mediaById = new Map(
     (property.media ?? [])
