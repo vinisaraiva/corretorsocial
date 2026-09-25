@@ -468,6 +468,50 @@ export async function ensureCampaignVariant(
   return persistCampaign(input);
 }
 
+export async function getCampaignRenderRequirements(campaignId: string) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  const { data: campaign } = await supabase
+    .from("campaigns")
+    .select("id")
+    .eq("id", campaignId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!campaign) {
+    throw new Error("Campanha não encontrada.");
+  }
+
+  const { data: rows, error } = await supabase
+    .from("campaign_variants")
+    .select("provider,format,rendered_asset_path")
+    .eq("campaign_id", campaign.id);
+
+  if (error) {
+    throw new Error("Não foi possível verificar os arquivos da campanha.");
+  }
+
+  return (rows ?? [])
+    .filter(
+      (variant) =>
+        !variant.rendered_asset_path &&
+        !(
+          variant.provider === "tiktok" &&
+          variant.format === "vertical_video"
+        ),
+    )
+    .map((variant) => ({
+      provider: variant.provider,
+      format: variant.format,
+    }));
+}
+
 export async function saveCampaignDraft(input: CampaignDraftInput) {
   return persistCampaign(input);
 }
