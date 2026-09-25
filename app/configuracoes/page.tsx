@@ -26,13 +26,33 @@ const metaNotices: Record<string, string> = {
     "Não foi possível remover a conexão com a Meta neste momento.",
 };
 
+const instagramNotices: Record<string, string> = {
+  connected: "Instagram conectado com sucesso.",
+  disconnected: "A conexão com o Instagram foi removida.",
+  missing_config:
+    "A integração Instagram ainda precisa das credenciais do Instagram Login no servidor.",
+  denied: "A autorização do Instagram foi cancelada ou negada.",
+  invalid_state:
+    "A autorização do Instagram expirou ou não pôde ser validada. Tente conectar novamente.",
+  failed:
+    "Não foi possível concluir a conexão com o Instagram. Verifique a configuração do Instagram Login e tente novamente.",
+  disconnect_failed:
+    "Não foi possível remover a conexão com o Instagram neste momento.",
+};
+
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ meta?: string | string[] }>;
+  searchParams: Promise<{
+    meta?: string | string[];
+    instagram?: string | string[];
+  }>;
 }) {
   const params = await searchParams;
   const metaCode = Array.isArray(params.meta) ? params.meta[0] : params.meta;
+  const instagramCode = Array.isArray(params.instagram)
+    ? params.instagram[0]
+    : params.instagram;
   const supabase = await createClient();
 
   const {
@@ -81,6 +101,9 @@ export default async function SettingsPage({
         connections={connections ?? []}
         logoUrl={logoUrl}
         metaNotice={metaCode ? metaNotices[metaCode] : undefined}
+        instagramNotice={
+          instagramCode ? instagramNotices[instagramCode] : undefined
+        }
       />
     </AppShell>
   );
