@@ -548,6 +548,17 @@ export async function handleSocialPublish(job: WorkerJob) {
       throw new Error("No social networks selected for publication");
     }
 
+    if (payload.mode === "scheduled") {
+      const { error: publishingError } = await supabase
+        .from("campaigns")
+        .update({ status: "publishing" })
+        .eq("id", campaign.id)
+        .eq("user_id", job.user_id)
+        .eq("status", "scheduled");
+
+      if (publishingError) throw publishingError;
+    }
+
     const [{ data: profile, error: profileError }, { data: property, error: propertyError }] =
       await Promise.all([
         supabase
@@ -711,6 +722,22 @@ export async function handleSocialPublish(job: WorkerJob) {
       publications: published,
     };
   } catch (error) {
+    if (job.attempts < job.max_attempts && payload.mode === "scheduled") {
+      const { error: retryStatusError } = await supabase
+        .from("campaigns")
+        .update({ status: "scheduled" })
+        .eq("id", payload.campaign_id)
+        .eq("user_id", job.user_id)
+        .eq("status", "publishing");
+
+      if (retryStatusError) {
+        console.error(
+          "Could not restore campaign status before retry",
+          retryStatusError.message,
+        );
+      }
+    }
+
     await markCampaignFailedIfFinalAttempt(job, payload.campaign_id);
     throw error;
   }
