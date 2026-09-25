@@ -11,6 +11,7 @@ import {
 } from "@/lib/campaign-persistence";
 import {
   buildSocialPublishJobPayload,
+  supportedInstagramPublishFormats,
   supportedPublishProviders,
 } from "@/lib/publication-plan";
 
@@ -32,6 +33,9 @@ function campaignGenerationMetadata(input: CampaignDraftInput) {
     template_id: input.visualStyle,
     subheadline: input.subheadline.trim(),
     publish_providers: supportedPublishProviders(input.publishProviders ?? []),
+    publish_instagram_formats: supportedInstagramPublishFormats(
+      input.instagramPublishFormats ?? [],
+    ),
   };
 }
 
@@ -362,6 +366,9 @@ export async function publishCampaignNow(input: CampaignDraftInput) {
   const publishProviders = supportedPublishProviders(
     input.publishProviders ?? [],
   );
+  const instagramFormats = supportedInstagramPublishFormats(
+    input.instagramPublishFormats ?? [],
+  );
 
   if (publishProviders.length === 0) {
     return {
@@ -370,7 +377,20 @@ export async function publishCampaignNow(input: CampaignDraftInput) {
     };
   }
 
-  const campaignId = await persistCampaign(input);
+  if (
+    publishProviders.includes("instagram") &&
+    instagramFormats.length === 0
+  ) {
+    return {
+      ok: false as const,
+      message: "Selecione ao menos um formato do Instagram: Feed, Story ou Carrossel.",
+    };
+  }
+
+  const campaignId = await persistCampaign({
+    ...input,
+    instagramPublishFormats: instagramFormats,
+  });
   const supabase = await createClient();
 
   const {
@@ -450,6 +470,7 @@ export async function publishCampaignNow(input: CampaignDraftInput) {
       generation_metadata: campaignGenerationMetadata({
         ...input,
         publishProviders,
+        instagramPublishFormats: instagramFormats,
       }),
     })
     .eq("id", campaignId)
@@ -469,6 +490,7 @@ export async function publishCampaignNow(input: CampaignDraftInput) {
       campaignId,
       scheduledFor: queuedAt,
       providers: publishProviders,
+      instagramFormats,
       mode: "immediate",
     }),
   });
@@ -536,6 +558,19 @@ export async function scheduleCampaignDraft(
   const publishProviders = supportedPublishProviders(
     input.publishProviders ?? [],
   );
+  const instagramFormats = supportedInstagramPublishFormats(
+    input.instagramPublishFormats ?? [],
+  );
+
+  if (
+    publishProviders.includes("instagram") &&
+    instagramFormats.length === 0
+  ) {
+    return {
+      ok: false as const,
+      message: "Selecione ao menos um formato do Instagram: Feed, Story ou Carrossel.",
+    };
+  }
 
   if (publishProviders.length > 0) {
     const { data: profile } = await supabase
@@ -591,6 +626,7 @@ export async function scheduleCampaignDraft(
       generation_metadata: campaignGenerationMetadata({
         ...input,
         publishProviders,
+        instagramPublishFormats: instagramFormats,
       }),
     })
     .eq("id", campaignId)
@@ -610,6 +646,7 @@ export async function scheduleCampaignDraft(
       campaignId,
       scheduledFor: scheduledIso,
       providers: publishProviders,
+      instagramFormats,
     }),
   });
 
