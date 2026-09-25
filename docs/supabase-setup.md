@@ -1,64 +1,78 @@
-# Supabase — preparação do Corretor Social
+# Supabase — Corretor Social
 
-## Situação atual
+## Estado atual
 
-Nenhum projeto Supabase do Corretor Social foi criado ainda.
+O Supabase já faz parte do backend real do Corretor Social.
 
-Na conta atualmente conectada aparecem:
-- cataloguei
-- profidb
-
-Não reutilizar esses bancos para o Corretor Social.
-
-## Quando criar o projeto
-
-Criar um projeto separado chamado `corretorsocial`, preferencialmente na região `sa-east-1` para o público brasileiro, caso o plano/custo disponível seja aceitável.
-
-Antes de criar via automação, confirmar:
-1. organização Supabase;
-2. custo informado pelo Supabase;
-3. que há vaga gratuita disponível ou que qualquer cobrança foi aceita explicitamente.
-
-## Migration
-
-Arquivo:
-
-`supabase/migrations/001_initial_schema.sql`
-
-Ele cria:
+O app usa:
+- Auth;
+- PostgreSQL com RLS;
+- Storage;
 - perfis;
+- imóveis e mídias;
+- campanhas e variantes;
 - conexões sociais;
-- imóveis;
-- mídia dos imóveis;
-- campanhas;
-- variantes por rede/formato;
-- publicações;
-- tracking links;
 - fila de jobs;
-- ledger de créditos de IA;
-- índices;
-- triggers de updated_at;
-- criação automática do perfil após cadastro;
-- RLS.
+- publicações;
+- links rastreáveis;
+- créditos/ledger previstos pelo schema.
+
+O projeto do Corretor Social está em uma conta/projeto Supabase separado dos projetos que aparecem no conector Supabase disponível nesta sessão. Não aplicar migrations em outro projeto apenas por ele estar acessível no conector.
+
+## Fonte de verdade do schema
+
+A fonte de verdade é o diretório:
+
+`supabase/migrations/`
+
+Não usar nomes históricos como `001_initial_schema.sql` como referência operacional.
+
+As migrations são versionadas por timestamp. Entre as migrations existentes estão:
+- schema inicial;
+- fila/claim atômico;
+- operações de mídia;
+- reforços de segurança;
+- incremento atômico de tracking;
+- unicidade de link rastreável por campanha/rede.
+
+## Aplicação de migrations
+
+Antes de testar uma feature que dependa de migration nova, aplicar todas as migrations pendentes no projeto Supabase correto.
+
+Fluxo recomendado com Supabase CLI:
+
+```bash
+supabase login
+supabase link --project-ref SEU_PROJECT_REF
+supabase db push
+```
+
+Nunca salvar access token, senha do banco ou service role no repositório.
+
+Se a migration for aplicada manualmente pelo SQL Editor, manter o arquivo correspondente em `supabase/migrations/` para que o GitHub continue sendo a fonte de verdade.
 
 ## Segurança
 
-A service role:
-- nunca vai para o browser;
-- não deve ser usada em componentes client;
-- será utilizada apenas por server-side/worker quando necessário.
+- RLS permanece habilitado nas tabelas de dados do usuário.
+- `SUPABASE_SERVICE_ROLE_KEY` é server-only/worker.
+- Tokens OAuth não vão para o browser.
+- Tokens Meta são criptografados antes de serem salvos em `social_connections.token_secret_ref`.
+- `SOCIAL_TOKEN_ENCRYPTION_KEY` deve existir somente em ambientes seguros.
+- Funções administrativas como incremento atômico de tracking são concedidas somente a `service_role`.
 
-Tokens OAuth não serão salvos em texto aberto em tabelas acessíveis ao cliente. A tabela guarda apenas referência/metadata de segredo; a estratégia final de cofre será definida junto com as integrações.
+## Types TypeScript
 
-## Próxima etapa após criar o projeto
+`types/database.ts` deve acompanhar o schema aplicado.
 
-1. aplicar migration;
-2. executar Security Advisor;
-3. executar Performance Advisor;
-4. gerar types TypeScript do banco;
-5. adicionar `@supabase/supabase-js` e `@supabase/ssr`;
-6. configurar cookies/sessão no Next.js;
-7. criar login/cadastro;
-8. substituir mocks de profile/properties por dados reais;
-9. Storage para logo e fotos;
-10. só depois ligar extrator/IA.
+Depois de alterações maiores no banco, regenerar os tipos a partir do projeto correto e comparar o diff antes de substituir o arquivo.
+
+## Verificações recomendadas após migrations
+
+1. Security Advisor;
+2. Performance Advisor;
+3. confirmar RLS;
+4. confirmar índices/constraints novos;
+5. validar Auth;
+6. validar Storage;
+7. validar worker com service role;
+8. executar um fluxo E2E representativo.
