@@ -5,6 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import {
   META_OAUTH_PENDING_COOKIE,
   listMetaPages,
+  metaPageCanPublish,
 } from "@/lib/meta";
 import { readPendingMetaOAuth } from "@/lib/meta-oauth-session";
 import { completeMetaConnection } from "./actions";
@@ -38,6 +39,7 @@ export default async function MetaConnectionPage() {
         <div className="space-y-3">
           {pages.map((page) => {
             const instagram = page.instagram_business_account;
+            const canPublish = metaPageCanPublish(page);
 
             return (
               <form
@@ -55,12 +57,20 @@ export default async function MetaConnectionPage() {
                       : " · sem Instagram profissional vinculado"}
                   </div>
                 </div>
-                <button
-                  type="submit"
-                  className="app-button-primary w-full sm:w-auto"
-                >
-                  Usar esta Página
-                </button>
+                <div className="w-full sm:w-auto">
+                  <button
+                    type="submit"
+                    disabled={!canPublish}
+                    className="app-button-primary w-full disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                  >
+                    {canPublish ? "Usar esta Página" : "Sem permissão de publicar"}
+                  </button>
+                  {!canPublish ? (
+                    <div className="mt-1 text-[11px] text-[#B42318]">
+                      Sua conta não recebeu a tarefa CREATE_CONTENT nesta Página.
+                    </div>
+                  ) : null}
+                </div>
               </form>
             );
           })}
