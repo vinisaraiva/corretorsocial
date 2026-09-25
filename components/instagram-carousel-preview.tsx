@@ -269,21 +269,21 @@ function factSlideImageHeight(slide: Extract<Slide, { kind: "facts" }>) {
   if (structuredCount > 0) {
     if (structuredCount <= 3) {
       return {
-        imageClass: "h-[70%]",
-        panelClass: "top-[67%]",
+        imageClass: "h-[76%]",
+        panelClass: "top-[72%]",
       };
     }
 
     if (structuredCount <= 5) {
       return {
-        imageClass: "h-[63%]",
-        panelClass: "top-[60%]",
+        imageClass: "h-[72%]",
+        panelClass: "top-[68%]",
       };
     }
 
     return {
-      imageClass: "h-[60%]",
-      panelClass: "top-[57%]",
+      imageClass: "h-[68%]",
+      panelClass: "top-[64%]",
     };
   }
 
@@ -291,14 +291,14 @@ function factSlideImageHeight(slide: Extract<Slide, { kind: "facts" }>) {
 
   if (textCount <= 2) {
     return {
-      imageClass: "h-[62%]",
-      panelClass: "top-[59%]",
+      imageClass: "h-[76%]",
+      panelClass: "top-[72%]",
     };
   }
 
   return {
-    imageClass: "h-[57%]",
-    panelClass: "top-[54%]",
+    imageClass: "h-[70%]",
+    panelClass: "top-[66%]",
   };
 }
 
