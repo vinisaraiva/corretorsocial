@@ -1471,10 +1471,53 @@ export function CampaignBuilder({
             </div>
           )}
 
+          <div className="rounded-xl border border-[#E4E7EC] p-4">
+            <div className="text-xs font-extrabold uppercase tracking-wide text-[#667085]">
+              Canais de publicação
+            </div>
+            <div className="mt-3 space-y-3">
+              {(["instagram", "facebook"] as const).map((provider) => {
+                const connection = socialConnections.find(
+                  (item) =>
+                    item.provider === provider && item.status === "connected",
+                );
+                const connected = Boolean(connection);
+                const selected = publishProviders.includes(provider);
+
+                return (
+                  <label key={provider} className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selected && connected}
+                      disabled={!connected || working !== null}
+                      onChange={() => togglePublishProvider(provider)}
+                      className="mt-0.5 h-4 w-4 accent-[#176B5B]"
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-bold">
+                        {provider === "instagram" ? "Instagram" : "Facebook"}
+                      </span>
+                      <span className="block truncate text-[11px] leading-4 text-[#667085]">
+                        {connected
+                          ? connection?.display_name || "Conta conectada"
+                          : "Não conectado"}
+                      </span>
+                      {provider === "instagram" && connected ? (
+                        <span className="block text-[10px] leading-4 text-[#667085]">
+                          Feed, Story e Carrossel quando disponível.
+                        </span>
+                      ) : null}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={() => setScheduleOpen((value) => !value)}
-            disabled={working !== null}
+            disabled={working !== null || status === "publishing"}
             className="app-button-primary flex w-full items-center justify-center gap-2 disabled:opacity-60"
           >
             <CalendarClock size={18} />
@@ -1483,15 +1526,31 @@ export function CampaignBuilder({
 
           <button
             type="button"
-            disabled
-            title="Disponível após conectar uma rede social"
-            className="app-button-secondary w-full opacity-50"
+            onClick={() => void publishNow()}
+            disabled={
+              working !== null ||
+              status === "publishing" ||
+              publishProviders.length === 0
+            }
+            title={
+              publishProviders.length === 0
+                ? "Conecte e selecione pelo menos uma rede"
+                : "Publicar agora nas redes selecionadas"
+            }
+            className="app-button-secondary flex w-full items-center justify-center gap-2 disabled:opacity-50"
           >
-            Publicar em todas
+            {working === "publish" ? (
+              <LoaderCircle size={18} className="animate-spin" />
+            ) : null}
+            {status === "publishing" ? "Publicando…" : "Publicar agora"}
           </button>
 
           <p className="text-center text-xs text-[#667085]">
-            Publicação será liberada após a integração OAuth das redes.
+            {connectedMetaProviders.length === 0
+              ? "Conecte Facebook/Instagram em Configurações para publicar automaticamente."
+              : publishProviders.length === 0
+                ? "Selecione ao menos um canal para publicação automática."
+                : "Somente os canais marcados serão publicados."}
           </p>
         </aside>
       </section>
@@ -1545,69 +1604,14 @@ export function CampaignBuilder({
         <section className="app-card p-5 sm:p-6">
           <h3 className="text-lg font-extrabold">Agendar campanha</h3>
           <p className="mt-1 text-sm text-[#667085]">
-            Escolha quando publicar e em quais redes conectadas. Se nenhuma rede
-            for marcada, o agendamento fica apenas no calendário.
+            Escolha o horário. Os canais usados serão os que estão marcados no
+            painel de publicação; sem canais marcados, o horário fica apenas no calendário.
           </p>
 
-          <div className="mt-5">
-            <div className="text-sm font-extrabold">Onde publicar</div>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              {(["instagram", "facebook"] as const).map((provider) => {
-                const connection = socialConnections.find(
-                  (item) =>
-                    item.provider === provider && item.status === "connected",
-                );
-                const connected = Boolean(connection);
-                const selected = publishProviders.includes(provider);
-
-                return (
-                  <label
-                    key={provider}
-                    className={`flex min-h-20 items-start gap-3 rounded-xl border p-4 ${
-                      connected
-                        ? "border-[#D0D5DD] bg-white"
-                        : "border-[#EAECF0] bg-[#F9FAFB]"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selected && connected}
-                      disabled={!connected || working !== null}
-                      onChange={() => togglePublishProvider(provider)}
-                      className="mt-1 h-5 w-5 accent-[#176B5B]"
-                    />
-                    <span className="min-w-0">
-                      <span className="block font-bold">
-                        {provider === "instagram" ? "Instagram" : "Facebook"}
-                      </span>
-                      <span className="mt-1 block text-xs leading-5 text-[#667085]">
-                        {connected
-                          ? connection?.display_name ||
-                            "Conta conectada"
-                          : "Não conectado"}
-                      </span>
-                      {provider === "instagram" && connected ? (
-                        <span className="mt-1 block text-[11px] leading-4 text-[#667085]">
-                          Inclui Feed, Story e Carrossel quando disponível.
-                        </span>
-                      ) : null}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-
-            {connectedMetaProviders.length === 0 ? (
-              <p className="mt-3 text-xs leading-5 text-[#667085]">
-                Nenhuma rede Meta está conectada. Você ainda pode salvar o
-                horário no calendário ou conectar Facebook/Instagram em
-                Configurações.
-              </p>
-            ) : publishProviders.length === 0 ? (
-              <p className="mt-3 text-xs font-semibold text-[#B54708]">
-                Nenhuma rede selecionada: não haverá publicação automática.
-              </p>
-            ) : null}
+          <div className="mt-4 rounded-xl bg-[#F9FAFB] p-3 text-xs leading-5 text-[#667085]">
+            {publishProviders.length === 0
+              ? "Nenhuma rede selecionada: este horário ficará apenas no calendário."
+              : "A publicação usará os canais marcados no painel ao lado."}
           </div>
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
