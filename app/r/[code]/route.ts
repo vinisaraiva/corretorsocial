@@ -28,26 +28,24 @@ export async function GET(
   }
 
   const supabase = createAdminClient();
-  const { data: link, error } = await supabase
-    .from("tracking_links")
-    .select("id,destination_url,clicks")
-    .eq("short_code", shortCode)
-    .maybeSingle();
+  const { data: destination, error } = await supabase.rpc(
+    "increment_tracking_link_click",
+    {
+      p_short_code: shortCode,
+    },
+  );
 
-  if (error || !link || !allowedDestination(link.destination_url)) {
+  if (
+    error ||
+    typeof destination !== "string" ||
+    !allowedDestination(destination)
+  ) {
+    if (error) {
+      console.error("Could not increment tracking link", error);
+    }
+
     return NextResponse.redirect(new URL("/", request.url), 302);
   }
 
-  const { error: updateError } = await supabase
-    .from("tracking_links")
-    .update({
-      clicks: Number(link.clicks ?? 0) + 1,
-    })
-    .eq("id", link.id);
-
-  if (updateError) {
-    console.error("Could not increment tracking link", updateError);
-  }
-
-  return NextResponse.redirect(link.destination_url, 302);
+  return NextResponse.redirect(destination, 302);
 }
