@@ -100,13 +100,19 @@ async function persistCampaign(input: CampaignDraftInput) {
   if (campaignId) {
     const { data: existing } = await supabase
       .from("campaigns")
-      .select("id")
+      .select("id,status")
       .eq("id", campaignId)
       .eq("user_id", user.id)
       .maybeSingle();
 
     if (!existing) {
       throw new Error("Campanha não encontrada.");
+    }
+
+    if (existing.status === "publishing") {
+      throw new Error(
+        "A campanha está sendo publicada. Aguarde a conclusão antes de alterá-la.",
+      );
     }
 
     const { error } = await supabase
