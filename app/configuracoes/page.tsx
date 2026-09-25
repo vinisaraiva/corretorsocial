@@ -8,6 +8,10 @@ export const dynamic = "force-dynamic";
 const metaNotices: Record<string, string> = {
   connected: "Facebook e Instagram foram atualizados com sucesso.",
   disconnected: "A conexão com a Meta foi removida.",
+  no_page:
+    "Facebook autorizado, mas não encontramos nenhuma Página disponível para publicação automática. Você pode continuar usando o Corretor Social e conectar uma Página depois.",
+  no_publishable_page:
+    "Encontramos Página(s) na sua conta, mas nenhuma está liberada para publicação automática pelo Corretor Social.",
   missing_config:
     "A integração Meta ainda precisa das variáveis do aplicativo e da chave de criptografia no servidor.",
   denied: "A autorização da Meta foi cancelada ou negada.",
