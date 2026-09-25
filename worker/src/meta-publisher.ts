@@ -34,6 +34,35 @@ async function parseMetaResponse<T>(response: Response) {
   return payload as T;
 }
 
+export async function refreshInstagramLongLivedToken(
+  accessToken: string,
+) {
+  const url = new URL(
+    `https://graph.instagram.com/${graphVersion()}/refresh_access_token`,
+  );
+  url.searchParams.set("grant_type", "ig_refresh_token");
+  url.searchParams.set("access_token", accessToken);
+
+  const response = await fetch(url);
+  const payload = await parseMetaResponse<{
+    access_token?: string;
+    token_type?: string;
+    expires_in?: number;
+  }>(response);
+
+  if (!payload.access_token) {
+    throw new Error("Instagram did not return a refreshed access token");
+  }
+
+  return {
+    accessToken: payload.access_token,
+    expiresAt:
+      typeof payload.expires_in === "number"
+        ? new Date(Date.now() + payload.expires_in * 1000).toISOString()
+        : null,
+  };
+}
+
 function graphBaseUrl(host: GraphHost) {
   return host === "instagram"
     ? "https://graph.instagram.com"
