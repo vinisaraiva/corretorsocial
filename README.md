@@ -56,7 +56,7 @@ O GitHub é a fonte de verdade do projeto.
 
 Framework oficial: **Next.js App Router + TypeScript + Tailwind CSS + shadcn/ui**. O Lovable pode ser usado como apoio visual, mas o GitHub é a fonte de verdade e o código não depende do runtime do Lovable.
 
-Backend, banco, autenticação real e integrações externas serão adicionados depois da validação visual/UX do frontend.
+Backend, banco, autenticação e Storage já estão integrados ao Supabase. A publicação Meta está implementada no código e depende da configuração das credenciais/ambiente e da validação E2E antes de ser considerada pronta para produção.
 
 
 ## Hospedagem atual
@@ -67,8 +67,8 @@ A arquitetura foi mantida portátil: o app não depende de serviços proprietár
 
 ## Banco
 
-O schema Supabase está preparado em:
+O schema Supabase é versionado em:
 
-`supabase/migrations/001_initial_schema.sql`
+`supabase/migrations/`
 
-Nenhum projeto Supabase dedicado ao Corretor Social foi criado ainda para evitar custo enquanto o limite gratuito de projetos estiver ocupado.
+O diretório de migrations é a fonte de verdade. Novas migrations devem ser aplicadas ao projeto Supabase correto antes de testar features que dependam delas.
