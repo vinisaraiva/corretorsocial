@@ -5,7 +5,29 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function SettingsPage() {
+const metaNotices: Record<string, string> = {
+  connected: "Facebook e Instagram foram atualizados com sucesso.",
+  disconnected: "A conexão com a Meta foi removida.",
+  missing_config:
+    "A integração Meta ainda precisa das variáveis do aplicativo e da chave de criptografia no servidor.",
+  denied: "A autorização da Meta foi cancelada ou negada.",
+  invalid_state:
+    "A autorização expirou ou não pôde ser validada. Inicie a conexão novamente.",
+  expired:
+    "A sessão temporária da Meta expirou. Inicie a conexão novamente.",
+  failed:
+    "Não foi possível concluir a conexão com a Meta. Verifique o aplicativo e tente novamente.",
+  disconnect_failed:
+    "Não foi possível remover a conexão com a Meta neste momento.",
+};
+
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ meta?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const metaCode = Array.isArray(params.meta) ? params.meta[0] : params.meta;
   const supabase = await createClient();
 
   const {
@@ -26,7 +48,7 @@ export default async function SettingsPage() {
       .maybeSingle(),
     supabase
       .from("social_connections")
-      .select("provider,status")
+      .select("provider,status,display_name,external_account_id")
       .eq("user_id", user.id),
   ]);
 
@@ -53,6 +75,7 @@ export default async function SettingsPage() {
         profile={profile}
         connections={connections ?? []}
         logoUrl={logoUrl}
+        metaNotice={metaCode ? metaNotices[metaCode] : undefined}
       />
     </AppShell>
   );
