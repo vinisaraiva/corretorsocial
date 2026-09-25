@@ -2,6 +2,13 @@
 
 ## Estado atual
 
+Projeto oficial do Corretor Social:
+
+- nome: `corretor`;
+- project ref: `uicojmwgebwcvfwavyqr`;
+- região: `sa-east-1`;
+- API URL: `https://uicojmwgebwcvfwavyqr.supabase.co`.
+
 O Supabase já faz parte do backend real do Corretor Social.
 
 O app usa:
@@ -17,7 +24,7 @@ O app usa:
 - links rastreáveis;
 - créditos/ledger previstos pelo schema.
 
-O projeto do Corretor Social está em uma conta/projeto Supabase separado dos projetos que aparecem no conector Supabase disponível nesta sessão. Não aplicar migrations em outro projeto apenas por ele estar acessível no conector.
+O projeto do Corretor Social está em uma organização Supabase diferente dos projetos `cataloguei` e `profidb`. A listagem geral do conector pode não mostrá-lo, mas o acesso direto pelo project ref `uicojmwgebwcvfwavyqr` funciona. Nunca aplicar migrations nos outros projetos por engano.
 
 ## Fonte de verdade do schema
 
