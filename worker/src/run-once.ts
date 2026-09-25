@@ -9,7 +9,7 @@ function positiveInteger(name: string, fallback: number) {
   return Number.isInteger(value) && value > 0 ? value : fallback;
 }
 
-const maxJobs = positiveInteger("CRON_MAX_JOBS", 5);
+const maxJobs = positiveInteger("CRON_MAX_JOBS", 1);
 
 async function runOnce() {
   console.log(
