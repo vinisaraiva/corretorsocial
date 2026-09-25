@@ -9,6 +9,7 @@ import {
   encryptSocialSecret,
   socialTokenEncryptionConfigured,
 } from "@/lib/social-token-crypto";
+import { publicAppUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +26,10 @@ function safeStateMatch(received: string, expected: string) {
 
 function redirectWithStatus(request: NextRequest, status: string) {
   return NextResponse.redirect(
-    new URL(`/configuracoes?meta=${encodeURIComponent(status)}`, request.url),
+    publicAppUrl(
+      request,
+      `/configuracoes?meta=${encodeURIComponent(status)}`,
+    ),
   );
 }
 
@@ -36,7 +40,7 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(publicAppUrl(request, "/login"));
   }
 
   if (!socialTokenEncryptionConfigured()) {
@@ -69,7 +73,7 @@ export async function GET(request: NextRequest) {
     const token = await exchangeMetaAuthorizationCode(code);
     const encryptedPendingToken = encryptSocialSecret(JSON.stringify(token));
     const response = NextResponse.redirect(
-      new URL("/configuracoes/meta", request.url),
+      publicAppUrl(request, "/configuracoes/meta"),
     );
 
     response.cookies.delete(META_OAUTH_STATE_COOKIE);
