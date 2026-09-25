@@ -317,6 +317,31 @@ export async function saveCampaignDraft(input: CampaignDraftInput) {
   return persistCampaign(input);
 }
 
+export async function getCampaignPublicationState(campaignId: string) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data: campaign, error } = await supabase
+    .from("campaigns")
+    .select("status,published_at")
+    .eq("id", campaignId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error || !campaign) {
+    throw new Error("Campanha não encontrada.");
+  }
+
+  return campaign;
+}
+
 export async function publishCampaignNow(input: CampaignDraftInput) {
   const publishProviders = supportedPublishProviders(
     input.publishProviders ?? [],
