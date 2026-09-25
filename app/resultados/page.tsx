@@ -44,9 +44,7 @@ export default async function ResultsPage() {
         "id,property_id,marketing_angle,status,published_at,created_at",
       )
       .eq("user_id", user.id)
-      .eq("status", "published")
-      .gte("published_at", since)
-      .order("published_at", { ascending: false }),
+      .order("created_at", { ascending: false }),
     supabase
       .from("tracking_links")
       .select("campaign_id,provider,clicks,created_at")
@@ -57,11 +55,23 @@ export default async function ResultsPage() {
     throw new Error("Não foi possível carregar os resultados.");
   }
 
-  const campaigns = campaignsResult.data ?? [];
+  const allCampaigns = campaignsResult.data ?? [];
+  const campaigns = allCampaigns
+    .filter(
+      (campaign) =>
+        campaign.status === "published" &&
+        Boolean(campaign.published_at) &&
+        new Date(campaign.published_at!).getTime() >= new Date(since).getTime(),
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.published_at!).getTime() -
+        new Date(a.published_at!).getTime(),
+    );
   const trackingLinks = linksResult.data ?? [];
   const campaignIds = campaigns.map((campaign) => campaign.id);
   const propertyIds = Array.from(
-    new Set(campaigns.map((campaign) => campaign.property_id)),
+    new Set(allCampaigns.map((campaign) => campaign.property_id)),
   );
 
   const [variantsResult, propertiesResult] = await Promise.all([
@@ -108,7 +118,7 @@ export default async function ResultsPage() {
     ]),
   );
   const campaignById = new Map(
-    campaigns.map((campaign) => [campaign.id, campaign]),
+    allCampaigns.map((campaign) => [campaign.id, campaign]),
   );
   const variantById = new Map(
     variants.map((variant) => [variant.id, variant]),
