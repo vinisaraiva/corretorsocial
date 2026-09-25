@@ -7,6 +7,10 @@ import {
   instagramIntegrationConfigured,
   instagramIntegrationMissingConfiguration,
 } from "@/lib/instagram";
+import {
+  socialTokenEncryptionConfigurationIssue,
+  socialTokenEncryptionConfigured,
+} from "@/lib/social-token-crypto";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -21,10 +25,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(publicAppUrl(request, "/login"));
   }
 
-  if (!instagramIntegrationConfigured()) {
+  if (
+    !instagramIntegrationConfigured() ||
+    !socialTokenEncryptionConfigured()
+  ) {
     console.error("Instagram OAuth is missing server configuration", {
       missingInstagramConfiguration:
         instagramIntegrationMissingConfiguration(),
+      encryptionIssue: socialTokenEncryptionConfigurationIssue(),
     });
 
     return NextResponse.redirect(
