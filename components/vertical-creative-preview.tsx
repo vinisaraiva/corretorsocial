@@ -136,6 +136,7 @@ export function VerticalCreativePreview({
   cta,
   blockPosition,
   suggestedBlockPosition,
+  renderTarget,
 }: {
   property: Property;
   brand: VerticalBrand;
@@ -146,6 +147,7 @@ export function VerticalCreativePreview({
   cta: string;
   blockPosition: BlockPosition;
   suggestedBlockPosition?: "left" | "right" | null;
+  renderTarget?: string;
 }) {
   const brandColor = safeBrandColor(brand.primaryColor);
   const brandText = contrastText(brandColor);
@@ -172,7 +174,8 @@ export function VerticalCreativePreview({
       <div
         className="relative aspect-[9/16] overflow-hidden"
         data-render-target={
-          platform === "instagram_story" ? "story" : undefined
+          renderTarget ??
+          (platform === "instagram_story" ? "story" : undefined)
         }
       >
         <PropertyImage property={property} />
