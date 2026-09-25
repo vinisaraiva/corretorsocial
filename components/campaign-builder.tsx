@@ -19,6 +19,7 @@ import {
   registerRenderedAssets,
   validateCampaignScheduleTime,
   saveCampaignDraft,
+  publishCampaignNow,
   scheduleCampaignDraft,
   type CampaignDraftInput,
 } from "@/app/campanhas/actions";
@@ -276,7 +277,7 @@ export function CampaignBuilder({
   );
   const [status, setStatus] = useState(campaignData?.status ?? "draft");
   const [working, setWorking] = useState<
-    "save" | "schedule" | "render" | null
+    "save" | "schedule" | "publish" | "render" | null
   >(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -578,6 +579,30 @@ export function CampaignBuilder({
     return configs;
   }
 
+  async function prepareSelectedPublishAssets(campaignId: string) {
+    if (publishProviders.length === 0) return 0;
+
+    const required = await getCampaignRenderRequirements(campaignId);
+    const requiredKeys = new Set(
+      required.map((item) => `${item.provider}:${item.format}`),
+    );
+
+    const configs = staticRenderConfigs().filter(
+      (config) =>
+        publishProviders.includes(config.provider) &&
+        requiredKeys.has(`${config.provider}:${config.format}`),
+    );
+
+    for (const [index, config] of configs.entries()) {
+      setMessage(
+        `Preparando arquivos finais (${index + 1}/${configs.length})…`,
+      );
+      await renderRegisteredAssets(campaignId, config);
+    }
+
+    return configs.length;
+  }
+
   async function save() {
     setWorking("save");
     setError("");
@@ -596,6 +621,60 @@ export function CampaignBuilder({
         caught instanceof Error
           ? caught.message
           : "Não foi possível salvar a campanha.",
+      );
+    } finally {
+      setWorking(null);
+    }
+  }
+
+  async function publishNow() {
+    if (!property.image) {
+      setError("Adicione pelo menos uma foto antes de publicar a campanha.");
+      return;
+    }
+
+    if (publishProviders.length === 0) {
+      setError("Selecione pelo menos uma rede conectada para publicar.");
+      return;
+    }
+
+    setWorking("publish");
+    setError("");
+    setMessage("");
+    setRenderedDownloads([]);
+    setRenderedLabel("");
+
+    try {
+      const savedId = await saveCampaignDraft(draftInput());
+      setPersistedCampaignId(savedId);
+      setDirty(false);
+
+      const renderedCount = await prepareSelectedPublishAssets(savedId);
+
+      const publishResult = await publishCampaignNow({
+        ...draftInput(),
+        campaignId: savedId,
+      });
+
+      if (!publishResult.ok) {
+        setError(publishResult.message);
+        setMessage("");
+        return;
+      }
+
+      setPersistedCampaignId(publishResult.campaignId);
+      setStatus("publishing");
+      setDirty(false);
+      setMessage(
+        renderedCount > 0
+          ? `Arquivos atualizados e publicação enviada para ${publishResult.queuedProviders.length} rede${publishResult.queuedProviders.length === 1 ? "" : "s"}.`
+          : `Publicação enviada para ${publishResult.queuedProviders.length} rede${publishResult.queuedProviders.length === 1 ? "" : "s"}.`,
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Não foi possível iniciar a publicação.",
       );
     } finally {
       setWorking(null);
@@ -637,23 +716,7 @@ export function CampaignBuilder({
       setPersistedCampaignId(savedId);
       setDirty(false);
 
-      const required = await getCampaignRenderRequirements(savedId);
-      const requiredKeys = new Set(
-        required.map((item) => `${item.provider}:${item.format}`),
-      );
-
-      const configs = staticRenderConfigs().filter(
-        (config) =>
-          publishProviders.includes(config.provider) &&
-          requiredKeys.has(`${config.provider}:${config.format}`),
-      );
-
-      for (const [index, config] of configs.entries()) {
-        setMessage(
-          `Preparando arquivos finais (${index + 1}/${configs.length})…`,
-        );
-        await renderRegisteredAssets(savedId, config);
-      }
+      const renderedCount = await prepareSelectedPublishAssets(savedId);
 
       const scheduleResult = await scheduleCampaignDraft(
         {
@@ -681,9 +744,9 @@ export function CampaignBuilder({
         setMessage(
           `Agendamento salvo para ${new Date(scheduledFor).toLocaleString("pt-BR")}. Nenhuma rede foi selecionada para publicação automática.`,
         );
-      } else if (configs.length > 0) {
+      } else if (renderedCount > 0) {
         setMessage(
-          `Campanha agendada para publicação e ${configs.length} formato${configs.length === 1 ? "" : "s"} atualizado${configs.length === 1 ? "" : "s"} automaticamente.`,
+          `Campanha agendada para publicação e ${renderedCount} formato${renderedCount === 1 ? "" : "s"} atualizado${renderedCount === 1 ? "" : "s"} automaticamente.`,
         );
       } else {
         setMessage(
@@ -1374,12 +1437,12 @@ export function CampaignBuilder({
               <ImageDown size={18} />
             )}
             {isCarouselView
-              ? `Gerar ${selectedCarouselModel.slideCount} PNGs`
+              ? `Gerar ${selectedCarouselModel.slideCount} JPGs`
               : isStoryView
-                ? "Gerar Story PNG"
+                ? "Gerar Story JPG"
                 : isTiktokView
                   ? "TikTok · vídeo em breve"
-                  : "Gerar PNG"}
+                  : "Gerar JPG"}
           </button>
 
           {renderedDownloads.length > 0 && (
@@ -1398,7 +1461,7 @@ export function CampaignBuilder({
                   >
                     {renderedDownloads.length > 1
                       ? `Abrir página ${index + 1}`
-                      : "Abrir PNG"}
+                      : "Abrir JPG"}
                   </a>
                 ))}
               </div>
