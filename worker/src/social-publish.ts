@@ -4,9 +4,13 @@ import {
   publishInstagramCarousel,
   publishInstagramImage,
   publishInstagramStory,
+  refreshInstagramLongLivedToken,
 } from "./meta-publisher.js";
 import { supabase, type WorkerJob } from "./queue.js";
-import { decryptSocialSecret } from "./social-token-crypto.js";
+import {
+  decryptSocialSecret,
+  encryptSocialSecret,
+} from "./social-token-crypto.js";
 
 type PublishProvider = "instagram" | "facebook";
 
@@ -24,6 +28,8 @@ type SocialConnection = {
   external_account_id: string | null;
   token_secret_ref: string | null;
   status: string;
+  expires_at: string | null;
+  metadata: unknown;
 };
 
 type CampaignVariant = {
@@ -380,6 +386,83 @@ function captionWithTracking(caption: string, trackingUrl?: string) {
   return `${caption}\n\n${trackingUrl}`;
 }
 
+function isDirectInstagramConnection(connection: SocialConnection) {
+  const metadata = metadataObject(connection.metadata);
+  return metadata.auth_mode === "instagram_login";
+}
+
+function instagramAccountType(connection: SocialConnection) {
+  const metadata = metadataObject(connection.metadata);
+  return typeof metadata.account_type === "string"
+    ? metadata.account_type.toUpperCase()
+    : null;
+}
+
+function variantSupportedByConnection(
+  variant: CampaignVariant,
+  connection: SocialConnection,
+) {
+  if (
+    variant.provider === "instagram" &&
+    variant.format === "story_9x16" &&
+    isDirectInstagramConnection(connection)
+  ) {
+    return instagramAccountType(connection) === "BUSINESS";
+  }
+
+  return true;
+}
+
+async function maybeRefreshInstagramConnection(
+  connection: SocialConnection,
+) {
+  if (
+    connection.provider !== "instagram" ||
+    !isDirectInstagramConnection(connection) ||
+    !connection.token_secret_ref ||
+    !connection.expires_at
+  ) {
+    return connection;
+  }
+
+  const expiresAt = new Date(connection.expires_at).getTime();
+
+  if (!Number.isFinite(expiresAt)) {
+    return connection;
+  }
+
+  const refreshThreshold = Date.now() + 7 * 24 * 60 * 60 * 1000;
+
+  if (expiresAt > refreshThreshold) {
+    return connection;
+  }
+
+  const refreshed = await refreshInstagramLongLivedToken(
+    decryptSocialSecret(connection.token_secret_ref),
+  );
+
+  const encrypted = encryptSocialSecret(refreshed.accessToken);
+  const nextExpiresAt = refreshed.expiresAt ?? connection.expires_at;
+
+  const { error } = await supabase
+    .from("social_connections")
+    .update({
+      token_secret_ref: encrypted,
+      expires_at: nextExpiresAt,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", connection.id)
+    .eq("provider", "instagram");
+
+  if (error) throw error;
+
+  return {
+    ...connection,
+    token_secret_ref: encrypted,
+    expires_at: nextExpiresAt,
+  };
+}
+
 async function publishVariant(
   variant: CampaignVariant,
   connection: SocialConnection,
@@ -416,12 +499,17 @@ async function publishVariant(
   }
 
   if (variant.provider === "instagram") {
+    const graphHost = isDirectInstagramConnection(connection)
+      ? "instagram"
+      : "facebook";
+
     if (variant.format === "feed_4x5") {
       const result = await publishInstagramImage({
         instagramAccountId: connection.external_account_id,
         accessToken,
         imageUrl: urls[0],
         caption,
+        graphHost,
       });
 
       return result.externalId;
@@ -432,6 +520,7 @@ async function publishVariant(
         instagramAccountId: connection.external_account_id,
         accessToken,
         imageUrl: urls[0],
+        graphHost,
       });
 
       return result.externalId;
@@ -443,6 +532,7 @@ async function publishVariant(
         accessToken,
         imageUrls: urls,
         caption,
+        graphHost,
       });
 
       return result.externalId;
@@ -601,7 +691,7 @@ export async function handleSocialPublish(job: WorkerJob) {
     const { data: connectionRows, error: connectionError } = await supabase
       .from("social_connections")
       .select(
-        "id,provider,external_account_id,token_secret_ref,status",
+        "id,provider,external_account_id,token_secret_ref,status,expires_at,metadata",
       )
       .eq("user_id", job.user_id)
       .eq("status", "connected")
@@ -610,6 +700,13 @@ export async function handleSocialPublish(job: WorkerJob) {
     if (connectionError) throw connectionError;
 
     const connections = (connectionRows ?? []) as SocialConnection[];
+
+    for (let index = 0; index < connections.length; index += 1) {
+      connections[index] = await maybeRefreshInstagramConnection(
+        connections[index],
+      );
+    }
+
     const connectionByProvider = new Map(
       connections.map((connection) => [connection.provider, connection]),
     );
@@ -647,6 +744,12 @@ export async function handleSocialPublish(job: WorkerJob) {
               variant.format,
             )),
       )
+      .filter((variant) => {
+        const connection = connectionByProvider.get(variant.provider);
+        return connection
+          ? variantSupportedByConnection(variant, connection)
+          : false;
+      })
       .sort((a, b) => variantPriority(a) - variantPriority(b));
 
     if (variants.length === 0) {
