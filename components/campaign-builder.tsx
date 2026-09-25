@@ -19,6 +19,7 @@ import {
   ensureCampaignVariant,
   getCampaignRenderRequirements,
   registerRenderedAssets,
+  validateCampaignScheduleTime,
   saveCampaignDraft,
   scheduleCampaignDraft,
   type CampaignDraftInput,
@@ -603,6 +604,22 @@ export function CampaignBuilder({
     setRenderedLabel("");
 
     try {
+      const requestedDate = new Date(scheduledFor);
+
+      if (Number.isNaN(requestedDate.getTime())) {
+        setError("Escolha uma data e horário válidos.");
+        return;
+      }
+
+      const validation = await validateCampaignScheduleTime(
+        requestedDate.toISOString(),
+      );
+
+      if (!validation.ok) {
+        setError(validation.message);
+        return;
+      }
+
       const savedId = await saveCampaignDraft(draftInput());
       setPersistedCampaignId(savedId);
       setDirty(false);
@@ -623,14 +640,21 @@ export function CampaignBuilder({
         await renderRegisteredAssets(savedId, config);
       }
 
-      const id = await scheduleCampaignDraft(
+      const scheduleResult = await scheduleCampaignDraft(
         {
           ...draftInput(),
           campaignId: savedId,
         },
-        new Date(scheduledFor).toISOString(),
+        validation.scheduledFor,
       );
 
+      if (!scheduleResult.ok) {
+        setError(scheduleResult.message);
+        setMessage("");
+        return;
+      }
+
+      const id = scheduleResult.campaignId;
       setPersistedCampaignId(id);
       setStatus("scheduled");
       setScheduleOpen(false);
