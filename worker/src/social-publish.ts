@@ -13,11 +13,22 @@ import {
 } from "./social-token-crypto.js";
 
 type PublishProvider = "instagram" | "facebook";
+type InstagramPublishFormat =
+  | "feed_4x5"
+  | "story_9x16"
+  | "carousel_4x5";
+
+const ALL_INSTAGRAM_FORMATS: InstagramPublishFormat[] = [
+  "feed_4x5",
+  "story_9x16",
+  "carousel_4x5",
+];
 
 type SocialPublishPayload = {
   campaign_id: string;
   scheduled_for: string;
   providers: PublishProvider[];
+  instagram_formats: InstagramPublishFormat[];
   mode: "scheduled" | "immediate";
   version?: number;
 };
@@ -58,6 +69,19 @@ function parsePayload(payload: unknown): SocialPublishPayload {
       )
     : [];
 
+  const instagramFormats = Array.isArray(value.instagram_formats)
+    ? Array.from(
+        new Set(
+          value.instagram_formats.filter(
+            (format): format is InstagramPublishFormat =>
+              format === "feed_4x5" ||
+              format === "story_9x16" ||
+              format === "carousel_4x5",
+          ),
+        ),
+      )
+    : ALL_INSTAGRAM_FORMATS;
+
   if (
     typeof value.campaign_id !== "string" ||
     typeof value.scheduled_for !== "string"
@@ -69,6 +93,7 @@ function parsePayload(payload: unknown): SocialPublishPayload {
     campaign_id: value.campaign_id,
     scheduled_for: value.scheduled_for,
     providers,
+    instagram_formats: instagramFormats,
     mode: value.mode === "immediate" ? "immediate" : "scheduled",
     version: typeof value.version === "number" ? value.version : undefined,
   };
@@ -617,6 +642,26 @@ export async function handleSocialPublish(job: WorkerJob) {
     const effectiveProviders =
       payload.mode === "immediate" ? payload.providers : savedProviders;
 
+    const savedInstagramFormats = Array.isArray(
+      metadata.publish_instagram_formats,
+    )
+      ? Array.from(
+          new Set(
+            metadata.publish_instagram_formats.filter(
+              (format): format is InstagramPublishFormat =>
+                format === "feed_4x5" ||
+                format === "story_9x16" ||
+                format === "carousel_4x5",
+            ),
+          ),
+        )
+      : ALL_INSTAGRAM_FORMATS;
+
+    const effectiveInstagramFormats =
+      payload.mode === "immediate"
+        ? payload.instagram_formats
+        : savedInstagramFormats;
+
     if (payload.mode === "scheduled" && effectiveProviders.length === 0) {
       const { error: readyError } = await supabase
         .from("campaigns")
@@ -740,8 +785,8 @@ export async function handleSocialPublish(job: WorkerJob) {
         (variant) =>
           (variant.provider === "facebook" && variant.format === "feed") ||
           (variant.provider === "instagram" &&
-            ["feed_4x5", "story_9x16", "carousel_4x5"].includes(
-              variant.format,
+            effectiveInstagramFormats.includes(
+              variant.format as InstagramPublishFormat,
             )),
       )
       .filter((variant) => {
