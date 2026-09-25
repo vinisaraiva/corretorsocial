@@ -257,9 +257,134 @@ function variantPriority(variant: CampaignVariant) {
   return order[`${variant.provider}:${variant.format}`] ?? 999;
 }
 
+function publicAppUrl() {
+  const value =
+    process.env.APP_PUBLIC_URL?.trim() ||
+    process.env.NEXT_PUBLIC_APP_URL?.trim();
+
+  if (!value) {
+    throw new Error("Missing required environment variable: APP_PUBLIC_URL");
+  }
+
+  const url = new URL(value);
+
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
+    throw new Error("APP_PUBLIC_URL must use http or https");
+  }
+
+  return url.toString().replace(/\/$/, "");
+}
+
+function normalizeWhatsappNumber(value: string) {
+  let digits = value.replace(/\D/g, "");
+
+  if (digits.length === 10 || digits.length === 11) {
+    digits = `55${digits}`;
+  }
+
+  if (digits.length < 12 || digits.length > 15) {
+    throw new Error("Profile WhatsApp number is not valid for wa.me");
+  }
+
+  return digits;
+}
+
+function providerDisplayName(provider: PublishProvider) {
+  return provider === "instagram" ? "Instagram" : "Facebook";
+}
+
+async function ensureTrackingLink(input: {
+  userId: string;
+  campaignId: string;
+  propertyId: string;
+  propertyTitle: string;
+  provider: PublishProvider;
+  whatsapp: string;
+}) {
+  const phone = normalizeWhatsappNumber(input.whatsapp);
+  const message =
+    `Olá! Tenho interesse em ${input.propertyTitle}. ` +
+    `Vi a campanha no ${providerDisplayName(input.provider)}.`;
+  const destination = new URL(`https://wa.me/${phone}`);
+  destination.searchParams.set("text", message);
+
+  const { data: existingRows, error: existingError } = await supabase
+    .from("tracking_links")
+    .select("id,short_code,destination_url")
+    .eq("user_id", input.userId)
+    .eq("campaign_id", input.campaignId)
+    .eq("provider", input.provider)
+    .limit(1);
+
+  if (existingError) throw existingError;
+
+  const existing = existingRows?.[0];
+
+  if (existing) {
+    if (existing.destination_url !== destination.toString()) {
+      const { error: updateError } = await supabase
+        .from("tracking_links")
+        .update({ destination_url: destination.toString() })
+        .eq("id", existing.id);
+
+      if (updateError) throw updateError;
+    }
+
+    return `${publicAppUrl()}/r/${existing.short_code}`;
+  }
+
+  const shortCode = createHash("sha256")
+    .update(
+      [
+        input.userId,
+        input.campaignId,
+        input.propertyId,
+        input.provider,
+      ].join(":"),
+    )
+    .digest("base64url")
+    .slice(0, 16);
+
+  const { error: insertError } = await supabase
+    .from("tracking_links")
+    .insert({
+      user_id: input.userId,
+      property_id: input.propertyId,
+      campaign_id: input.campaignId,
+      provider: input.provider,
+      short_code: shortCode,
+      destination_url: destination.toString(),
+    });
+
+  if (insertError) {
+    const { data: racedRows, error: racedError } = await supabase
+      .from("tracking_links")
+      .select("short_code")
+      .eq("user_id", input.userId)
+      .eq("campaign_id", input.campaignId)
+      .eq("provider", input.provider)
+      .limit(1);
+
+    if (racedError || !racedRows?.[0]) {
+      throw insertError;
+    }
+
+    return `${publicAppUrl()}/r/${racedRows[0].short_code}`;
+  }
+
+  return `${publicAppUrl()}/r/${shortCode}`;
+}
+
+function captionWithTracking(caption: string, trackingUrl?: string) {
+  if (!trackingUrl) return caption;
+  if (!caption) return trackingUrl;
+  return `${caption}\n\n${trackingUrl}`;
+}
+
 async function publishVariant(
   variant: CampaignVariant,
   connection: SocialConnection,
+  trackingUrl?: string,
 ) {
   if (!connection.external_account_id || !connection.token_secret_ref) {
     throw new Error(`${connection.provider} connection is incomplete`);
@@ -275,7 +400,10 @@ async function publishVariant(
   }
 
   const urls = await createSignedUrls(paths);
-  const caption = variant.caption?.trim() ?? "";
+  const caption = captionWithTracking(
+    variant.caption?.trim() ?? "",
+    trackingUrl,
+  );
 
   if (variant.provider === "facebook" && variant.format === "feed") {
     const result = await publishFacebookPhoto({
@@ -350,7 +478,7 @@ export async function handleSocialPublish(job: WorkerJob) {
   try {
     const { data: campaign, error: campaignError } = await supabase
       .from("campaigns")
-      .select("id,user_id,status,scheduled_for")
+      .select("id,user_id,property_id,status,scheduled_for")
       .eq("id", payload.campaign_id)
       .eq("user_id", job.user_id)
       .maybeSingle();
@@ -377,6 +505,45 @@ export async function handleSocialPublish(job: WorkerJob) {
       scheduledAt !== expectedAt
     ) {
       return { skipped: true, reason: "stale_schedule" };
+    }
+
+    const [{ data: profile, error: profileError }, { data: property, error: propertyError }] =
+      await Promise.all([
+        supabase
+          .from("profiles")
+          .select("whatsapp")
+          .eq("user_id", job.user_id)
+          .maybeSingle(),
+        supabase
+          .from("properties")
+          .select("id,title")
+          .eq("id", campaign.property_id)
+          .eq("user_id", job.user_id)
+          .maybeSingle(),
+      ]);
+
+    if (profileError || !profile?.whatsapp) {
+      throw new Error("Profile WhatsApp is required before social publishing");
+    }
+
+    if (propertyError || !property) {
+      throw new Error("Campaign property was not found");
+    }
+
+    const trackingUrlByProvider = new Map<PublishProvider, string>();
+
+    for (const provider of payload.providers) {
+      trackingUrlByProvider.set(
+        provider,
+        await ensureTrackingLink({
+          userId: job.user_id,
+          campaignId: campaign.id,
+          propertyId: property.id,
+          propertyTitle: property.title,
+          provider,
+          whatsapp: profile.whatsapp,
+        }),
+      );
     }
 
     const { data: connectionRows, error: connectionError } = await supabase
@@ -466,7 +633,11 @@ export async function handleSocialPublish(job: WorkerJob) {
       }
 
       try {
-        const externalPostId = await publishVariant(variant, connection);
+        const externalPostId = await publishVariant(
+          variant,
+          connection,
+          trackingUrlByProvider.get(variant.provider),
+        );
         await completePublication(publication.publicationId, externalPostId);
 
         published.push({
