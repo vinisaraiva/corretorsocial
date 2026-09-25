@@ -67,7 +67,10 @@ import {
   removeCampaignAssetPaths,
   renderAndUploadCampaignAssets,
 } from "@/lib/campaign-renderer";
-import type { PublishProvider } from "@/lib/publication-plan";
+import type {
+  InstagramPublishFormat,
+  PublishProvider,
+} from "@/lib/publication-plan";
 import type { Property, SocialChannel } from "@/types";
 
 const allChannels: { id: SocialChannel; label: string }[] = [
@@ -109,6 +112,7 @@ type InitialCampaign = {
   status: string;
   scheduledFor?: string | null;
   publishProviders?: PublishProvider[];
+  instagramPublishFormats?: InstagramPublishFormat[];
   captions?: Partial<Record<SocialChannel, string>>;
   instagramStory?: {
     templateId: string;
@@ -276,6 +280,9 @@ export function CampaignBuilder({
       campaignData?.publishProviders ??
       Array.from(new Set<PublishProvider>(connectedMetaProviders)),
   );
+  const [instagramPublishFormats, setInstagramPublishFormats] = useState<
+    InstagramPublishFormat[]
+  >(() => campaignData?.instagramPublishFormats ?? ["feed_4x5"]);
   const [status, setStatus] = useState(campaignData?.status ?? "draft");
   const [working, setWorking] = useState<
     "save" | "schedule" | "publish" | "render" | null
@@ -497,6 +504,21 @@ export function CampaignBuilder({
     markChanged();
   }
 
+  function toggleInstagramPublishFormat(format: InstagramPublishFormat) {
+    if (format === "carousel_4x5" && !carouselEligible) return;
+
+    setInstagramPublishFormats((current) =>
+      current.includes(format)
+        ? current.filter((item) => item !== format)
+        : [...current, format],
+    );
+    markChanged();
+  }
+
+  const effectiveInstagramPublishFormats = instagramPublishFormats.filter(
+    (format) => format !== "carousel_4x5" || carouselEligible,
+  );
+
   function draftInput(): CampaignDraftInput {
     return {
       campaignId: persistedCampaignId,
@@ -506,6 +528,7 @@ export function CampaignBuilder({
       subheadline,
       cta,
       publishProviders,
+      instagramPublishFormats: effectiveInstagramPublishFormats,
       captions,
       instagramStory: {
         templateId: storyTemplateId,
@@ -636,6 +659,10 @@ export function CampaignBuilder({
     const configs = staticRenderConfigs().filter(
       (config) =>
         publishProviders.includes(config.provider) &&
+        (config.provider !== "instagram" ||
+          effectiveInstagramPublishFormats.includes(
+            config.format as InstagramPublishFormat,
+          )) &&
         requiredKeys.has(`${config.provider}:${config.format}`),
     );
 
@@ -699,6 +726,14 @@ export function CampaignBuilder({
       return;
     }
 
+    if (
+      publishProviders.includes("instagram") &&
+      effectiveInstagramPublishFormats.length === 0
+    ) {
+      setError("Selecione ao menos um formato do Instagram para publicar.");
+      return;
+    }
+
     setWorking("publish");
     setError("");
     setMessage("");
@@ -744,6 +779,14 @@ export function CampaignBuilder({
 
   async function schedule() {
     if (!scheduledFor) return;
+
+    if (
+      publishProviders.includes("instagram") &&
+      effectiveInstagramPublishFormats.length === 0
+    ) {
+      setError("Selecione ao menos um formato do Instagram para agendar.");
+      return;
+    }
 
     if (!property.image) {
       setError("Adicione pelo menos uma foto antes de agendar a campanha.");
@@ -1536,7 +1579,7 @@ export function CampaignBuilder({
             <div className="text-xs font-extrabold uppercase tracking-wide text-[#667085]">
               Canais de publicação
             </div>
-            <div className="mt-3 space-y-3">
+            <div className="mt-3 space-y-4">
               {(["instagram", "facebook"] as const).map((provider) => {
                 const connection = socialConnections.find(
                   (item) =>
@@ -1546,30 +1589,72 @@ export function CampaignBuilder({
                 const selected = publishProviders.includes(provider);
 
                 return (
-                  <label key={provider} className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      checked={selected && connected}
-                      disabled={!connected || working !== null}
-                      onChange={() => togglePublishProvider(provider)}
-                      className="mt-0.5 h-4 w-4 accent-[#176B5B]"
-                    />
-                    <span className="min-w-0">
-                      <span className="block text-sm font-bold">
-                        {provider === "instagram" ? "Instagram" : "Facebook"}
-                      </span>
-                      <span className="block truncate text-[11px] leading-4 text-[#667085]">
-                        {connected
-                          ? connection?.display_name || "Conta conectada"
-                          : "Não conectado"}
-                      </span>
-                      {provider === "instagram" && connected ? (
-                        <span className="block text-[10px] leading-4 text-[#667085]">
-                          Feed, Story e Carrossel quando disponível.
+                  <div key={provider}>
+                    <label className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selected && connected}
+                        disabled={!connected || working !== null}
+                        onChange={() => togglePublishProvider(provider)}
+                        className="mt-0.5 h-4 w-4 accent-[#176B5B]"
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-bold">
+                          {provider === "instagram" ? "Instagram" : "Facebook"}
                         </span>
-                      ) : null}
-                    </span>
-                  </label>
+                        <span className="block truncate text-[11px] leading-4 text-[#667085]">
+                          {connected
+                            ? connection?.display_name || "Conta conectada"
+                            : "Não conectado"}
+                        </span>
+                      </span>
+                    </label>
+
+                    {provider === "instagram" && connected && selected ? (
+                      <div className="ml-7 mt-2 rounded-lg bg-[#F9FAFB] p-2.5">
+                        <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[#667085]">
+                          Formatos a publicar
+                        </div>
+                        <div className="space-y-2">
+                          {([
+                            ["feed_4x5", "Feed"],
+                            ["carousel_4x5", "Carrossel"],
+                            ["story_9x16", "Story"],
+                          ] as const).map(([format, label]) => {
+                            const unavailable =
+                              format === "carousel_4x5" && !carouselEligible;
+
+                            return (
+                              <label
+                                key={format}
+                                className="flex items-center gap-2 text-xs font-semibold text-[#344054]"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={
+                                    effectiveInstagramPublishFormats.includes(
+                                      format,
+                                    ) && !unavailable
+                                  }
+                                  disabled={working !== null || unavailable}
+                                  onChange={() =>
+                                    toggleInstagramPublishFormat(format)
+                                  }
+                                  className="h-4 w-4 accent-[#176B5B]"
+                                />
+                                <span>
+                                  {label}
+                                  {unavailable
+                                    ? " — requer pelo menos 3 fotos"
+                                    : ""}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
                 );
               })}
             </div>
@@ -1591,12 +1676,17 @@ export function CampaignBuilder({
             disabled={
               working !== null ||
               status === "publishing" ||
-              publishProviders.length === 0
+              publishProviders.length === 0 ||
+              (publishProviders.includes("instagram") &&
+                effectiveInstagramPublishFormats.length === 0)
             }
             title={
               publishProviders.length === 0
                 ? "Conecte e selecione pelo menos uma rede"
-                : "Publicar agora nas redes selecionadas"
+                : publishProviders.includes("instagram") &&
+                    effectiveInstagramPublishFormats.length === 0
+                  ? "Selecione ao menos um formato do Instagram"
+                  : "Publicar agora nas redes e formatos selecionados"
             }
             className="app-button-secondary flex w-full items-center justify-center gap-2 disabled:opacity-50"
           >
@@ -1611,7 +1701,10 @@ export function CampaignBuilder({
               ? "Conecte Facebook/Instagram em Configurações para publicar automaticamente."
               : publishProviders.length === 0
                 ? "Selecione ao menos um canal para publicação automática."
-                : "Somente os canais marcados serão publicados."}
+                : publishProviders.includes("instagram") &&
+                    effectiveInstagramPublishFormats.length === 0
+                  ? "Escolha Feed, Carrossel ou Story para o Instagram."
+                  : "Somente os canais e formatos marcados serão publicados."}
           </p>
         </aside>
       </section>
