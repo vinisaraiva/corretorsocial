@@ -217,6 +217,12 @@ async function imageUrlForMedia(media: {
 }
 
 export async function handleMediaAnalysis(job: WorkerJob) {
+  if (!config.openaiApiKey) {
+    throw new Error(
+      "Missing required environment variable for media analysis: OPENAI_API_KEY",
+    );
+  }
+
   const payload = parsePayload(job.payload);
 
   const { data: property, error: propertyError } = await supabase
