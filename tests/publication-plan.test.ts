@@ -42,6 +42,7 @@ test("buildSocialPublishJobPayload produz payload determinístico da fila", () =
       campaign_id: "campaign-1",
       scheduled_for: "2026-09-25T15:00:00.000Z",
       providers: ["facebook", "instagram"],
+      mode: "scheduled",
       version: 1,
     },
   );
