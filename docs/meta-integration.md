@@ -9,12 +9,14 @@ Fluxo implementado:
 1. usuário inicia OAuth em Configurações;
 2. callback valida `state` anti-CSRF;
 3. token de usuário é trocado por token de longa duração;
-4. o sistema lista as Páginas administradas;
-5. o usuário escolhe explicitamente a Página;
-6. Facebook Page e Instagram profissional vinculado são persistidos em `social_connections`;
-7. tokens são armazenados criptografados com AES-256-GCM;
-8. campanhas podem ser publicadas imediatamente ou agendadas;
-9. o worker cria registros em `publications`, publica e aplica retry/idempotência.
+4. o sistema lista as Páginas administradas via `/me/accounts`;
+5. se houver uma única Página apta a publicar, ela é conectada automaticamente;
+6. se houver mais de uma, o Corretor Social pergunta qual Página usar;
+7. se não houver Página apta, o usuário volta às configurações com uma orientação simples e pode continuar usando o produto;
+8. Facebook Page e Instagram profissional vinculado são persistidos em `social_connections`;
+9. tokens são armazenados criptografados com AES-256-GCM;
+10. campanhas podem ser publicadas imediatamente ou agendadas;
+11. o worker cria registros em `publications`, publica e aplica retry/idempotência.
 
 ## Permissões solicitadas
 
@@ -54,10 +56,11 @@ META_APP_SECRET=
 META_REDIRECT_URI=https://SEU-DOMINIO/api/oauth/meta/callback
 META_GRAPH_VERSION=v26.0
 META_LOGIN_CONFIG_ID=
+META_USE_LOGIN_CONFIG=false
 SOCIAL_TOKEN_ENCRYPTION_KEY=
 ```
 
-`META_LOGIN_CONFIG_ID` é opcional e deve ser preenchido somente se o app usar uma configuração do Facebook Login for Business.
+`META_LOGIN_CONFIG_ID` pode permanecer configurado, mas o fluxo padrão do Corretor Social não usa o seletor de ativos do Facebook Login for Business. Para voltar deliberadamente a esse modo, defina `META_USE_LOGIN_CONFIG=true`. Com o valor ausente ou `false`, o OAuth solicita as permissões diretamente e o próprio Corretor Social resolve a Página via `/me/accounts`.
 
 ## Chave de criptografia
 
@@ -126,10 +129,11 @@ Isso evita duplicar variantes que já foram confirmadas em uma tentativa anterio
 ## Checklist de teste
 
 1. configurar as variáveis no Next.js e no worker;
-2. conectar Meta em Configurações;
-3. selecionar uma Página com `CREATE_CONTENT`;
-4. confirmar que Facebook aparece conectado;
-5. se houver Instagram profissional vinculado, confirmar que ele também aparece;
+2. conectar Facebook em Configurações;
+3. confirmar que, com uma única Página apta, não há segunda escolha;
+4. se houver várias Páginas aptas, escolher uma única vez dentro do Corretor Social;
+5. confirmar que Facebook aparece conectado;
+6. se houver Instagram profissional vinculado, confirmar que ele também aparece;
 6. criar campanha;
 7. marcar Instagram e/ou Facebook;
 8. testar `Publicar agora`;
