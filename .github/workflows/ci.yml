@@ -38,3 +38,11 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Install worker dependencies
+        run: npm install --no-audit --no-fund
+        working-directory: worker
+
+      - name: Worker typecheck
+        run: npm run typecheck
+        working-directory: worker
