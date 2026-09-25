@@ -43,11 +43,13 @@ export function buildSocialPublishJobPayload(input: {
   campaignId: string;
   scheduledFor: string;
   providers: PublishProvider[];
+  mode?: "scheduled" | "immediate";
 }) {
   return {
     campaign_id: input.campaignId,
     scheduled_for: input.scheduledFor,
     providers: supportedPublishProviders(input.providers),
+    mode: input.mode ?? "scheduled",
     version: 1,
   };
 }
