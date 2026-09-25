@@ -50,7 +50,10 @@ import {
   normalizeCarouselModel,
   type CarouselModelId,
 } from "@/lib/carousel-templates";
-import { InstagramCarouselPreview } from "@/components/instagram-carousel-preview";
+import {
+  InstagramCarouselPreview,
+  InstagramCarouselRenderSet,
+} from "@/components/instagram-carousel-preview";
 import { InstagramCarouselControls } from "@/components/instagram-carousel-controls";
 import { buildCampaignRecommendation } from "@/lib/campaign-recommendation";
 import { MediaAnalysisStatus } from "@/components/media-analysis-status";
@@ -311,6 +314,14 @@ export function CampaignBuilder({
     campaignData?.mediaSelection?.instagramStory,
     recommendation.media.storyCover,
   );
+  const facebookMedia = resolveSavedMedia(
+    campaignData?.mediaSelection?.facebook,
+    recommendation.media.feedCover,
+  );
+  const googleMedia = resolveSavedMedia(
+    campaignData?.mediaSelection?.google,
+    recommendation.media.feedCover,
+  );
   const tiktokMedia = resolveSavedMedia(
     campaignData?.mediaSelection?.tiktok,
     recommendation.media.tiktokCover,
@@ -331,6 +342,14 @@ export function CampaignBuilder({
   const storyProperty: Property = {
     ...property,
     image: storyMedia?.url ?? property.image,
+  };
+  const facebookProperty: Property = {
+    ...property,
+    image: facebookMedia?.url ?? property.image,
+  };
+  const googleProperty: Property = {
+    ...property,
+    image: googleMedia?.url ?? property.image,
   };
   const tiktokProperty: Property = {
     ...property,
@@ -368,6 +387,18 @@ export function CampaignBuilder({
         ? getVerticalTemplateName(tiktokTemplateId, "tiktok")
         : selectedTemplate.name;
   const copy = captions[channel];
+  const activeNonVerticalProperty =
+    channel === "facebook"
+      ? facebookProperty
+      : channel === "google"
+        ? googleProperty
+        : feedProperty;
+  const activeNonVerticalMedia =
+    channel === "facebook"
+      ? facebookMedia
+      : channel === "google"
+        ? googleMedia
+        : feedMedia;
   const activeNonVerticalPosition =
     channel === "facebook"
       ? blockPositions.facebook
@@ -437,9 +468,9 @@ export function CampaignBuilder({
       mediaSelection: {
         instagramFeed: feedMedia?.id,
         instagramStory: storyMedia?.id,
-        facebook: feedMedia?.id,
+        facebook: facebookMedia?.id,
         tiktok: tiktokMedia?.id,
-        google: feedMedia?.id,
+        google: googleMedia?.id,
         carousel: carouselMedia
           .map((item) => item.id)
           .filter((id): id is string => Boolean(id)),
@@ -776,7 +807,7 @@ export function CampaignBuilder({
             />
           ) : (
             <CreativePreview
-              property={feedProperty}
+              property={activeNonVerticalProperty}
               brand={brand}
               templateId={templateId}
               headline={headline}
@@ -785,7 +816,7 @@ export function CampaignBuilder({
               cta={cta}
               blockPosition={activeNonVerticalPosition}
               suggestedBlockPosition={suggestedBlockPositionFromTags(
-                feedMedia?.aiTags,
+                activeNonVerticalMedia?.aiTags,
               )}
             />
           )}
@@ -1397,6 +1428,7 @@ function CreativePreview({
   cta,
   blockPosition,
   suggestedBlockPosition,
+  renderTarget = "feed",
 }: {
   property: Property;
   brand: CampaignBrand;
@@ -1407,6 +1439,7 @@ function CreativePreview({
   cta: string;
   blockPosition: BlockPosition;
   suggestedBlockPosition?: "left" | "right" | null;
+  renderTarget?: string;
 }) {
   const brandColor = safeBrandColor(brand.primaryColor);
   const brandText = contrastText(brandColor);
@@ -1429,7 +1462,7 @@ function CreativePreview({
     <div className="mx-auto max-w-[430px] overflow-hidden rounded-2xl border border-[#E4E7EC] bg-white shadow-sm">
       <div
         className="relative aspect-[4/5] overflow-hidden bg-[#EAECF0]"
-        data-render-target="feed"
+        data-render-target={renderTarget}
       >
         <PropertyImage property={property} />
 
