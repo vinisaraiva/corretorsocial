@@ -34,6 +34,7 @@ import {
   safeBrandColor,
   type CampaignBrand,
 } from "@/components/campaign/creative-preview";
+import { CampaignRenderWorkspace } from "@/components/campaign/campaign-render-workspace";
 import {
   campaignTemplateToVertical,
   normalizeBlockPosition,
@@ -54,10 +55,7 @@ import {
   normalizeCarouselModel,
   type CarouselModelId,
 } from "@/lib/carousel-templates";
-import {
-  InstagramCarouselPreview,
-  InstagramCarouselRenderSet,
-} from "@/components/instagram-carousel-preview";
+import { InstagramCarouselPreview } from "@/components/instagram-carousel-preview";
 import { InstagramCarouselControls } from "@/components/instagram-carousel-controls";
 import { buildCampaignRecommendation } from "@/lib/campaign-recommendation";
 import { MediaAnalysisStatus } from "@/components/media-analysis-status";
@@ -1394,90 +1392,50 @@ export function CampaignBuilder({
         </aside>
       </section>
 
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed left-[-30000px] top-0 z-[-1]"
-      >
-        <div className="w-[430px]">
-          <CreativePreview
-            property={feedProperty}
-            brand={brand}
-            templateId={templateId}
-            headline={headline}
-            subheadline={subheadline}
-            copy={captions.instagram}
-            cta={cta}
-            blockPosition={blockPositions.instagramFeed}
-            suggestedBlockPosition={suggestedBlockPositionFromTags(
-              feedMedia?.aiTags,
-            )}
-            renderTarget="schedule-instagram-feed"
-          />
-        </div>
-
-        <div className="w-[330px]">
-          <VerticalCreativePreview
-            property={storyProperty}
-            brand={brand}
-            platform="instagram_story"
-            templateId={storyTemplateId}
-            headline={storyHeadline}
-            subheadline={storySubheadline}
-            cta={storyCta}
-            blockPosition={blockPositions.instagramStory}
-            suggestedBlockPosition={suggestedBlockPositionFromTags(
-              storyMedia?.aiTags,
-            )}
-            renderTarget="schedule-story"
-          />
-        </div>
-
-        <div className="w-[430px]">
-          <CreativePreview
-            property={facebookProperty}
-            brand={brand}
-            templateId={templateId}
-            headline={headline}
-            subheadline={subheadline}
-            copy={captions.facebook}
-            cta={cta}
-            blockPosition={blockPositions.facebook}
-            suggestedBlockPosition={suggestedBlockPositionFromTags(
-              facebookMedia?.aiTags,
-            )}
-            renderTarget="schedule-facebook"
-          />
-        </div>
-
-        <div className="w-[430px]">
-          <CreativePreview
-            property={googleProperty}
-            brand={brand}
-            templateId={templateId}
-            headline={headline}
-            subheadline={subheadline}
-            copy={captions.google}
-            cta={cta}
-            blockPosition={blockPositions.google}
-            suggestedBlockPosition={suggestedBlockPositionFromTags(
-              googleMedia?.aiTags,
-            )}
-            renderTarget="schedule-google"
-          />
-        </div>
-
-        {carouselEligible && (
-          <InstagramCarouselRenderSet
-            property={carouselProperty}
-            brand={brand}
-            templateId={templateId}
-            modelId={carouselModelId}
-            headline={carouselHeadline}
-            cta={carouselCta}
-            renderGroup="schedule-carousel"
-          />
-        )}
-      </div>
+      <CampaignRenderWorkspace
+        brand={brand}
+        templateId={templateId}
+        headline={headline}
+        subheadline={subheadline}
+        cta={cta}
+        instagramFeed={{
+          property: feedProperty,
+          caption: captions.instagram,
+          blockPosition: blockPositions.instagramFeed,
+          aiTags: feedMedia?.aiTags,
+        }}
+        story={{
+          property: storyProperty,
+          templateId: storyTemplateId,
+          headline: storyHeadline,
+          subheadline: storySubheadline,
+          cta: storyCta,
+          blockPosition: blockPositions.instagramStory,
+          aiTags: storyMedia?.aiTags,
+        }}
+        facebook={{
+          property: facebookProperty,
+          caption: captions.facebook,
+          blockPosition: blockPositions.facebook,
+          aiTags: facebookMedia?.aiTags,
+        }}
+        google={{
+          property: googleProperty,
+          caption: captions.google,
+          blockPosition: blockPositions.google,
+          aiTags: googleMedia?.aiTags,
+        }}
+        carousel={
+          carouselEligible
+            ? {
+                property: carouselProperty,
+                modelId: carouselModelId,
+                headline: carouselHeadline,
+                cta: carouselCta,
+              }
+            : undefined
+        }
+      />
 
       {scheduleOpen && (
         <section className="app-card p-5 sm:p-6">
