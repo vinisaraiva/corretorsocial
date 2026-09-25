@@ -49,3 +49,27 @@ O worker:
 - marca a campanha como `failed` quando o último retry falha.
 
 Veja `docs/meta-integration.md`.
+
+
+## Modos de execução
+
+Desenvolvimento/daemon:
+
+```bash
+npm start
+```
+
+Cron local com TypeScript:
+
+```bash
+npm run cron
+```
+
+Produção após o build:
+
+```bash
+node dist/index.js
+node dist/run-once.js
+```
+
+Na Hostinger Business, usar inicialmente o modo cron one-shot. Veja `docs/worker-deployment.md`.
