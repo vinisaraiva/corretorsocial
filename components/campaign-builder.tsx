@@ -1388,6 +1388,91 @@ export function CampaignBuilder({
         </aside>
       </section>
 
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed left-[-30000px] top-0 z-[-1]"
+      >
+        <div className="w-[430px]">
+          <CreativePreview
+            property={feedProperty}
+            brand={brand}
+            templateId={templateId}
+            headline={headline}
+            subheadline={subheadline}
+            copy={captions.instagram}
+            cta={cta}
+            blockPosition={blockPositions.instagramFeed}
+            suggestedBlockPosition={suggestedBlockPositionFromTags(
+              feedMedia?.aiTags,
+            )}
+            renderTarget="schedule-instagram-feed"
+          />
+        </div>
+
+        <div className="w-[330px]">
+          <VerticalCreativePreview
+            property={storyProperty}
+            brand={brand}
+            platform="instagram_story"
+            templateId={storyTemplateId}
+            headline={storyHeadline}
+            subheadline={storySubheadline}
+            cta={storyCta}
+            blockPosition={blockPositions.instagramStory}
+            suggestedBlockPosition={suggestedBlockPositionFromTags(
+              storyMedia?.aiTags,
+            )}
+            renderTarget="schedule-story"
+          />
+        </div>
+
+        <div className="w-[430px]">
+          <CreativePreview
+            property={facebookProperty}
+            brand={brand}
+            templateId={templateId}
+            headline={headline}
+            subheadline={subheadline}
+            copy={captions.facebook}
+            cta={cta}
+            blockPosition={blockPositions.facebook}
+            suggestedBlockPosition={suggestedBlockPositionFromTags(
+              facebookMedia?.aiTags,
+            )}
+            renderTarget="schedule-facebook"
+          />
+        </div>
+
+        <div className="w-[430px]">
+          <CreativePreview
+            property={googleProperty}
+            brand={brand}
+            templateId={templateId}
+            headline={headline}
+            subheadline={subheadline}
+            copy={captions.google}
+            cta={cta}
+            blockPosition={blockPositions.google}
+            suggestedBlockPosition={suggestedBlockPositionFromTags(
+              googleMedia?.aiTags,
+            )}
+            renderTarget="schedule-google"
+          />
+        </div>
+
+        {carouselEligible && (
+          <InstagramCarouselRenderSet
+            property={carouselProperty}
+            brand={brand}
+            templateId={templateId}
+            modelId={carouselModelId}
+            headline={carouselHeadline}
+            cta={carouselCta}
+            renderGroup="schedule-carousel"
+          />
+        )}
+      </div>
+
       {scheduleOpen && (
         <section className="app-card p-5 sm:p-6">
           <h3 className="text-lg font-extrabold">Agendar campanha</h3>
