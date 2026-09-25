@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { Save } from "lucide-react";
 import { saveSettings } from "@/app/configuracoes/actions";
+import { disconnectMeta } from "@/app/configuracoes/meta/actions";
 import { LogoUploader } from "@/components/logo-uploader";
 
 type ProfileSettings = {
@@ -22,6 +24,8 @@ type ProfileSettings = {
 type Connection = {
   provider: "instagram" | "facebook" | "tiktok" | "google_business";
   status: string;
+  display_name: string | null;
+  external_account_id: string | null;
 };
 
 const networkLabels = {
@@ -35,14 +39,20 @@ export function SettingsForm({
   profile,
   connections,
   logoUrl,
+  metaNotice,
 }: {
   profile: ProfileSettings;
   connections: Connection[];
   logoUrl?: string | null;
+  metaNotice?: string;
 }) {
-  const statusByProvider = new Map(
-    connections.map((connection) => [connection.provider, connection.status]),
+  const connectedByProvider = new Map(
+    connections
+      .filter((connection) => connection.status === "connected")
+      .map((connection) => [connection.provider, connection]),
   );
+  const metaConnected =
+    connectedByProvider.has("facebook") || connectedByProvider.has("instagram");
 
   return (
     <form action={saveSettings} className="space-y-5">
@@ -167,18 +177,31 @@ export function SettingsForm({
         title="Redes sociais"
         description="Só mostramos uma rede como conectada depois da autorização real."
       >
+        {metaNotice ? (
+          <div className="mb-4 rounded-xl border border-[#B2DDFF] bg-[#EFF8FF] p-4 text-sm font-semibold text-[#175CD3]">
+            {metaNotice}
+          </div>
+        ) : null}
+
         <div className="grid gap-3 sm:grid-cols-2">
           {(Object.keys(networkLabels) as Array<keyof typeof networkLabels>).map(
             (provider) => {
-              const status = statusByProvider.get(provider);
-              const connected = status === "connected";
+              const connection = connectedByProvider.get(provider);
+              const connected = Boolean(connection);
 
               return (
                 <div
                   key={provider}
-                  className="flex min-h-14 items-center justify-between rounded-xl border border-[#E4E7EC] px-4"
+                  className="flex min-h-16 items-center justify-between gap-4 rounded-xl border border-[#E4E7EC] px-4"
                 >
-                  <strong>{networkLabels[provider]}</strong>
+                  <div>
+                    <strong>{networkLabels[provider]}</strong>
+                    {connection?.display_name ? (
+                      <div className="mt-1 text-xs text-[#667085]">
+                        {connection.display_name}
+                      </div>
+                    ) : null}
+                  </div>
                   <span
                     className={
                       connected
@@ -193,6 +216,30 @@ export function SettingsForm({
             },
           )}
         </div>
+
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <Link
+            href="/api/oauth/meta/start"
+            className="app-button-primary inline-flex min-h-11 items-center justify-center"
+          >
+            {metaConnected ? "Reconectar Meta" : "Conectar Facebook e Instagram"}
+          </Link>
+          {metaConnected ? (
+            <button
+              type="submit"
+              formAction={disconnectMeta}
+              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#D0D5DD] px-4 text-sm font-bold text-[#344054]"
+            >
+              Desconectar Meta
+            </button>
+          ) : null}
+        </div>
+
+        <p className="mt-3 text-xs leading-5 text-[#667085]">
+          A conexão Meta permite escolher explicitamente a Página do Facebook.
+          Se houver uma conta profissional do Instagram vinculada a essa Página,
+          ela também será conectada.
+        </p>
       </Section>
 
       <Section
