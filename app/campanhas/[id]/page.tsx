@@ -48,6 +48,7 @@ export default async function CampaignDetailPage({
     campaignsResult,
     variantsResult,
     profileResult,
+    connectionsResult,
   ] = await Promise.all([
       supabase
         .from("properties")
@@ -72,6 +73,10 @@ export default async function CampaignDetailPage({
         .select("professional_name,logo_path,primary_color")
         .eq("user_id", user.id)
         .maybeSingle(),
+      supabase
+        .from("social_connections")
+        .select("provider,status,display_name")
+        .eq("user_id", user.id),
     ]);
 
   if (!row) {
@@ -146,6 +151,22 @@ export default async function CampaignDetailPage({
   if (typeof metadata?.subheadline === "string") {
     subheadline = metadata.subheadline;
   }
+
+  const publishProviders = Array.isArray(metadata?.publish_providers)
+    ? metadata.publish_providers.filter(
+        (
+          provider,
+        ): provider is
+          | "instagram"
+          | "facebook"
+          | "tiktok"
+          | "google_business" =>
+          provider === "instagram" ||
+          provider === "facebook" ||
+          provider === "tiktok" ||
+          provider === "google_business",
+      )
+    : [];
 
   for (const variant of variantsResult.data ?? []) {
     const variantMetadata =
@@ -296,6 +317,7 @@ export default async function CampaignDetailPage({
           cta,
           status: campaign.status,
           scheduledFor: campaign.scheduled_for,
+          publishProviders,
           captions,
           instagramStory,
           tiktokVertical,
@@ -303,6 +325,7 @@ export default async function CampaignDetailPage({
           mediaSelection,
           blockPositions,
         }}
+        socialConnections={connectionsResult.data ?? []}
       />
     </AppShell>
   );
