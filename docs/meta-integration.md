@@ -1,53 +1,49 @@
-# Integração Meta — Facebook + Instagram
+# Integrações Meta — Facebook + Instagram
 
-## Estado
+## Arquitetura
 
-A integração do Corretor Social usa a Graph API v26.0.
+Facebook e Instagram são conexões independentes no Corretor Social.
 
-Fluxo implementado:
+Para o usuário isso é simples:
 
-1. usuário inicia OAuth em Configurações;
-2. callback valida `state` anti-CSRF;
-3. token de usuário é trocado por token de longa duração;
-4. o sistema lista as Páginas administradas via `/me/accounts`;
+- **Conectar Facebook** autoriza uma Página do Facebook;
+- **Conectar Instagram** autoriza diretamente uma conta profissional Business ou Creator;
+- na criação/publicação de campanhas, o Corretor Social usa automaticamente a credencial correspondente a cada rede selecionada.
+
+Uma conexão não depende da outra. Conectar, reconectar ou desconectar Facebook não altera Instagram, e vice-versa.
+
+A aplicação usa Graph API v26.0 por padrão.
+
+## Facebook
+
+### Fluxo
+
+1. usuário clica em **Conectar Facebook**;
+2. OAuth valida `state` anti-CSRF;
+3. o token de usuário é trocado por token de longa duração;
+4. o sistema consulta `/me/accounts`;
 5. se houver uma única Página apta a publicar, ela é conectada automaticamente;
 6. se houver mais de uma, o Corretor Social pergunta qual Página usar;
-7. se não houver Página apta, o usuário volta às configurações com uma orientação simples e pode continuar usando o produto;
-8. Facebook Page e Instagram profissional vinculado são persistidos em `social_connections`;
-9. tokens são armazenados criptografados com AES-256-GCM;
-10. campanhas podem ser publicadas imediatamente ou agendadas;
-11. o worker cria registros em `publications`, publica e aplica retry/idempotência.
+7. o Page Access Token é armazenado criptografado em `social_connections`;
+8. nenhuma conta Instagram é criada/alterada por esse fluxo.
 
-## Permissões solicitadas
+### Permissões
+
+Somente permissões de Facebook Pages:
 
 - `pages_show_list`
 - `pages_read_engagement`
 - `pages_manage_posts`
-- `instagram_basic`
-- `instagram_content_publish`
 
-A Página precisa expor a tarefa `CREATE_CONTENT` para ser selecionada.
+A Página precisa expor a tarefa `CREATE_CONTENT`.
 
-## Redirect OAuth
-
-Configure na Meta exatamente o callback público:
+### Callback
 
 ```text
 https://SEU-DOMINIO/api/oauth/meta/callback
 ```
 
-O mesmo valor deve ser usado em:
-
-```env
-NEXT_PUBLIC_APP_URL=https://SEU-DOMINIO
-META_REDIRECT_URI=https://SEU-DOMINIO/api/oauth/meta/callback
-```
-
-Em hospedagens atrás de proxy reverso, como a Hostinger, o processo Next.js pode enxergar internamente algo como `0.0.0.0:3000`. Rotas OAuth não devem usar esse endereço como origem pública. O Corretor Social resolve redirects pela URL pública configurada, usando `NEXT_PUBLIC_APP_URL` como primeira fonte e `META_REDIRECT_URI` como fallback.
-
-Depois de alterar essas variáveis em produção, faça redeploy/restart da aplicação antes de testar novamente.
-
-## Variáveis do Next.js
+### Variáveis
 
 ```env
 NEXT_PUBLIC_APP_URL=https://SEU-DOMINIO
@@ -57,105 +53,145 @@ META_REDIRECT_URI=https://SEU-DOMINIO/api/oauth/meta/callback
 META_GRAPH_VERSION=v26.0
 META_LOGIN_CONFIG_ID=
 META_USE_LOGIN_CONFIG=false
+```
+
+`META_LOGIN_CONFIG_ID` pode permanecer salvo, mas o fluxo simplificado ignora o seletor de ativos do Facebook Login for Business enquanto `META_USE_LOGIN_CONFIG` estiver ausente ou `false`.
+
+## Instagram
+
+O Instagram usa **Instagram API with Instagram Login**, sem depender de uma Página do Facebook.
+
+A Meta mantém credenciais específicas do produto Instagram. O **Instagram App ID** e o **Instagram App Secret** exibidos em:
+
+`Instagram → API setup with Instagram login`
+
+não devem ser confundidos com `META_APP_ID` e `META_APP_SECRET`.
+
+### Fluxo
+
+1. usuário clica em **Conectar Instagram**;
+2. é levado ao Business Login for Instagram;
+3. autoriza a conta profissional;
+4. o callback valida `state`;
+5. o código é trocado por token curto;
+6. o servidor troca imediatamente pelo token de longa duração;
+7. consulta `graph.instagram.com/.../me` para obter `user_id`, username e tipo da conta;
+8. armazena o token criptografado em `social_connections`;
+9. o worker usa `graph.instagram.com` para publicar;
+10. quando o token estiver a menos de 7 dias do vencimento, o worker tenta renová-lo automaticamente.
+
+Somente contas profissionais Business ou Creator são suportadas pela API oficial.
+
+### Permissões
+
+- `instagram_business_basic`
+- `instagram_business_content_publish`
+
+Não solicitar permissões de mensagens/comentários enquanto o produto não usar essas funções.
+
+### Callback
+
+```text
+https://SEU-DOMINIO/api/oauth/instagram/callback
+```
+
+Esse callback deve ser cadastrado em **Instagram → API setup with Instagram login → Business login settings**.
+
+### Variáveis
+
+```env
+INSTAGRAM_APP_ID=
+INSTAGRAM_APP_SECRET=
+INSTAGRAM_REDIRECT_URI=https://SEU-DOMINIO/api/oauth/instagram/callback
+INSTAGRAM_GRAPH_VERSION=v26.0
+```
+
+## Criptografia dos tokens
+
+Facebook e Instagram usam a mesma chave interna de criptografia do Corretor Social:
+
+```env
 SOCIAL_TOKEN_ENCRYPTION_KEY=
 ```
 
-`META_LOGIN_CONFIG_ID` pode permanecer configurado, mas o fluxo padrão do Corretor Social não usa o seletor de ativos do Facebook Login for Business. Para voltar deliberadamente a esse modo, defina `META_USE_LOGIN_CONFIG=true`. Com o valor ausente ou `false`, o OAuth solicita as permissões diretamente e o próprio Corretor Social resolve a Página via `/me/accounts`.
+Ela deve conter exatamente 32 bytes em Base64 e deve ser a mesma no Next.js e no worker.
 
-## Chave de criptografia
-
-A mesma chave precisa existir no frontend/server Next.js e no worker.
-
-Gere uma chave de 32 bytes em Base64, por exemplo com Node:
+Geração local:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-Depois salve o valor como:
+Nunca commitar ou expor a chave.
 
-```env
-SOCIAL_TOKEN_ENCRYPTION_KEY=...
-```
-
-Não rotacione essa chave sem antes recriptografar os tokens existentes.
-
-## Variáveis do worker
-
-```env
-SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
-APP_PUBLIC_URL=https://SEU-DOMINIO
-SOCIAL_TOKEN_ENCRYPTION_KEY=
-META_GRAPH_VERSION=v26.0
-```
-
-O worker também mantém as variáveis já usadas pela análise de mídia.
-
-## Formatos Meta publicados no MVP
+## Publicação
 
 ### Facebook
 
-- Feed/post com uma imagem final.
+- Feed/post com imagem final.
 
 ### Instagram
 
 - Feed 4:5;
-- Story 9:16;
-- Carrossel 4:5 quando disponível.
+- Carrossel 4:5;
+- Story 9:16 apenas quando a conta/conjunto de permissões suportar Story.
 
-As artes finais são JPEG. Campanhas antigas com PNG são consideradas desatualizadas e serão renderizadas novamente antes de publicação/agendamento.
+Para conexões diretas, o worker armazena o tipo da conta. Em conta Creator, o Story não deve derrubar toda a campanha; os formatos compatíveis continuam sendo publicados.
 
-## Fila e idempotência
+As artes finais são JPEG.
 
-O Next.js nunca publica diretamente na Meta.
+## Worker
 
-Ele cria um job `social_publish`.
+O Next.js não publica diretamente nas redes. Ele cria um job `social_publish`.
 
 O worker:
 
-1. confirma que o job ainda corresponde ao agendamento/status atual;
-2. confirma que a conexão continua ativa;
-3. cria/reutiliza um registro em `publications` para cada variante;
-4. ignora variantes já marcadas como `published`;
-5. publica na Meta;
-6. salva `external_post_id`;
-7. atualiza a campanha para `published`;
-8. em falha, usa retry exponencial da fila;
-9. ao esgotar tentativas, marca a campanha como `failed`.
-
-Isso evita duplicar variantes que já foram confirmadas em uma tentativa anterior.
+1. valida o job e o estado atual da campanha;
+2. carrega a conexão independente de cada provider;
+3. descriptografa o token correspondente;
+4. para Facebook, usa `graph.facebook.com`;
+5. para Instagram Login, usa `graph.instagram.com`;
+6. renova token Instagram próximo do vencimento quando possível;
+7. usa idempotência por campanha/variante/conexão;
+8. não republica variantes já confirmadas;
+9. grava `external_post_id`;
+10. aplica retry em falhas.
 
 ## Checklist de teste
 
-1. configurar as variáveis no Next.js e no worker;
-2. conectar Facebook em Configurações;
-3. confirmar que, com uma única Página apta, não há segunda escolha;
-4. se houver várias Páginas aptas, escolher uma única vez dentro do Corretor Social;
-5. confirmar que Facebook aparece conectado;
-6. se houver Instagram profissional vinculado, confirmar que ele também aparece;
-6. criar campanha;
-7. marcar Instagram e/ou Facebook;
-8. testar `Publicar agora`;
-9. conferir `publications` no Supabase;
-10. testar um agendamento futuro;
-11. confirmar que um reagendamento torna o job antigo obsoleto;
-12. desconectar Meta e confirmar que novas publicações são bloqueadas.
+### Facebook
 
+1. clicar em **Conectar Facebook**;
+2. autorizar;
+3. com uma Página, confirmar conexão automática;
+4. com várias, confirmar que a escolha ocorre só no Corretor Social;
+5. confirmar a linha `facebook` em `social_connections`.
+
+### Instagram
+
+1. cadastrar `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET` e callback;
+2. adicionar a conta de teste ao app enquanto ele estiver em desenvolvimento;
+3. clicar em **Conectar Instagram**;
+4. autorizar pelo Instagram;
+5. confirmar username e provider `instagram` em `social_connections`.
+
+### Publicação
+
+1. criar campanha;
+2. marcar somente Facebook e publicar;
+3. marcar somente Instagram e publicar;
+4. marcar ambos e publicar;
+5. confirmar que cada rede usa sua própria conexão;
+6. conferir `publications`, IDs externos e tracking;
+7. testar agendamento futuro;
+8. testar reconexão de uma rede sem afetar a outra.
 
 ## Tracking de WhatsApp
 
-Para Facebook e para legendas do Instagram Feed/Carrossel, o worker cria um link curto por campanha/rede:
+O worker mantém um link rastreável separado por campanha e provider:
 
 ```text
 https://SEU-DOMINIO/r/<codigo>
 ```
 
-Ao abrir esse endereço, o Next.js:
-1. procura o código usando um client server-only com `service_role`;
-2. incrementa `tracking_links.clicks`;
-3. redireciona para `wa.me` com uma mensagem pré-preenchida.
-
-O Instagram não transforma URLs da legenda em links clicáveis. Portanto o tracking de Instagram via legenda tende a ter conversão menor e não deve ser interpretado como cobertura completa de todos os contatos vindos da rede.
-
-Story não recebe link na publicação automática porque a API usada aqui não cria sticker interativo de link.
+Facebook pode receber esse link na publicação. No Instagram, URLs em legendas não são clicáveis, portanto o tracking via legenda é incompleto e não deve ser tratado como atribuição total.
