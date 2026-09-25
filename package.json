@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && tsc -p worker/tsconfig.build.json",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -42,4 +42,3 @@
     "node": ">=22 <25"
   }
 }
-
