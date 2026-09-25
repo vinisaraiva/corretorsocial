@@ -9,12 +9,8 @@ import {
   metaPageCanPublish,
 } from "@/lib/meta";
 import { readPendingMetaOAuth } from "@/lib/meta-oauth-session";
-import { encryptSocialSecret } from "@/lib/social-token-crypto";
+import { persistMetaPageConnection } from "@/lib/meta-connection";
 import { createClient } from "@/lib/supabase/server";
-import type { Database } from "@/types/database";
-
-type SocialConnectionInsert =
-  Database["public"]["Tables"]["social_connections"]["Insert"];
 
 export async function completeMetaConnection(formData: FormData) {
   const supabase = await createClient();
@@ -49,70 +45,11 @@ export async function completeMetaConnection(formData: FormData) {
         );
       }
 
-      const { error: disconnectError } = await supabase
-        .from("social_connections")
-        .update({
-          status: "disconnected",
-          token_secret_ref: null,
-          expires_at: null,
-        })
-        .eq("user_id", user.id)
-        .in("provider", ["facebook", "instagram"]);
-
-      if (disconnectError) {
-        throw disconnectError;
-      }
-
-      const rows: SocialConnectionInsert[] = [
-        {
-          user_id: user.id,
-          provider: "facebook",
-          external_account_id: page.id,
-          display_name: page.name,
-          status: "connected",
-          token_secret_ref: encryptSocialSecret(page.access_token),
-          expires_at: null,
-          metadata: {
-            source: "meta_facebook_login",
-            page_id: page.id,
-            tasks: page.tasks ?? [],
-            user_token_expires_at: pending.expiresAt,
-          },
-        },
-      ];
-
-      if (page.instagram_business_account?.id) {
-        const instagram = page.instagram_business_account;
-
-        rows.push({
-          user_id: user.id,
-          provider: "instagram",
-          external_account_id: instagram.id,
-          display_name: instagram.username
-            ? `@${instagram.username}`
-            : instagram.name || "Instagram",
-          status: "connected",
-          token_secret_ref: encryptSocialSecret(page.access_token),
-          expires_at: null,
-          metadata: {
-            source: "meta_facebook_login",
-            facebook_page_id: page.id,
-            facebook_page_name: page.name,
-            instagram_username: instagram.username ?? null,
-            user_token_expires_at: pending.expiresAt,
-          },
-        });
-      }
-
-      const { error: upsertError } = await supabase
-        .from("social_connections")
-        .upsert(rows, {
-          onConflict: "user_id,provider,external_account_id",
-        });
-
-      if (upsertError) {
-        throw upsertError;
-      }
+      await persistMetaPageConnection({
+        userId: user.id,
+        page,
+        pending,
+      });
 
       cookieStore.delete(META_OAUTH_PENDING_COOKIE);
       revalidatePath("/configuracoes");
