@@ -1,6 +1,6 @@
 "use client";
 
-import { toBlob } from "html-to-image";
+import { toCanvas } from "html-to-image";
 import { createClient } from "@/lib/supabase/client";
 
 type RenderProvider = "instagram" | "facebook" | "google_business";
@@ -54,7 +54,7 @@ async function renderNode(
 
   const pixelRatio = targetWidth / rect.width;
 
-  const blob = await toBlob(node, {
+  const canvas = await toCanvas(node, {
     cacheBust: true,
     pixelRatio,
     backgroundColor: "#FFFFFF",
@@ -64,9 +64,19 @@ async function renderNode(
     },
   });
 
-  if (!blob) {
-    throw new Error("Não foi possível gerar o arquivo PNG.");
-  }
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (result) => {
+        if (result) {
+          resolve(result);
+        } else {
+          reject(new Error("Não foi possível gerar o arquivo final."));
+        }
+      },
+      "image/jpeg",
+      0.92,
+    );
+  });
 
   return blob;
 }
@@ -106,12 +116,12 @@ export async function renderAndUploadCampaignAssets(input: {
       const page = String(index + 1).padStart(2, "0");
       const path =
         `${user.id}/${input.campaignId}/${input.provider}-${input.format}/` +
-        `${timestamp}-${page}.png`;
+        `${timestamp}-${page}.jpg`;
 
       const { error } = await supabase.storage
         .from("campaign-assets")
         .upload(path, blob, {
-          contentType: "image/png",
+          contentType: "image/jpeg",
           cacheControl: "3600",
           upsert: false,
         });
