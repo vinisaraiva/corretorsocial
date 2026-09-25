@@ -48,29 +48,47 @@ function metaGraphVersion() {
     : DEFAULT_META_GRAPH_VERSION;
 }
 
+export function metaIntegrationMissingConfiguration() {
+  const missing: string[] = [];
+
+  if (!process.env.META_APP_ID?.trim()) {
+    missing.push("META_APP_ID");
+  }
+
+  if (!process.env.META_APP_SECRET?.trim()) {
+    missing.push("META_APP_SECRET");
+  }
+
+  const explicitRedirect = process.env.META_REDIRECT_URI?.trim();
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+
+  if (!explicitRedirect && !appUrl) {
+    missing.push("META_REDIRECT_URI ou NEXT_PUBLIC_APP_URL");
+  }
+
+  return missing;
+}
+
 function requiredMetaEnv() {
-  const appId = process.env.META_APP_ID?.trim();
-  const appSecret = process.env.META_APP_SECRET?.trim();
+  const missing = metaIntegrationMissingConfiguration();
+
+  if (missing.length > 0) {
+    throw new Error(
+      `A integração Meta ainda não está configurada no servidor: ${missing.join(", ")}.`,
+    );
+  }
+
+  const appId = process.env.META_APP_ID!.trim();
+  const appSecret = process.env.META_APP_SECRET!.trim();
   const redirectUri =
     process.env.META_REDIRECT_URI?.trim() ||
-    (process.env.NEXT_PUBLIC_APP_URL
-      ? `${process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")}/api/oauth/meta/callback`
-      : "");
-
-  if (!appId || !appSecret || !redirectUri) {
-    throw new Error("A integração Meta ainda não está configurada no servidor.");
-  }
+    `${process.env.NEXT_PUBLIC_APP_URL!.replace(/\/$/, "")}/api/oauth/meta/callback`;
 
   return { appId, appSecret, redirectUri };
 }
 
 export function metaIntegrationConfigured() {
-  try {
-    requiredMetaEnv();
-    return true;
-  } catch {
-    return false;
-  }
+  return metaIntegrationMissingConfiguration().length === 0;
 }
 
 export function buildMetaAuthorizationUrl(state: string) {
