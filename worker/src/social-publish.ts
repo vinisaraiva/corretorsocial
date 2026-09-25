@@ -14,6 +14,7 @@ type SocialPublishPayload = {
   campaign_id: string;
   scheduled_for: string;
   providers: PublishProvider[];
+  mode: "scheduled" | "immediate";
   version?: number;
 };
 
@@ -63,6 +64,7 @@ function parsePayload(payload: unknown): SocialPublishPayload {
     campaign_id: value.campaign_id,
     scheduled_for: value.scheduled_for,
     providers,
+    mode: value.mode === "immediate" ? "immediate" : "scheduled",
     version: typeof value.version === "number" ? value.version : undefined,
   };
 }
@@ -364,7 +366,11 @@ export async function handleSocialPublish(job: WorkerJob) {
       : Number.NaN;
     const expectedAt = new Date(payload.scheduled_for).getTime();
 
-    if (
+    if (payload.mode === "immediate") {
+      if (campaign.status !== "publishing") {
+        return { skipped: true, reason: "stale_immediate_publish" };
+      }
+    } else if (
       campaign.status !== "scheduled" ||
       !Number.isFinite(scheduledAt) ||
       !Number.isFinite(expectedAt) ||
