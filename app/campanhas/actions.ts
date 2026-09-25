@@ -272,7 +272,8 @@ export async function getCampaignRenderRequirements(campaignId: string) {
   return (rows ?? [])
     .filter(
       (variant) =>
-        !variant.rendered_asset_path &&
+        (!variant.rendered_asset_path ||
+          !variant.rendered_asset_path.toLowerCase().endsWith(".jpg")) &&
         !(
           variant.provider === "tiktok" &&
           variant.format === "vertical_video"
