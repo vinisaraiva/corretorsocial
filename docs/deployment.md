@@ -51,7 +51,15 @@ Resposta esperada:
 
 Supabase e autenticação já fazem parte do fluxo real. Use `.env.example` como referência e mantenha valores reais apenas no ambiente seguro da plataforma.
 
-Para Meta, além de `META_APP_ID`, `META_APP_SECRET` e `META_REDIRECT_URI`, o servidor precisa de `SOCIAL_TOKEN_ENCRYPTION_KEY`.
+Para Facebook, além de `META_APP_ID`, `META_APP_SECRET` e `META_REDIRECT_URI`, o servidor precisa de `SOCIAL_TOKEN_ENCRYPTION_KEY`.
+
+Para o Instagram direto, o Next.js também precisa de:
+- `INSTAGRAM_APP_ID`;
+- `INSTAGRAM_APP_SECRET`;
+- `INSTAGRAM_REDIRECT_URI`;
+- `INSTAGRAM_GRAPH_VERSION=v26.0`.
+
+O Instagram App ID/Secret são as credenciais específicas exibidas em **Instagram → API setup with Instagram login** e não devem ser substituídas pelo App ID/Secret geral da Meta.
 
 O worker é um processo separado e precisa de:
 - `SUPABASE_URL`;
@@ -59,6 +67,8 @@ O worker é um processo separado e precisa de:
 - `OPENAI_API_KEY` para análise de mídia;
 - `SOCIAL_TOKEN_ENCRYPTION_KEY` para publicação social;
 - `META_GRAPH_VERSION=v26.0`.
+
+O worker não precisa do Instagram App Secret para publicar: o token Instagram de longa duração já é armazenado criptografado em `social_connections`. O worker usa `graph.instagram.com` e tenta renovar tokens Instagram próximos do vencimento.
 
 A chave `SOCIAL_TOKEN_ENCRYPTION_KEY` deve ser exatamente a mesma no Next.js e no worker.
 
