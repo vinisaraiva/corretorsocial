@@ -238,6 +238,7 @@ export function applyCampaignRenderState(input: {
       slide_count: row.render_metadata.slide_count ?? null,
       media_ids: row.render_metadata.media_ids ?? [],
       render_context: input.renderContext,
+      asset_format: "image/jpeg",
     });
 
     const sameRender =
