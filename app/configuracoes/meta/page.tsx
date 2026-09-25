@@ -24,7 +24,7 @@ export default async function MetaConnectionPage() {
 
   try {
     const pending = readPendingMetaOAuth(pendingValue);
-    pages = await listMetaPages(pending.accessToken);
+    pages = (await listMetaPages(pending.accessToken)).filter(metaPageCanPublish);
   } catch (error) {
     console.error("Could not list Meta Pages", error);
     redirect("/configuracoes?meta=failed");
@@ -32,14 +32,13 @@ export default async function MetaConnectionPage() {
 
   return (
     <AppShell
-      title="Escolha sua Página"
-      description="Selecione explicitamente onde o Corretor Social poderá publicar."
+      title="Qual Página você usa?"
+      description="Encontramos mais de uma Página disponível. Escolha onde o Corretor Social deve publicar."
     >
       <section className="app-card p-5 sm:p-6">
         <div className="space-y-3">
           {pages.map((page) => {
             const instagram = page.instagram_business_account;
-            const canPublish = metaPageCanPublish(page);
 
             return (
               <form
@@ -60,16 +59,10 @@ export default async function MetaConnectionPage() {
                 <div className="w-full sm:w-auto">
                   <button
                     type="submit"
-                    disabled={!canPublish}
-                    className="app-button-primary w-full disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                    className="app-button-primary w-full sm:w-auto"
                   >
-                    {canPublish ? "Usar esta Página" : "Sem permissão de publicar"}
+                    Usar esta Página
                   </button>
-                  {!canPublish ? (
-                    <div className="mt-1 text-[11px] text-[#B42318]">
-                      Sua conta não recebeu a tarefa CREATE_CONTENT nesta Página.
-                    </div>
-                  ) : null}
                 </div>
               </form>
             );
@@ -78,9 +71,8 @@ export default async function MetaConnectionPage() {
 
         {pages.length === 0 ? (
           <div className="rounded-xl border border-[#FDA29B] bg-[#FFFBFA] p-4 text-sm text-[#912018]">
-            Nenhuma Página administrada por esta conta foi liberada para o
-            aplicativo. Confirme na Meta se você administra uma Página e se as
-            permissões solicitadas foram concedidas.
+            Não encontramos mais uma Página disponível para concluir esta
+            conexão. Volte às configurações e tente conectar novamente.
           </div>
         ) : null}
 
