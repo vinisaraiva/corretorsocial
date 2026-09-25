@@ -530,13 +530,14 @@ function SlideArtwork({
   );
 }
 
-export function InstagramCarouselPreview({
+export function InstagramCarouselRenderSet({
   property,
   brand,
   templateId,
   modelId,
   headline,
   cta,
+  renderGroup,
 }: {
   property: Property;
   brand: CarouselBrand;
@@ -544,6 +545,54 @@ export function InstagramCarouselPreview({
   modelId: CarouselModelId;
   headline: string;
   cta: string;
+  renderGroup: string;
+}) {
+  const slides = useMemo(
+    () => buildSlides(property, modelId, headline, cta),
+    [property, modelId, headline, cta],
+  );
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed left-[-20000px] top-0 w-[470px]"
+    >
+      {slides.map((slide, index) => (
+        <div
+          key={`render-${renderGroup}-${slide.kind}-${index}`}
+          data-render-carousel-slide={renderGroup}
+          className="w-[470px]"
+        >
+          <SlideArtwork
+            slide={slide}
+            brand={brand}
+            templateId={templateId}
+            index={index}
+            total={slides.length}
+            exportMode
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function InstagramCarouselPreview({
+  property,
+  brand,
+  templateId,
+  modelId,
+  headline,
+  cta,
+  renderGroup = "true",
+}: {
+  property: Property;
+  brand: CarouselBrand;
+  templateId: CampaignTemplateId;
+  modelId: CarouselModelId;
+  headline: string;
+  cta: string;
+  renderGroup?: string;
 }) {
   const slides = useMemo(
     () => buildSlides(property, modelId, headline, cta),
@@ -605,7 +654,7 @@ export function InstagramCarouselPreview({
         {slides.map((slide, index) => (
           <div
             key={`export-${slide.kind}-${index}`}
-            data-render-carousel-slide="true"
+            data-render-carousel-slide={renderGroup}
             className="w-[470px]"
           >
             <SlideArtwork
