@@ -4,8 +4,12 @@ import {
   META_OAUTH_STATE_COOKIE,
   buildMetaAuthorizationUrl,
   metaIntegrationConfigured,
+  metaIntegrationMissingConfiguration,
 } from "@/lib/meta";
-import { socialTokenEncryptionConfigured } from "@/lib/social-token-crypto";
+import {
+  socialTokenEncryptionConfigurationIssue,
+  socialTokenEncryptionConfigured,
+} from "@/lib/social-token-crypto";
 import { publicAppUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
 
@@ -23,8 +27,8 @@ export async function GET(request: NextRequest) {
 
   if (!metaIntegrationConfigured() || !socialTokenEncryptionConfigured()) {
     console.error("Meta OAuth is missing server configuration", {
-      metaConfigured: metaIntegrationConfigured(),
-      encryptionConfigured: socialTokenEncryptionConfigured(),
+      missingMetaConfiguration: metaIntegrationMissingConfiguration(),
+      encryptionIssue: socialTokenEncryptionConfigurationIssue(),
     });
 
     return NextResponse.redirect(
