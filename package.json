@@ -7,7 +7,7 @@
     "build": "next build && tsc -p worker/tsconfig.build.json",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p worker/tsconfig.json",
     "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
