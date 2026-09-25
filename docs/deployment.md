@@ -49,9 +49,18 @@ Resposta esperada:
 
 ## Variáveis
 
-Na fase atual de frontend mockado nenhuma variável externa é obrigatória.
+Supabase e autenticação já fazem parte do fluxo real. Use `.env.example` como referência e mantenha valores reais apenas no ambiente seguro da plataforma.
 
-Quando Supabase e integrações forem ligadas, usar `.env.example` como referência e cadastrar valores reais apenas no ambiente seguro da plataforma.
+Para Meta, além de `META_APP_ID`, `META_APP_SECRET` e `META_REDIRECT_URI`, o servidor precisa de `SOCIAL_TOKEN_ENCRYPTION_KEY`.
+
+O worker é um processo separado e precisa de:
+- `SUPABASE_URL`;
+- `SUPABASE_SERVICE_ROLE_KEY`;
+- `OPENAI_API_KEY` para análise de mídia;
+- `SOCIAL_TOKEN_ENCRYPTION_KEY` para publicação social;
+- `META_GRAPH_VERSION=v26.0`.
+
+A chave `SOCIAL_TOKEN_ENCRYPTION_KEY` deve ser exatamente a mesma no Next.js e no worker.
 
 ## Critério de aprovação do frontend
 
