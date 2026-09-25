@@ -50,8 +50,7 @@ export default async function ResultsPage() {
     supabase
       .from("tracking_links")
       .select("campaign_id,provider,clicks,created_at")
-      .eq("user_id", user.id)
-      .gte("created_at", since),
+      .eq("user_id", user.id),
   ]);
 
   if (campaignsResult.error || linksResult.error) {
@@ -172,7 +171,7 @@ export default async function ResultsPage() {
   return (
     <AppShell
       title="Resultados"
-      description="Dados reais das publicações e links rastreáveis dos últimos 30 dias."
+      description="Publicações dos últimos 30 dias e cliques acumulados nos links rastreáveis."
     >
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
@@ -185,7 +184,7 @@ export default async function ResultsPage() {
           label="Cliques no WhatsApp"
           value={String(totalClicks)}
           icon={MessageCircle}
-          helper="Links rastreáveis criados no período"
+          helper="Total acumulado nos links rastreáveis"
         />
         <StatCard
           label="Melhor campanha"
