@@ -12,6 +12,8 @@ type MetaIdResponse = {
   post_id?: string;
 };
 
+type GraphHost = "facebook" | "instagram";
+
 function graphVersion() {
   const configured = process.env.META_GRAPH_VERSION?.trim();
   return configured && /^v\d+\.\d+$/.test(configured)
@@ -32,13 +34,20 @@ async function parseMetaResponse<T>(response: Response) {
   return payload as T;
 }
 
+function graphBaseUrl(host: GraphHost) {
+  return host === "instagram"
+    ? "https://graph.instagram.com"
+    : "https://graph.facebook.com";
+}
+
 async function graphPost<T>(
   path: string,
   accessToken: string,
   params: Record<string, string>,
+  host: GraphHost = "facebook",
 ) {
   const response = await fetch(
-    `https://graph.facebook.com/${graphVersion()}/${path}`,
+    `${graphBaseUrl(host)}/${graphVersion()}/${path}`,
     {
       method: "POST",
       headers: {
@@ -56,9 +65,10 @@ async function graphGet<T>(
   path: string,
   accessToken: string,
   params: Record<string, string>,
+  host: GraphHost = "facebook",
 ) {
   const url = new URL(
-    `https://graph.facebook.com/${graphVersion()}/${path}`,
+    `${graphBaseUrl(host)}/${graphVersion()}/${path}`,
   );
 
   for (const [key, value] of Object.entries(params)) {
@@ -80,6 +90,7 @@ const sleep = (ms: number) =>
 async function waitForInstagramContainer(
   containerId: string,
   accessToken: string,
+  host: GraphHost,
 ) {
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const status = await graphGet<{
@@ -87,7 +98,7 @@ async function waitForInstagramContainer(
       status?: string;
     }>(containerId, accessToken, {
       fields: "status_code,status",
-    });
+    }, host);
 
     if (
       status.status_code === "FINISHED" ||
@@ -140,18 +151,21 @@ async function publishInstagramContainer(input: {
   instagramAccountId: string;
   accessToken: string;
   params: Record<string, string>;
+  graphHost?: GraphHost;
 }) {
+  const host = input.graphHost ?? "facebook";
   const container = await graphPost<MetaIdResponse>(
     `${input.instagramAccountId}/media`,
     input.accessToken,
     input.params,
+    host,
   );
 
   if (!container.id) {
     throw new Error("Instagram did not return a media container id");
   }
 
-  await waitForInstagramContainer(container.id, input.accessToken);
+  await waitForInstagramContainer(container.id, input.accessToken, host);
 
   const published = await graphPost<MetaIdResponse>(
     `${input.instagramAccountId}/media_publish`,
@@ -159,6 +173,7 @@ async function publishInstagramContainer(input: {
     {
       creation_id: container.id,
     },
+    host,
   );
 
   if (!published.id) {
@@ -173,6 +188,7 @@ export function publishInstagramImage(input: {
   accessToken: string;
   imageUrl: string;
   caption: string;
+  graphHost?: GraphHost;
 }) {
   return publishInstagramContainer({
     instagramAccountId: input.instagramAccountId,
@@ -181,6 +197,7 @@ export function publishInstagramImage(input: {
       image_url: input.imageUrl,
       caption: input.caption,
     },
+    graphHost: input.graphHost,
   });
 }
 
@@ -188,6 +205,7 @@ export function publishInstagramStory(input: {
   instagramAccountId: string;
   accessToken: string;
   imageUrl: string;
+  graphHost?: GraphHost;
 }) {
   return publishInstagramContainer({
     instagramAccountId: input.instagramAccountId,
@@ -196,6 +214,7 @@ export function publishInstagramStory(input: {
       media_type: "STORIES",
       image_url: input.imageUrl,
     },
+    graphHost: input.graphHost,
   });
 }
 
@@ -204,7 +223,9 @@ export async function publishInstagramCarousel(input: {
   accessToken: string;
   imageUrls: string[];
   caption: string;
+  graphHost?: GraphHost;
 }) {
+  const host = input.graphHost ?? "facebook";
   if (input.imageUrls.length < 2 || input.imageUrls.length > 10) {
     throw new Error("Instagram carousel must contain between 2 and 10 items");
   }
@@ -219,13 +240,14 @@ export async function publishInstagramCarousel(input: {
         image_url: imageUrl,
         is_carousel_item: "true",
       },
+      host,
     );
 
     if (!child.id) {
       throw new Error("Instagram did not return a carousel item id");
     }
 
-    await waitForInstagramContainer(child.id, input.accessToken);
+    await waitForInstagramContainer(child.id, input.accessToken, host);
     childIds.push(child.id);
   }
 
@@ -237,5 +259,6 @@ export async function publishInstagramCarousel(input: {
       children: childIds.join(","),
       caption: input.caption,
     },
+    graphHost: host,
   });
 }
