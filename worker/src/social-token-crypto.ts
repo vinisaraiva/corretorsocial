@@ -1,4 +1,8 @@
-import { createDecipheriv } from "node:crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  randomBytes,
+} from "node:crypto";
 
 const SECRET_PREFIX = "enc:v1";
 
@@ -42,4 +46,22 @@ export function decryptSocialSecret(value: string) {
     decipher.update(Buffer.from(encryptedValue, "base64url")),
     decipher.final(),
   ]).toString("utf8");
+}
+
+
+export function encryptSocialSecret(value: string) {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", encryptionKey(), iv);
+  const encrypted = Buffer.concat([
+    cipher.update(value, "utf8"),
+    cipher.final(),
+  ]);
+  const authTag = cipher.getAuthTag();
+
+  return [
+    SECRET_PREFIX,
+    iv.toString("base64url"),
+    authTag.toString("base64url"),
+    encrypted.toString("base64url"),
+  ].join(".");
 }
