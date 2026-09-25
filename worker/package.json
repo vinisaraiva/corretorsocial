@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "tsx src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "cron": "tsx src/run-once.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.1",
