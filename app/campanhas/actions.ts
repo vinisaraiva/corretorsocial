@@ -689,6 +689,20 @@ export async function registerRenderedAssets(input: {
       ? { ...variant.render_metadata }
       : {};
 
+  const expectedSlideCount =
+    input.format === "carousel_4x5" &&
+    typeof (metadata as Record<string, unknown>).slide_count === "number"
+      ? Number((metadata as Record<string, unknown>).slide_count)
+      : 1;
+
+  if (uniquePaths.length !== expectedSlideCount) {
+    throw new Error(
+      input.format === "carousel_4x5"
+        ? `O carrossel esperava ${expectedSlideCount} páginas, mas foram geradas ${uniquePaths.length}.`
+        : "A arte final não foi gerada corretamente.",
+    );
+  }
+
   const previousPaths = Array.isArray(
     (metadata as Record<string, unknown>).rendered_asset_paths,
   )
