@@ -156,6 +156,14 @@ export async function exchangeMetaAuthorizationCode(code: string) {
   };
 }
 
+export function metaPageCanPublish(page: MetaPageAccount) {
+  return (
+    !Array.isArray(page.tasks) ||
+    page.tasks.length === 0 ||
+    page.tasks.includes("CREATE_CONTENT")
+  );
+}
+
 export async function listMetaPages(userAccessToken: string) {
   const version = metaGraphVersion();
   const fields = [
