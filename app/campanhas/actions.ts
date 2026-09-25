@@ -512,6 +512,34 @@ export async function getCampaignRenderRequirements(campaignId: string) {
     }));
 }
 
+export async function validateCampaignScheduleTime(
+  scheduledFor: string,
+) {
+  const date = new Date(scheduledFor);
+  const now = Date.now();
+  const minimumScheduleAt = now + 2 * 60 * 1000;
+
+  if (Number.isNaN(date.getTime())) {
+    return {
+      ok: false as const,
+      message: "Escolha uma data e horário válidos.",
+    };
+  }
+
+  if (date.getTime() < minimumScheduleAt) {
+    return {
+      ok: false as const,
+      message:
+        "Escolha um horário com pelo menos 2 minutos de antecedência para prepararmos os arquivos finais.",
+    };
+  }
+
+  return {
+    ok: true as const,
+    scheduledFor: date.toISOString(),
+  };
+}
+
 export async function saveCampaignDraft(input: CampaignDraftInput) {
   return persistCampaign(input);
 }
@@ -520,6 +548,23 @@ export async function scheduleCampaignDraft(
   input: CampaignDraftInput,
   scheduledFor: string,
 ) {
+  const date = new Date(scheduledFor);
+
+  if (Number.isNaN(date.getTime())) {
+    return {
+      ok: false as const,
+      message: "Escolha uma data e horário válidos.",
+    };
+  }
+
+  if (date.getTime() <= Date.now()) {
+    return {
+      ok: false as const,
+      message:
+        "O horário escolhido passou enquanto preparávamos os arquivos. Escolha um novo horário.",
+    };
+  }
+
   const campaignId = await persistCampaign(input);
   const supabase = await createClient();
 
@@ -531,10 +576,12 @@ export async function scheduleCampaignDraft(
     redirect("/login");
   }
 
-  const date = new Date(scheduledFor);
-
-  if (Number.isNaN(date.getTime()) || date.getTime() <= Date.now()) {
-    throw new Error("Escolha uma data futura para o agendamento.");
+  if (date.getTime() <= Date.now()) {
+    return {
+      ok: false as const,
+      message:
+        "O horário escolhido passou enquanto preparávamos os arquivos. Escolha um novo horário.",
+    };
   }
 
   const { error } = await supabase
@@ -550,7 +597,10 @@ export async function scheduleCampaignDraft(
     throw new Error("Não foi possível agendar a campanha.");
   }
 
-  return campaignId;
+  return {
+    ok: true as const,
+    campaignId,
+  };
 }
 
 
