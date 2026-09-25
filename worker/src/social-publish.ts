@@ -54,8 +54,7 @@ function parsePayload(payload: unknown): SocialPublishPayload {
 
   if (
     typeof value.campaign_id !== "string" ||
-    typeof value.scheduled_for !== "string" ||
-    providers.length === 0
+    typeof value.scheduled_for !== "string"
   ) {
     throw new Error("Incomplete social_publish payload");
   }
@@ -478,7 +477,7 @@ export async function handleSocialPublish(job: WorkerJob) {
   try {
     const { data: campaign, error: campaignError } = await supabase
       .from("campaigns")
-      .select("id,user_id,property_id,status,scheduled_for")
+      .select("id,user_id,property_id,status,scheduled_for,generation_metadata")
       .eq("id", payload.campaign_id)
       .eq("user_id", job.user_id)
       .maybeSingle();
@@ -507,6 +506,48 @@ export async function handleSocialPublish(job: WorkerJob) {
       return { skipped: true, reason: "stale_schedule" };
     }
 
+    const metadata =
+      campaign.generation_metadata &&
+      typeof campaign.generation_metadata === "object" &&
+      !Array.isArray(campaign.generation_metadata)
+        ? (campaign.generation_metadata as Record<string, unknown>)
+        : {};
+
+    const savedProviders = Array.isArray(metadata.publish_providers)
+      ? Array.from(
+          new Set(
+            metadata.publish_providers.filter(
+              (provider): provider is PublishProvider =>
+                provider === "instagram" || provider === "facebook",
+            ),
+          ),
+        )
+      : [];
+
+    const effectiveProviders =
+      payload.mode === "immediate" ? payload.providers : savedProviders;
+
+    if (payload.mode === "scheduled" && effectiveProviders.length === 0) {
+      const { error: readyError } = await supabase
+        .from("campaigns")
+        .update({ status: "ready" })
+        .eq("id", campaign.id)
+        .eq("user_id", job.user_id)
+        .eq("status", "scheduled");
+
+      if (readyError) throw readyError;
+
+      return {
+        campaignId: campaign.id,
+        skipped: true,
+        reason: "calendar_only_schedule_completed",
+      };
+    }
+
+    if (effectiveProviders.length === 0) {
+      throw new Error("No social networks selected for publication");
+    }
+
     const [{ data: profile, error: profileError }, { data: property, error: propertyError }] =
       await Promise.all([
         supabase
@@ -532,7 +573,7 @@ export async function handleSocialPublish(job: WorkerJob) {
 
     const trackingUrlByProvider = new Map<PublishProvider, string>();
 
-    for (const provider of payload.providers) {
+    for (const provider of effectiveProviders) {
       trackingUrlByProvider.set(
         provider,
         await ensureTrackingLink({
@@ -553,7 +594,7 @@ export async function handleSocialPublish(job: WorkerJob) {
       )
       .eq("user_id", job.user_id)
       .eq("status", "connected")
-      .in("provider", payload.providers);
+      .in("provider", effectiveProviders);
 
     if (connectionError) throw connectionError;
 
@@ -562,7 +603,7 @@ export async function handleSocialPublish(job: WorkerJob) {
       connections.map((connection) => [connection.provider, connection]),
     );
 
-    for (const provider of payload.providers) {
+    for (const provider of effectiveProviders) {
       const connection = connectionByProvider.get(provider);
 
       if (
@@ -582,7 +623,7 @@ export async function handleSocialPublish(job: WorkerJob) {
         "id,provider,format,caption,rendered_asset_path,render_metadata",
       )
       .eq("campaign_id", campaign.id)
-      .in("provider", payload.providers);
+      .in("provider", effectiveProviders);
 
     if (variantsError) throw variantsError;
 
