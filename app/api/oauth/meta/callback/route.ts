@@ -4,12 +4,15 @@ import {
   META_OAUTH_PENDING_COOKIE,
   META_OAUTH_STATE_COOKIE,
   exchangeMetaAuthorizationCode,
+  listMetaPages,
+  metaPageCanPublish,
 } from "@/lib/meta";
 import {
   encryptSocialSecret,
   socialTokenEncryptionConfigured,
 } from "@/lib/social-token-crypto";
 import { publicAppUrl } from "@/lib/app-url";
+import { persistMetaPageConnection } from "@/lib/meta-connection";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -71,6 +74,30 @@ export async function GET(request: NextRequest) {
 
   try {
     const token = await exchangeMetaAuthorizationCode(code);
+    const pages = await listMetaPages(token.accessToken);
+    const publishablePages = pages.filter(metaPageCanPublish);
+
+    if (publishablePages.length === 0) {
+      const status = pages.length === 0 ? "no_page" : "no_publishable_page";
+      const response = redirectWithStatus(request, status);
+      response.cookies.delete(META_OAUTH_STATE_COOKIE);
+      response.cookies.delete(META_OAUTH_PENDING_COOKIE);
+      return response;
+    }
+
+    if (publishablePages.length === 1) {
+      await persistMetaPageConnection({
+        userId: user.id,
+        page: publishablePages[0],
+        pending: token,
+      });
+
+      const response = redirectWithStatus(request, "connected");
+      response.cookies.delete(META_OAUTH_STATE_COOKIE);
+      response.cookies.delete(META_OAUTH_PENDING_COOKIE);
+      return response;
+    }
+
     const encryptedPendingToken = encryptSocialSecret(JSON.stringify(token));
     const response = NextResponse.redirect(
       publicAppUrl(request, "/configuracoes/meta"),
