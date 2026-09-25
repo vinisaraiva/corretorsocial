@@ -42,7 +42,8 @@ export default async function NewCampaignPage({
     redirect(`/imoveis/${row.id}`);
   }
 
-  const [mediaResult, campaignsResult, profileResult] = await Promise.all([
+  const [mediaResult, campaignsResult, profileResult, connectionsResult] =
+    await Promise.all([
     supabase
       .from("property_media")
       .select("id,property_id,original_url,storage_path,is_cover,sort_order,width,height,ai_score,ai_tags")
@@ -56,6 +57,10 @@ export default async function NewCampaignPage({
       .select("professional_name,logo_path,primary_color")
       .eq("user_id", user.id)
       .maybeSingle(),
+    supabase
+      .from("social_connections")
+      .select("provider,status,display_name")
+      .eq("user_id", user.id),
   ]);
 
   const media = await resolvePrivateMedia(
@@ -95,6 +100,7 @@ export default async function NewCampaignPage({
         propertyData={property}
         brand={brand}
         mediaAnalysisJobId={params.analise}
+        socialConnections={connectionsResult.data ?? []}
       />
     </AppShell>
   );
