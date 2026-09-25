@@ -166,7 +166,7 @@ export default async function CampaignDetailPage({
           provider === "tiktok" ||
           provider === "google_business",
       )
-    : [];
+    : undefined;
 
   for (const variant of variantsResult.data ?? []) {
     const variantMetadata =
