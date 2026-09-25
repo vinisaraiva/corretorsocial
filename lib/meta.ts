@@ -1,5 +1,8 @@
 const DEFAULT_META_GRAPH_VERSION = "v26.0";
 
+export const META_OAUTH_STATE_COOKIE = "cs_meta_oauth_state";
+export const META_OAUTH_PENDING_COOKIE = "cs_meta_oauth_pending";
+
 export const META_OAUTH_SCOPES = [
   "pages_show_list",
   "pages_read_engagement",
