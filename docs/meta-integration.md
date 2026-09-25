@@ -37,15 +37,21 @@ https://SEU-DOMINIO/api/oauth/meta/callback
 O mesmo valor deve ser usado em:
 
 ```env
+NEXT_PUBLIC_APP_URL=https://SEU-DOMINIO
 META_REDIRECT_URI=https://SEU-DOMINIO/api/oauth/meta/callback
 ```
+
+Em hospedagens atrás de proxy reverso, como a Hostinger, o processo Next.js pode enxergar internamente algo como `0.0.0.0:3000`. Rotas OAuth não devem usar esse endereço como origem pública. O Corretor Social resolve redirects pela URL pública configurada, usando `NEXT_PUBLIC_APP_URL` como primeira fonte e `META_REDIRECT_URI` como fallback.
+
+Depois de alterar essas variáveis em produção, faça redeploy/restart da aplicação antes de testar novamente.
 
 ## Variáveis do Next.js
 
 ```env
+NEXT_PUBLIC_APP_URL=https://SEU-DOMINIO
 META_APP_ID=
 META_APP_SECRET=
-META_REDIRECT_URI=
+META_REDIRECT_URI=https://SEU-DOMINIO/api/oauth/meta/callback
 META_GRAPH_VERSION=v26.0
 META_LOGIN_CONFIG_ID=
 SOCIAL_TOKEN_ENCRYPTION_KEY=
