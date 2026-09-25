@@ -9,8 +9,21 @@ import {
   renderedPathsFromVariant,
   type CampaignDraftInput,
 } from "@/lib/campaign-persistence";
+import {
+  buildSocialPublishJobPayload,
+  supportedPublishProviders,
+} from "@/lib/publication-plan";
 
 export type { CampaignDraftInput } from "@/lib/campaign-persistence";
+
+function campaignGenerationMetadata(input: CampaignDraftInput) {
+  return {
+    source: "deterministic_preview_v0_2",
+    template_id: input.visualStyle,
+    subheadline: input.subheadline.trim(),
+    publish_providers: supportedPublishProviders(input.publishProviders ?? []),
+  };
+}
 
 async function persistCampaign(input: CampaignDraftInput) {
   const supabase = await createClient();
@@ -91,11 +104,7 @@ async function persistCampaign(input: CampaignDraftInput) {
       .update({
         visual_style: input.visualStyle,
         marketing_angle: input.headline,
-        generation_metadata: {
-          source: "deterministic_preview_v0_2",
-          template_id: input.visualStyle,
-          subheadline: input.subheadline.trim(),
-        },
+        generation_metadata: campaignGenerationMetadata(input),
       })
       .eq("id", campaignId)
       .eq("user_id", user.id);
@@ -112,11 +121,7 @@ async function persistCampaign(input: CampaignDraftInput) {
         visual_style: input.visualStyle,
         marketing_angle: input.headline,
         status: "ready",
-        generation_metadata: {
-          source: "deterministic_preview_v0_2",
-          template_id: input.visualStyle,
-          subheadline: input.subheadline.trim(),
-        },
+        generation_metadata: campaignGenerationMetadata(input),
       })
       .select("id")
       .single();
@@ -351,11 +356,51 @@ export async function scheduleCampaignDraft(
     };
   }
 
+  const publishProviders = supportedPublishProviders(
+    input.publishProviders ?? [],
+  );
+
+  if (publishProviders.length > 0) {
+    const { data: connections, error: connectionsError } = await supabase
+      .from("social_connections")
+      .select("provider,token_secret_ref")
+      .eq("user_id", user.id)
+      .eq("status", "connected")
+      .in("provider", publishProviders);
+
+    if (connectionsError) {
+      throw new Error("Não foi possível validar as redes conectadas.");
+    }
+
+    const connectedProviders = new Set(
+      (connections ?? [])
+        .filter((connection) => Boolean(connection.token_secret_ref))
+        .map((connection) => connection.provider),
+    );
+
+    const missingProviders = publishProviders.filter(
+      (provider) => !connectedProviders.has(provider),
+    );
+
+    if (missingProviders.length > 0) {
+      return {
+        ok: false as const,
+        message:
+          "Uma das redes selecionadas não está mais conectada. Revise as conexões antes de agendar.",
+      };
+    }
+  }
+
+  const scheduledIso = date.toISOString();
   const { error } = await supabase
     .from("campaigns")
     .update({
       status: "scheduled",
-      scheduled_for: date.toISOString(),
+      scheduled_for: scheduledIso,
+      generation_metadata: campaignGenerationMetadata({
+        ...input,
+        publishProviders,
+      }),
     })
     .eq("id", campaignId)
     .eq("user_id", user.id);
@@ -364,9 +409,40 @@ export async function scheduleCampaignDraft(
     throw new Error("Não foi possível agendar a campanha.");
   }
 
+  if (publishProviders.length > 0) {
+    const { error: jobError } = await supabase.from("jobs").insert({
+      user_id: user.id,
+      type: "social_publish",
+      priority: 40,
+      run_after: scheduledIso,
+      max_attempts: 3,
+      payload: buildSocialPublishJobPayload({
+        campaignId,
+        scheduledFor: scheduledIso,
+        providers: publishProviders,
+      }),
+    });
+
+    if (jobError) {
+      await supabase
+        .from("campaigns")
+        .update({
+          status: "ready",
+          scheduled_for: null,
+        })
+        .eq("id", campaignId)
+        .eq("user_id", user.id);
+
+      throw new Error(
+        "Não foi possível colocar a publicação na fila. O agendamento foi cancelado.",
+      );
+    }
+  }
+
   return {
     ok: true as const,
     campaignId,
+    queuedProviders: publishProviders,
   };
 }
 
