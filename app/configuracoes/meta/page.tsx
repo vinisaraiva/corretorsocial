@@ -38,8 +38,6 @@ export default async function MetaConnectionPage() {
       <section className="app-card p-5 sm:p-6">
         <div className="space-y-3">
           {pages.map((page) => {
-            const instagram = page.instagram_business_account;
-
             return (
               <form
                 key={page.id}
@@ -50,10 +48,7 @@ export default async function MetaConnectionPage() {
                 <div>
                   <div className="font-extrabold">{page.name}</div>
                   <div className="mt-1 text-sm text-[#667085]">
-                    Facebook Page
-                    {instagram?.username
-                      ? ` · Instagram @${instagram.username}`
-                      : " · sem Instagram profissional vinculado"}
+                    Página do Facebook
                   </div>
                 </div>
                 <div className="w-full sm:w-auto">
