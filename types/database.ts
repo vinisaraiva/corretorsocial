@@ -580,6 +580,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      increment_tracking_link_click: {
+        Args: {
+          p_short_code: string
+        }
+        Returns: string | null
+      }
       remove_property_media: {
         Args: {
           p_media_id: string
