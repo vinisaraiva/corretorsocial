@@ -383,6 +383,20 @@ export async function publishCampaignNow(input: CampaignDraftInput) {
     };
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("whatsapp")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!profile?.whatsapp?.trim()) {
+    return {
+      ok: false as const,
+      message:
+        "Cadastre seu WhatsApp em Configurações antes de publicar. Ele será usado no link rastreável da campanha.",
+    };
+  }
+
   const { data: connections, error: connectionsError } = await supabase
     .from("social_connections")
     .select("provider,token_secret_ref")
@@ -508,6 +522,20 @@ export async function scheduleCampaignDraft(
   );
 
   if (publishProviders.length > 0) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("whatsapp")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!profile?.whatsapp?.trim()) {
+      return {
+        ok: false as const,
+        message:
+          "Cadastre seu WhatsApp em Configurações antes de agendar publicação automática.",
+      };
+    }
+
     const { data: connections, error: connectionsError } = await supabase
       .from("social_connections")
       .select("provider,token_secret_ref")
