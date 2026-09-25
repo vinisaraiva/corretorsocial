@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import type { PublishProvider } from "@/lib/publication-plan";
 
 export type CampaignDraftInput = {
   campaignId?: string;
@@ -7,6 +8,7 @@ export type CampaignDraftInput = {
   headline: string;
   subheadline: string;
   cta: string;
+  publishProviders?: PublishProvider[];
   captions: {
     instagram: string;
     facebook: string;
