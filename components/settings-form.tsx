@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { Save } from "lucide-react";
 import { saveSettings } from "@/app/configuracoes/actions";
-import { disconnectMeta } from "@/app/configuracoes/meta/actions";
+import {
+  disconnectFacebook,
+  disconnectInstagram,
+} from "@/app/configuracoes/meta/actions";
 import { LogoUploader } from "@/components/logo-uploader";
 
 type ProfileSettings = {
@@ -40,19 +43,21 @@ export function SettingsForm({
   connections,
   logoUrl,
   metaNotice,
+  instagramNotice,
 }: {
   profile: ProfileSettings;
   connections: Connection[];
   logoUrl?: string | null;
   metaNotice?: string;
+  instagramNotice?: string;
 }) {
   const connectedByProvider = new Map(
     connections
       .filter((connection) => connection.status === "connected")
       .map((connection) => [connection.provider, connection]),
   );
-  const metaConnected =
-    connectedByProvider.has("facebook") || connectedByProvider.has("instagram");
+  const facebookConnected = connectedByProvider.has("facebook");
+  const instagramConnected = connectedByProvider.has("instagram");
 
   return (
     <form action={saveSettings} className="space-y-5">
@@ -175,7 +180,7 @@ export function SettingsForm({
 
       <Section
         title="Redes sociais"
-        description="Só mostramos uma rede como conectada depois da autorização real."
+        description="Conecte cada rede uma vez. Na publicação, o Corretor Social usa automaticamente a conexão correta."
       >
         {metaNotice ? (
           <div className="mb-4 rounded-xl border border-[#B2DDFF] bg-[#EFF8FF] p-4 text-sm font-semibold text-[#175CD3]">
@@ -183,64 +188,137 @@ export function SettingsForm({
           </div>
         ) : null}
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          {(Object.keys(networkLabels) as Array<keyof typeof networkLabels>).map(
-            (provider) => {
-              const connection = connectedByProvider.get(provider);
-              const connected = Boolean(connection);
+        {instagramNotice ? (
+          <div className="mb-4 rounded-xl border border-[#B2DDFF] bg-[#EFF8FF] p-4 text-sm font-semibold text-[#175CD3]">
+            {instagramNotice}
+          </div>
+        ) : null}
 
-              return (
-                <div
-                  key={provider}
-                  className="flex min-h-16 items-center justify-between gap-4 rounded-xl border border-[#E4E7EC] px-4"
-                >
-                  <div>
-                    <strong>{networkLabels[provider]}</strong>
-                    {connection?.display_name ? (
-                      <div className="mt-1 text-xs text-[#667085]">
-                        {connection.display_name}
-                      </div>
-                    ) : null}
-                  </div>
-                  <span
-                    className={
-                      connected
-                        ? "text-sm font-bold text-[#067647]"
-                        : "text-sm font-bold text-[#667085]"
-                    }
-                  >
-                    {connected ? "Conectado" : "A conectar"}
-                  </span>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="rounded-xl border border-[#E4E7EC] p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <strong>Facebook</strong>
+                <div className="mt-1 text-xs text-[#667085]">
+                  {connectedByProvider.get("facebook")?.display_name ||
+                    "Página para publicação automática"}
                 </div>
-              );
-            },
-          )}
+              </div>
+              <span
+                className={
+                  facebookConnected
+                    ? "text-sm font-bold text-[#067647]"
+                    : "text-sm font-bold text-[#667085]"
+                }
+              >
+                {facebookConnected ? "Conectado" : "Não conectado"}
+              </span>
+            </div>
+
+            <div className="mt-4 flex flex-col gap-2">
+              <Link
+                href="/api/oauth/meta/start"
+                className="app-button-primary inline-flex min-h-11 items-center justify-center"
+              >
+                {facebookConnected
+                  ? "Reconectar Facebook"
+                  : "Conectar Facebook"}
+              </Link>
+              {facebookConnected ? (
+                <button
+                  type="submit"
+                  formAction={disconnectFacebook}
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#D0D5DD] px-4 text-sm font-bold text-[#344054]"
+                >
+                  Desconectar Facebook
+                </button>
+              ) : null}
+            </div>
+
+            <p className="mt-3 text-xs leading-5 text-[#667085]">
+              Se houver uma única Página apta, ela é conectada
+              automaticamente. Se houver várias, você escolhe qual usar.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-[#E4E7EC] p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <strong>Instagram</strong>
+                <div className="mt-1 text-xs text-[#667085]">
+                  {connectedByProvider.get("instagram")?.display_name ||
+                    "Conta profissional Business ou Creator"}
+                </div>
+              </div>
+              <span
+                className={
+                  instagramConnected
+                    ? "text-sm font-bold text-[#067647]"
+                    : "text-sm font-bold text-[#667085]"
+                }
+              >
+                {instagramConnected ? "Conectado" : "Não conectado"}
+              </span>
+            </div>
+
+            <div className="mt-4 flex flex-col gap-2">
+              <Link
+                href="/api/oauth/instagram/start"
+                className="app-button-primary inline-flex min-h-11 items-center justify-center"
+              >
+                {instagramConnected
+                  ? "Reconectar Instagram"
+                  : "Conectar Instagram"}
+              </Link>
+              {instagramConnected ? (
+                <button
+                  type="submit"
+                  formAction={disconnectInstagram}
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#D0D5DD] px-4 text-sm font-bold text-[#344054]"
+                >
+                  Desconectar Instagram
+                </button>
+              ) : null}
+            </div>
+
+            <p className="mt-3 text-xs leading-5 text-[#667085]">
+              A autorização é feita diretamente pelo Instagram. Não é
+              necessário ter uma Página do Facebook vinculada.
+            </p>
+          </div>
         </div>
 
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/api/oauth/meta/start"
-            className="app-button-primary inline-flex min-h-11 items-center justify-center"
-          >
-            {metaConnected ? "Reconectar Facebook" : "Conectar Facebook"}
-          </Link>
-          {metaConnected ? (
-            <button
-              type="submit"
-              formAction={disconnectMeta}
-              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#D0D5DD] px-4 text-sm font-bold text-[#344054]"
-            >
-              Desconectar Meta
-            </button>
-          ) : null}
-        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {(["tiktok", "google_business"] as const).map((provider) => {
+            const connection = connectedByProvider.get(provider);
+            const connected = Boolean(connection);
 
-        <p className="mt-3 text-xs leading-5 text-[#667085]">
-          Entre com sua conta do Facebook. Se houver uma única Página apta,
-          conectamos automaticamente; se houver várias, perguntamos qual usar.
-          Um Instagram profissional vinculado à Página é detectado
-          automaticamente.
-        </p>
+            return (
+              <div
+                key={provider}
+                className="flex min-h-16 items-center justify-between gap-4 rounded-xl border border-[#E4E7EC] px-4"
+              >
+                <div>
+                  <strong>{networkLabels[provider]}</strong>
+                  {connection?.display_name ? (
+                    <div className="mt-1 text-xs text-[#667085]">
+                      {connection.display_name}
+                    </div>
+                  ) : null}
+                </div>
+                <span
+                  className={
+                    connected
+                      ? "text-sm font-bold text-[#067647]"
+                      : "text-sm font-bold text-[#667085]"
+                  }
+                >
+                  {connected ? "Conectado" : "Em breve"}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </Section>
 
       <Section
