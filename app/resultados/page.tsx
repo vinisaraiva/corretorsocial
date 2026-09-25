@@ -183,19 +183,14 @@ export default async function ResultsPage() {
     }
   }
 
-  const recentCampaigns = Array.from(latestPublicationByCampaign.entries())
-    .map(([campaignId, latestPublishedAt]) => ({
-      campaign: campaignById.get(campaignId),
-      latestPublishedAt,
-    }))
-    .filter(
-      (
-        item,
-      ): item is {
-        campaign: NonNullable<typeof item.campaign>;
-        latestPublishedAt: string;
-      } => Boolean(item.campaign),
-    )
+  const recentCampaigns = Array.from(
+    latestPublicationByCampaign.entries(),
+  )
+    .flatMap(([campaignId, latestPublishedAt]) => {
+      const campaign = campaignById.get(campaignId);
+
+      return campaign ? [{ campaign, latestPublishedAt }] : [];
+    })
     .sort(
       (a, b) =>
         new Date(b.latestPublishedAt).getTime() -
