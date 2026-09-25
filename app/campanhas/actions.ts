@@ -16,6 +16,16 @@ import {
 
 export type { CampaignDraftInput } from "@/lib/campaign-persistence";
 
+function whatsappReadyForTracking(value: string | null | undefined) {
+  const digits = value?.replace(/\D/g, "") ?? "";
+
+  return (
+    digits.length === 10 ||
+    digits.length === 11 ||
+    (digits.length >= 12 && digits.length <= 15)
+  );
+}
+
 function campaignGenerationMetadata(input: CampaignDraftInput) {
   return {
     source: "deterministic_preview_v0_2",
@@ -389,7 +399,7 @@ export async function publishCampaignNow(input: CampaignDraftInput) {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!profile?.whatsapp?.trim()) {
+  if (!whatsappReadyForTracking(profile?.whatsapp)) {
     return {
       ok: false as const,
       message:
@@ -528,7 +538,7 @@ export async function scheduleCampaignDraft(
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (!profile?.whatsapp?.trim()) {
+    if (!whatsappReadyForTracking(profile?.whatsapp)) {
       return {
         ok: false as const,
         message:
