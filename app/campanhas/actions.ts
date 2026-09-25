@@ -594,34 +594,34 @@ export async function scheduleCampaignDraft(
     throw new Error("Não foi possível agendar a campanha.");
   }
 
-  if (publishProviders.length > 0) {
-    const { error: jobError } = await supabase.from("jobs").insert({
-      user_id: user.id,
-      type: "social_publish",
-      priority: 40,
-      run_after: scheduledIso,
-      max_attempts: 3,
-      payload: buildSocialPublishJobPayload({
-        campaignId,
-        scheduledFor: scheduledIso,
-        providers: publishProviders,
-      }),
-    });
+  const { error: jobError } = await supabase.from("jobs").insert({
+    user_id: user.id,
+    type: "social_publish",
+    priority: publishProviders.length > 0 ? 40 : 80,
+    run_after: scheduledIso,
+    max_attempts: 3,
+    payload: buildSocialPublishJobPayload({
+      campaignId,
+      scheduledFor: scheduledIso,
+      providers: publishProviders,
+    }),
+  });
 
-    if (jobError) {
-      await supabase
-        .from("campaigns")
-        .update({
-          status: "ready",
-          scheduled_for: null,
-        })
-        .eq("id", campaignId)
-        .eq("user_id", user.id);
+  if (jobError) {
+    await supabase
+      .from("campaigns")
+      .update({
+        status: "ready",
+        scheduled_for: null,
+      })
+      .eq("id", campaignId)
+      .eq("user_id", user.id);
 
-      throw new Error(
-        "Não foi possível colocar a publicação na fila. O agendamento foi cancelado.",
-      );
-    }
+    throw new Error(
+      publishProviders.length > 0
+        ? "Não foi possível colocar a publicação na fila. O agendamento foi cancelado."
+        : "Não foi possível registrar o agendamento. Tente novamente.",
+    );
   }
 
   return {
