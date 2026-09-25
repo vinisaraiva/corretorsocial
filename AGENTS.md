@@ -15,7 +15,7 @@ Este arquivo contém regras obrigatórias para qualquer agente de IA ou desenvol
 - TypeScript estrito
 - Tailwind CSS
 - shadcn/ui quando componentes reutilizáveis forem necessários
-- Supabase será usado para Auth, PostgreSQL e Storage quando o backend for iniciado.
+- Supabase é o backend ativo para Auth, PostgreSQL e Storage.
 
 ### Não usar
 
