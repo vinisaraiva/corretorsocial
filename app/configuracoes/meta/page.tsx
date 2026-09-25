@@ -19,7 +19,7 @@ export default async function MetaConnectionPage() {
     redirect("/configuracoes?meta=expired");
   }
 
-  let pages;
+  let pages: Awaited<ReturnType<typeof listMetaPages>>;
 
   try {
     const pending = readPendingMetaOAuth(pendingValue);
