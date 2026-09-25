@@ -738,29 +738,10 @@ export function CampaignBuilder({
 
       setPersistedCampaignId(campaignId);
 
-      const paths = await renderAndUploadCampaignAssets({
+      const paths = await renderRegisteredAssets(
         campaignId,
-        ...config,
-      });
-
-      try {
-        await registerRenderedAssets({
-          campaignId,
-          provider: config.provider,
-          format: config.format,
-          paths,
-        });
-      } catch (registerError) {
-        await removeCampaignAssetPaths(paths);
-        throw registerError;
-      }
-
-      await cleanupCampaignAssetFolder({
-        campaignId,
-        provider: config.provider,
-        format: config.format,
-        keepPaths: paths,
-      });
+        config,
+      );
 
       const signedFiles = await createCampaignAssetSignedUrls(paths);
       setRenderedDownloads(signedFiles);
