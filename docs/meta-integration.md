@@ -76,6 +76,7 @@ Não rotacione essa chave sem antes recriptografar os tokens existentes.
 ```env
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
+APP_PUBLIC_URL=https://SEU-DOMINIO
 SOCIAL_TOKEN_ENCRYPTION_KEY=
 META_GRAPH_VERSION=v26.0
 ```
@@ -130,3 +131,21 @@ Isso evita duplicar variantes que já foram confirmadas em uma tentativa anterio
 10. testar um agendamento futuro;
 11. confirmar que um reagendamento torna o job antigo obsoleto;
 12. desconectar Meta e confirmar que novas publicações são bloqueadas.
+
+
+## Tracking de WhatsApp
+
+Para Facebook e para legendas do Instagram Feed/Carrossel, o worker cria um link curto por campanha/rede:
+
+```text
+https://SEU-DOMINIO/r/<codigo>
+```
+
+Ao abrir esse endereço, o Next.js:
+1. procura o código usando um client server-only com `service_role`;
+2. incrementa `tracking_links.clicks`;
+3. redireciona para `wa.me` com uma mensagem pré-preenchida.
+
+O Instagram não transforma URLs da legenda em links clicáveis. Portanto o tracking de Instagram via legenda tende a ter conversão menor e não deve ser interpretado como cobertura completa de todos os contatos vindos da rede.
+
+Story não recebe link na publicação automática porque a API usada aqui não cria sticker interativo de link.
