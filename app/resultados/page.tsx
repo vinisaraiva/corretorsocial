@@ -56,30 +56,18 @@ export default async function ResultsPage() {
   }
 
   const allCampaigns = campaignsResult.data ?? [];
-  const campaigns = allCampaigns
-    .filter(
-      (campaign) =>
-        campaign.status === "published" &&
-        Boolean(campaign.published_at) &&
-        new Date(campaign.published_at!).getTime() >= new Date(since).getTime(),
-    )
-    .sort(
-      (a, b) =>
-        new Date(b.published_at!).getTime() -
-        new Date(a.published_at!).getTime(),
-    );
   const trackingLinks = linksResult.data ?? [];
-  const campaignIds = campaigns.map((campaign) => campaign.id);
+  const allCampaignIds = allCampaigns.map((campaign) => campaign.id);
   const propertyIds = Array.from(
     new Set(allCampaigns.map((campaign) => campaign.property_id)),
   );
 
   const [variantsResult, propertiesResult] = await Promise.all([
-    campaignIds.length
+    allCampaignIds.length
       ? supabase
           .from("campaign_variants")
           .select("id,campaign_id,provider")
-          .in("campaign_id", campaignIds)
+          .in("campaign_id", allCampaignIds)
       : Promise.resolve({ data: [], error: null }),
     propertyIds.length
       ? supabase
@@ -95,6 +83,7 @@ export default async function ResultsPage() {
 
   const variants = variantsResult.data ?? [];
   const variantIds = variants.map((variant) => variant.id);
+
   const publicationsResult = variantIds.length
     ? await supabase
         .from("publications")
@@ -104,6 +93,7 @@ export default async function ResultsPage() {
         .in("campaign_variant_id", variantIds)
         .eq("status", "published")
         .gte("published_at", since)
+        .order("published_at", { ascending: false })
     : { data: [], error: null };
 
   if (publicationsResult.error) {
@@ -150,7 +140,6 @@ export default async function ResultsPage() {
   const bestCampaignEntry = Array.from(clicksByCampaign.entries()).sort(
     (a, b) => b[1] - a[1],
   )[0];
-
   const bestNetworkEntry = Array.from(clicksByProvider.entries()).sort(
     (a, b) => b[1] - a[1],
   )[0];
@@ -167,6 +156,7 @@ export default async function ResultsPage() {
       : 0;
 
   const publicationsByCampaign = new Map<string, number>();
+  const latestPublicationByCampaign = new Map<string, string>();
 
   for (const publication of publications) {
     const variant = variantById.get(publication.campaign_variant_id);
@@ -176,12 +166,47 @@ export default async function ResultsPage() {
       variant.campaign_id,
       (publicationsByCampaign.get(variant.campaign_id) ?? 0) + 1,
     );
+
+    if (publication.published_at) {
+      const current = latestPublicationByCampaign.get(variant.campaign_id);
+
+      if (
+        !current ||
+        new Date(publication.published_at).getTime() >
+          new Date(current).getTime()
+      ) {
+        latestPublicationByCampaign.set(
+          variant.campaign_id,
+          publication.published_at,
+        );
+      }
+    }
   }
+
+  const recentCampaigns = Array.from(latestPublicationByCampaign.entries())
+    .map(([campaignId, latestPublishedAt]) => ({
+      campaign: campaignById.get(campaignId),
+      latestPublishedAt,
+    }))
+    .filter(
+      (
+        item,
+      ): item is {
+        campaign: NonNullable<typeof item.campaign>;
+        latestPublishedAt: string;
+      } => Boolean(item.campaign),
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.latestPublishedAt).getTime() -
+        new Date(a.latestPublishedAt).getTime(),
+    )
+    .slice(0, 10);
 
   return (
     <AppShell
       title="Resultados"
-      description="Publicações dos últimos 30 dias e cliques acumulados nos links rastreáveis."
+      description="Publicações confirmadas dos últimos 30 dias e cliques acumulados nos links rastreáveis."
     >
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
@@ -222,10 +247,10 @@ export default async function ResultsPage() {
 
       <section className="app-card mt-6 overflow-hidden">
         <div className="border-b border-[#E4E7EC] p-5">
-          <h2 className="font-extrabold">Campanhas publicadas recentemente</h2>
+          <h2 className="font-extrabold">Campanhas com publicações recentes</h2>
         </div>
 
-        {campaigns.length === 0 ? (
+        {recentCampaigns.length === 0 ? (
           <div className="p-8 text-center">
             <div className="font-bold">Ainda não há publicações no período</div>
             <p className="mt-2 text-sm text-[#667085]">
@@ -240,7 +265,7 @@ export default async function ResultsPage() {
           </div>
         ) : (
           <div className="divide-y divide-[#E4E7EC]">
-            {campaigns.slice(0, 10).map((campaign) => {
+            {recentCampaigns.map(({ campaign, latestPublishedAt }) => {
               const clicks = clicksByCampaign.get(campaign.id) ?? 0;
               const publicationCount =
                 publicationsByCampaign.get(campaign.id) ?? 0;
@@ -258,9 +283,14 @@ export default async function ResultsPage() {
                     <div className="mt-1 text-sm text-[#667085]">
                       {campaign.marketing_angle ?? "Campanha publicada"}
                     </div>
+                    {campaign.status === "failed" ? (
+                      <div className="mt-1 text-xs font-semibold text-[#B42318]">
+                        Houve falha em outra publicação desta campanha.
+                      </div>
+                    ) : null}
                   </div>
                   <div className="text-sm text-[#667085]">
-                    {formatDate(campaign.published_at)}
+                    {formatDate(latestPublishedAt)}
                   </div>
                   <div className="text-sm text-[#667085]">
                     {publicationCount === 1
