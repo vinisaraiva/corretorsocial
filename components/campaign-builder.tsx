@@ -857,8 +857,8 @@ export function CampaignBuilder({
 
       setMessage(
         paths.length > 1
-          ? `${paths.length} páginas do carrossel geradas em PNG.`
-          : "Arquivo PNG gerado e salvo na campanha.",
+          ? `${paths.length} páginas do carrossel geradas em JPG.`
+          : "Arquivo JPG gerado e salvo na campanha.",
       );
     } catch (caught) {
       setError(
