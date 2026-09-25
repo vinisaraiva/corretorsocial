@@ -62,7 +62,7 @@ export async function completeMetaConnection(formData: FormData) {
   redirect(destination);
 }
 
-export async function disconnectMeta() {
+export async function disconnectFacebook() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -80,13 +80,42 @@ export async function disconnectMeta() {
       expires_at: null,
     })
     .eq("user_id", user.id)
-    .in("provider", ["facebook", "instagram"]);
+    .eq("provider", "facebook");
 
   if (error) {
-    console.error("Could not disconnect Meta accounts", error);
+    console.error("Could not disconnect Facebook", error);
     redirect("/configuracoes?meta=disconnect_failed");
   }
 
   revalidatePath("/configuracoes");
   redirect("/configuracoes?meta=disconnected");
+}
+
+export async function disconnectInstagram() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { error } = await supabase
+    .from("social_connections")
+    .update({
+      status: "disconnected",
+      token_secret_ref: null,
+      expires_at: null,
+    })
+    .eq("user_id", user.id)
+    .eq("provider", "instagram");
+
+  if (error) {
+    console.error("Could not disconnect Instagram", error);
+    redirect("/configuracoes?instagram=disconnect_failed");
+  }
+
+  revalidatePath("/configuracoes");
+  redirect("/configuracoes?instagram=disconnected");
 }
