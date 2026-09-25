@@ -52,29 +52,6 @@ export async function persistMetaPageConnection({
     },
   ];
 
-  if (page.instagram_business_account?.id) {
-    const instagram = page.instagram_business_account;
-
-    rows.push({
-      user_id: userId,
-      provider: "instagram",
-      external_account_id: instagram.id,
-      display_name: instagram.username
-        ? `@${instagram.username}`
-        : instagram.name || "Instagram",
-      status: "connected",
-      token_secret_ref: encryptSocialSecret(page.access_token),
-      expires_at: null,
-      metadata: {
-        source: "meta_facebook_login",
-        facebook_page_id: page.id,
-        facebook_page_name: page.name,
-        instagram_username: instagram.username ?? null,
-        user_token_expires_at: pending.expiresAt,
-      },
-    });
-  }
-
   const { error: upsertError } = await supabase
     .from("social_connections")
     .upsert(rows, {
@@ -88,6 +65,5 @@ export async function persistMetaPageConnection({
   return {
     facebookPageId: page.id,
     facebookPageName: page.name,
-    instagramConnected: Boolean(page.instagram_business_account?.id),
   };
 }
