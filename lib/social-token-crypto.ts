@@ -67,11 +67,17 @@ export function decryptSocialSecret(value: string) {
   ]).toString("utf8");
 }
 
-export function socialTokenEncryptionConfigured() {
+export function socialTokenEncryptionConfigurationIssue() {
   try {
     encryptionKey();
-    return true;
-  } catch {
-    return false;
+    return null;
+  } catch (error) {
+    return error instanceof Error
+      ? error.message
+      : "SOCIAL_TOKEN_ENCRYPTION_KEY inválida.";
   }
+}
+
+export function socialTokenEncryptionConfigured() {
+  return socialTokenEncryptionConfigurationIssue() === null;
 }
