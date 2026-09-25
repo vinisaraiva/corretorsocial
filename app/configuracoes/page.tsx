@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 const metaNotices: Record<string, string> = {
-  connected: "Facebook e Instagram foram atualizados com sucesso.",
+  connected:
+    "Facebook conectado com sucesso. Se havia um Instagram profissional vinculado à Página, ele também foi conectado.",
   disconnected: "A conexão com a Meta foi removida.",
   no_page:
     "Facebook autorizado, mas não encontramos nenhuma Página disponível para publicação automática. Você pode continuar usando o Corretor Social e conectar uma Página depois.",
