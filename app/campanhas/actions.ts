@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -58,6 +59,33 @@ const variants = [
   { key: "google", provider: "google_business", format: "post" },
 ] as const;
 
+function renderSignature(value: unknown) {
+  return createHash("sha256")
+    .update(JSON.stringify(value))
+    .digest("hex");
+}
+
+function metadataObject(value: unknown) {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function renderedPathsFromVariant(variant: {
+  rendered_asset_path: string | null;
+  render_metadata: unknown;
+}) {
+  const metadata = metadataObject(variant.render_metadata);
+  const paths = Array.isArray(metadata.rendered_asset_paths)
+    ? metadata.rendered_asset_paths.filter(
+        (path): path is string => typeof path === "string",
+      )
+    : [];
+
+  if (variant.rendered_asset_path) paths.push(variant.rendered_asset_path);
+  return Array.from(new Set(paths));
+}
+
 async function persistCampaign(input: CampaignDraftInput) {
   const supabase = await createClient();
 
@@ -69,12 +97,21 @@ async function persistCampaign(input: CampaignDraftInput) {
     redirect("/login");
   }
 
-  const { data: property } = await supabase
-    .from("properties")
-    .select("id")
-    .eq("id", input.propertyId)
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const [{ data: property }, { data: profile }] = await Promise.all([
+    supabase
+      .from("properties")
+      .select(
+        "id,title,purpose,price,public_location,city,bedrooms,suites,bathrooms,parking,area_m2,highlights,description",
+      )
+      .eq("id", input.propertyId)
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("professional_name,logo_path,primary_color")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+  ]);
 
   if (!property) {
     throw new Error("O imóvel não pertence a esta conta.");
@@ -179,6 +216,7 @@ async function persistCampaign(input: CampaignDraftInput) {
     headline: string | null;
     caption: string | null;
     cta: string | null;
+    rendered_asset_path?: string | null;
     render_metadata: {
       visual_style: string;
       source: string;
@@ -187,6 +225,10 @@ async function persistCampaign(input: CampaignDraftInput) {
       carousel_type?: string;
       slide_count?: number;
       media_ids?: string[];
+      render_signature?: string;
+      rendered_asset_paths?: string[];
+      rendered_at?: string;
+      render_source?: string;
     };
   }> = variants.map((variant) => ({
     campaign_id: campaignId!,
@@ -266,14 +308,122 @@ async function persistCampaign(input: CampaignDraftInput) {
     });
   }
 
+  const { data: existingVariants, error: existingVariantsError } =
+    await supabase
+      .from("campaign_variants")
+      .select("provider,format,render_metadata,rendered_asset_path")
+      .eq("campaign_id", campaignId!);
+
+  if (existingVariantsError) {
+    throw new Error("Não foi possível verificar as versões atuais da campanha.");
+  }
+
+  const existingByKey = new Map(
+    (existingVariants ?? []).map((variant) => [
+      `${variant.provider}:${variant.format}`,
+      variant,
+    ]),
+  );
+
+  const renderContext = {
+    property: {
+      title: property.title,
+      purpose: property.purpose,
+      price: property.price,
+      public_location: property.public_location,
+      city: property.city,
+      bedrooms: property.bedrooms,
+      suites: property.suites,
+      bathrooms: property.bathrooms,
+      parking: property.parking,
+      area_m2: property.area_m2,
+      highlights: property.highlights,
+      description: property.description,
+    },
+    brand: {
+      professional_name: profile?.professional_name ?? null,
+      logo_path: profile?.logo_path ?? null,
+      primary_color: profile?.primary_color ?? null,
+    },
+  };
+
+  const stalePaths = new Set<string>();
+
+  const rowsWithRenderState = variantRows.map((row) => {
+    const key = `${row.provider}:${row.format}`;
+    const existing = existingByKey.get(key);
+    const existingMetadata = metadataObject(existing?.render_metadata);
+
+    const signature = renderSignature({
+      provider: row.provider,
+      format: row.format,
+      headline: row.headline,
+      cta: row.cta,
+      visual_style: row.render_metadata.visual_style,
+      subheadline: row.render_metadata.subheadline,
+      block_position: row.render_metadata.block_position,
+      carousel_type: row.render_metadata.carousel_type ?? null,
+      slide_count: row.render_metadata.slide_count ?? null,
+      media_ids: row.render_metadata.media_ids ?? [],
+      render_context: renderContext,
+    });
+
+    const sameRender =
+      existingMetadata.render_signature === signature &&
+      Boolean(existing?.rendered_asset_path);
+
+    if (!sameRender && existing) {
+      renderedPathsFromVariant(existing).forEach((path) => {
+        if (path.startsWith(`${user.id}/`)) stalePaths.add(path);
+      });
+    }
+
+    const preservedPaths =
+      sameRender && Array.isArray(existingMetadata.rendered_asset_paths)
+        ? existingMetadata.rendered_asset_paths.filter(
+            (path): path is string => typeof path === "string",
+          )
+        : undefined;
+
+    return {
+      ...row,
+      rendered_asset_path: sameRender
+        ? existing?.rendered_asset_path ?? null
+        : null,
+      render_metadata: {
+        ...row.render_metadata,
+        render_signature: signature,
+        ...(sameRender && preservedPaths
+          ? { rendered_asset_paths: preservedPaths }
+          : {}),
+        ...(sameRender && typeof existingMetadata.rendered_at === "string"
+          ? { rendered_at: existingMetadata.rendered_at }
+          : {}),
+        ...(sameRender && typeof existingMetadata.render_source === "string"
+          ? { render_source: existingMetadata.render_source }
+          : {}),
+      },
+    };
+  });
+
   const { error: variantsError } = await supabase
     .from("campaign_variants")
-    .upsert(variantRows, {
+    .upsert(rowsWithRenderState, {
       onConflict: "campaign_id,provider,format",
     });
 
   if (variantsError) {
     throw new Error("A campanha foi criada, mas não conseguimos salvar suas versões.");
+  }
+
+  if (stalePaths.size > 0) {
+    const { error: cleanupError } = await supabase.storage
+      .from("campaign-assets")
+      .remove(Array.from(stalePaths));
+
+    if (cleanupError) {
+      console.error("Could not remove stale rendered campaign assets", cleanupError);
+    }
   }
 
   return campaignId;
