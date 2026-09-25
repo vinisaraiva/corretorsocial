@@ -65,6 +65,7 @@ import {
   removeCampaignAssetPaths,
   renderAndUploadCampaignAssets,
 } from "@/lib/campaign-renderer";
+import type { PublishProvider } from "@/lib/publication-plan";
 import type { Property, SocialChannel } from "@/types";
 
 const allChannels: { id: SocialChannel; label: string }[] = [
@@ -91,6 +92,12 @@ function toLocalDateTimeInput(value?: string | null) {
   return local.toISOString().slice(0, 16);
 }
 
+type SocialConnectionSummary = {
+  provider: "instagram" | "facebook" | "tiktok" | "google_business";
+  status: string;
+  display_name: string | null;
+};
+
 type InitialCampaign = {
   id: string;
   visualStyle: string;
@@ -99,6 +106,7 @@ type InitialCampaign = {
   cta: string;
   status: string;
   scheduledFor?: string | null;
+  publishProviders?: PublishProvider[];
   captions?: Partial<Record<SocialChannel, string>>;
   instagramStory?: {
     templateId: string;
@@ -139,13 +147,23 @@ export function CampaignBuilder({
   brand,
   campaignData,
   mediaAnalysisJobId,
+  socialConnections = [],
 }: {
   propertyData: Property;
   brand: CampaignBrand;
   campaignData?: InitialCampaign;
   mediaAnalysisJobId?: string | null;
+  socialConnections?: SocialConnectionSummary[];
 }) {
   const property = propertyData;
+  const connectedMetaProviders = socialConnections
+    .filter(
+      (connection) =>
+        connection.status === "connected" &&
+        (connection.provider === "instagram" ||
+          connection.provider === "facebook"),
+    )
+    .map((connection) => connection.provider);
   const brandColor = safeBrandColor(brand.primaryColor);
 
   const recommendation = useMemo(
@@ -250,6 +268,11 @@ export function CampaignBuilder({
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduledFor, setScheduledFor] = useState(
     toLocalDateTimeInput(campaignData?.scheduledFor),
+  );
+  const [publishProviders, setPublishProviders] = useState<PublishProvider[]>(
+    () =>
+      campaignData?.publishProviders ??
+      Array.from(new Set<PublishProvider>(connectedMetaProviders)),
   );
   const [status, setStatus] = useState(campaignData?.status ?? "draft");
   const [working, setWorking] = useState<
@@ -418,6 +441,15 @@ export function CampaignBuilder({
     markChanged();
   }
 
+  function togglePublishProvider(provider: PublishProvider) {
+    setPublishProviders((current) =>
+      current.includes(provider)
+        ? current.filter((item) => item !== provider)
+        : [...current, provider],
+    );
+    markChanged();
+  }
+
   function draftInput(): CampaignDraftInput {
     return {
       campaignId: persistedCampaignId,
@@ -426,6 +458,7 @@ export function CampaignBuilder({
       headline,
       subheadline,
       cta,
+      publishProviders,
       captions,
       instagramStory: {
         templateId: storyTemplateId,
@@ -609,8 +642,10 @@ export function CampaignBuilder({
         required.map((item) => `${item.provider}:${item.format}`),
       );
 
-      const configs = staticRenderConfigs().filter((config) =>
-        requiredKeys.has(`${config.provider}:${config.format}`),
+      const configs = staticRenderConfigs().filter(
+        (config) =>
+          publishProviders.includes(config.provider) &&
+          requiredKeys.has(`${config.provider}:${config.format}`),
       );
 
       for (const [index, config] of configs.entries()) {
@@ -640,13 +675,19 @@ export function CampaignBuilder({
       setScheduleOpen(false);
       setDirty(false);
 
-      if (configs.length > 0) {
+      const queuedProviders = scheduleResult.queuedProviders;
+
+      if (queuedProviders.length === 0) {
         setMessage(
-          `Campanha agendada e ${configs.length} formato${configs.length === 1 ? "" : "s"} atualizado${configs.length === 1 ? "" : "s"} automaticamente.`,
+          `Agendamento salvo para ${new Date(scheduledFor).toLocaleString("pt-BR")}. Nenhuma rede foi selecionada para publicação automática.`,
+        );
+      } else if (configs.length > 0) {
+        setMessage(
+          `Campanha agendada para publicação e ${configs.length} formato${configs.length === 1 ? "" : "s"} atualizado${configs.length === 1 ? "" : "s"} automaticamente.`,
         );
       } else {
         setMessage(
-          `Campanha agendada para ${new Date(scheduledFor).toLocaleString("pt-BR")}. Os arquivos já estavam atualizados.`,
+          `Campanha agendada para publicação em ${new Date(scheduledFor).toLocaleString("pt-BR")}. Os arquivos já estavam atualizados.`,
         );
       }
     } catch (caught) {
@@ -1441,10 +1482,70 @@ export function CampaignBuilder({
         <section className="app-card p-5 sm:p-6">
           <h3 className="text-lg font-extrabold">Agendar campanha</h3>
           <p className="mt-1 text-sm text-[#667085]">
-            Ao confirmar, o sistema salva a campanha e prepara automaticamente
-            os arquivos finais que estiverem desatualizados. A publicação nas
-            redes será liberada quando as conexões sociais estiverem ativas.
+            Escolha quando publicar e em quais redes conectadas. Se nenhuma rede
+            for marcada, o agendamento fica apenas no calendário.
           </p>
+
+          <div className="mt-5">
+            <div className="text-sm font-extrabold">Onde publicar</div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {(["instagram", "facebook"] as const).map((provider) => {
+                const connection = socialConnections.find(
+                  (item) =>
+                    item.provider === provider && item.status === "connected",
+                );
+                const connected = Boolean(connection);
+                const selected = publishProviders.includes(provider);
+
+                return (
+                  <label
+                    key={provider}
+                    className={`flex min-h-20 items-start gap-3 rounded-xl border p-4 ${
+                      connected
+                        ? "border-[#D0D5DD] bg-white"
+                        : "border-[#EAECF0] bg-[#F9FAFB]"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected && connected}
+                      disabled={!connected || working !== null}
+                      onChange={() => togglePublishProvider(provider)}
+                      className="mt-1 h-5 w-5 accent-[#176B5B]"
+                    />
+                    <span className="min-w-0">
+                      <span className="block font-bold">
+                        {provider === "instagram" ? "Instagram" : "Facebook"}
+                      </span>
+                      <span className="mt-1 block text-xs leading-5 text-[#667085]">
+                        {connected
+                          ? connection?.display_name ||
+                            "Conta conectada"
+                          : "Não conectado"}
+                      </span>
+                      {provider === "instagram" && connected ? (
+                        <span className="mt-1 block text-[11px] leading-4 text-[#667085]">
+                          Inclui Feed, Story e Carrossel quando disponível.
+                        </span>
+                      ) : null}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+
+            {connectedMetaProviders.length === 0 ? (
+              <p className="mt-3 text-xs leading-5 text-[#667085]">
+                Nenhuma rede Meta está conectada. Você ainda pode salvar o
+                horário no calendário ou conectar Facebook/Instagram em
+                Configurações.
+              </p>
+            ) : publishProviders.length === 0 ? (
+              <p className="mt-3 text-xs font-semibold text-[#B54708]">
+                Nenhuma rede selecionada: não haverá publicação automática.
+              </p>
+            ) : null}
+          </div>
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
             <label className="flex-1 text-sm font-bold">
