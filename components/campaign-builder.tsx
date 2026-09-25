@@ -1477,8 +1477,9 @@ export function CampaignBuilder({
         <section className="app-card p-5 sm:p-6">
           <h3 className="text-lg font-extrabold">Agendar campanha</h3>
           <p className="mt-1 text-sm text-[#667085]">
-            O agendamento já é salvo. A publicação automática começa quando o
-            worker e as conexões sociais estiverem ativos.
+            Ao confirmar, o sistema salva a campanha e prepara automaticamente
+            os arquivos finais que estiverem desatualizados. A publicação nas
+            redes será liberada quando as conexões sociais estiverem ativas.
           </p>
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
