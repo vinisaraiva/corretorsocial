@@ -657,11 +657,26 @@ export function CampaignBuilder({
     try {
       const id = await saveCampaignDraft(draftInput());
       setPersistedCampaignId(id);
+
+      const wasScheduled = status === "scheduled";
+      const renderedCount = wasScheduled
+        ? await prepareSelectedPublishAssets(id)
+        : 0;
+
       setStatus((current) =>
         current === "scheduled" ? "scheduled" : "ready",
       );
       setDirty(false);
-      setMessage("Campanha salva.");
+
+      if (wasScheduled && publishProviders.length > 0) {
+        setMessage(
+          renderedCount > 0
+            ? `Campanha agendada atualizada. ${renderedCount} formato${renderedCount === 1 ? "" : "s"} final${renderedCount === 1 ? "" : "is"} regenerado${renderedCount === 1 ? "" : "s"}.`
+            : "Campanha agendada atualizada. Os arquivos finais já estavam prontos.",
+        );
+      } else {
+        setMessage("Campanha salva.");
+      }
     } catch (caught) {
       setError(
         caught instanceof Error
