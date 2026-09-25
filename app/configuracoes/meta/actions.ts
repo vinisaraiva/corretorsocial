@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { META_OAUTH_PENDING_COOKIE, listMetaPages } from "@/lib/meta";
+import {
+  META_OAUTH_PENDING_COOKIE,
+  listMetaPages,
+  metaPageCanPublish,
+} from "@/lib/meta";
 import { readPendingMetaOAuth } from "@/lib/meta-oauth-session";
 import { encryptSocialSecret } from "@/lib/social-token-crypto";
 import { createClient } from "@/lib/supabase/server";
@@ -37,6 +41,12 @@ export async function completeMetaConnection(formData: FormData) {
 
       if (!page) {
         throw new Error("A Página selecionada não está mais disponível.");
+      }
+
+      if (!metaPageCanPublish(page)) {
+        throw new Error(
+          "Esta conta não tem permissão CREATE_CONTENT para a Página selecionada.",
+        );
       }
 
       const { error: disconnectError } = await supabase
