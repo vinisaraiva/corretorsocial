@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import {
   ensureCampaignVariant,
+  getCampaignRenderRequirements,
   registerRenderedAssets,
   saveCampaignDraft,
   scheduleCampaignDraft,
@@ -477,6 +478,90 @@ export function CampaignBuilder({
       },
       blockPositions,
     };
+  }
+
+  type StaticRenderConfig = {
+    provider: "instagram" | "facebook" | "google_business";
+    format: string;
+    selector: string;
+    width: number;
+    height: number;
+  };
+
+  async function renderRegisteredAssets(
+    campaignId: string,
+    config: StaticRenderConfig,
+  ) {
+    const paths = await renderAndUploadCampaignAssets({
+      campaignId,
+      ...config,
+    });
+
+    try {
+      await registerRenderedAssets({
+        campaignId,
+        provider: config.provider,
+        format: config.format,
+        paths,
+      });
+    } catch (registerError) {
+      await removeCampaignAssetPaths(paths);
+      throw registerError;
+    }
+
+    await cleanupCampaignAssetFolder({
+      campaignId,
+      provider: config.provider,
+      format: config.format,
+      keepPaths: paths,
+    });
+
+    return paths;
+  }
+
+  function staticRenderConfigs(): StaticRenderConfig[] {
+    const configs: StaticRenderConfig[] = [
+      {
+        provider: "instagram",
+        format: "feed_4x5",
+        selector: '[data-render-target="schedule-instagram-feed"]',
+        width: 1080,
+        height: 1350,
+      },
+      {
+        provider: "instagram",
+        format: "story_9x16",
+        selector: '[data-render-target="schedule-story"]',
+        width: 1080,
+        height: 1920,
+      },
+      {
+        provider: "facebook",
+        format: "feed",
+        selector: '[data-render-target="schedule-facebook"]',
+        width: 1080,
+        height: 1350,
+      },
+      {
+        provider: "google_business",
+        format: "post",
+        selector: '[data-render-target="schedule-google"]',
+        width: 1080,
+        height: 1350,
+      },
+    ];
+
+    if (carouselEligible) {
+      configs.splice(2, 0, {
+        provider: "instagram",
+        format: "carousel_4x5",
+        selector: '[data-render-carousel-slide="schedule-carousel"]',
+        width: 1080,
+        height: 1350,
+      });
+    }
+
+    return configs;
   }
 
   async function save() {
