@@ -7,22 +7,22 @@ export const dynamic = "force-dynamic";
 
 const metaNotices: Record<string, string> = {
   connected: "Facebook conectado com sucesso.",
-  disconnected: "A conexão com a Meta foi removida.",
+  disconnected: "A conexão com o Facebook foi removida.",
   no_page:
     "Facebook autorizado, mas não encontramos nenhuma Página disponível para publicação automática. Você pode continuar usando o Corretor Social e conectar uma Página depois.",
   no_publishable_page:
     "Encontramos Página(s) na sua conta, mas nenhuma está liberada para publicação automática pelo Corretor Social.",
   missing_config:
-    "A integração Meta ainda precisa das variáveis do aplicativo e da chave de criptografia no servidor.",
-  denied: "A autorização da Meta foi cancelada ou negada.",
+    "A integração Facebook ainda precisa das variáveis do aplicativo e da chave de criptografia no servidor.",
+  denied: "A autorização do Facebook foi cancelada ou negada.",
   invalid_state:
     "A autorização expirou ou não pôde ser validada. Inicie a conexão novamente.",
   expired:
     "A sessão temporária da Meta expirou. Inicie a conexão novamente.",
   failed:
-    "Não foi possível concluir a conexão com a Meta. Verifique o aplicativo e tente novamente.",
+    "Não foi possível concluir a conexão com o Facebook. Verifique o aplicativo e tente novamente.",
   disconnect_failed:
-    "Não foi possível remover a conexão com a Meta neste momento.",
+    "Não foi possível remover a conexão com o Facebook neste momento.",
 };
 
 const instagramNotices: Record<string, string> = {
