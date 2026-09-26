@@ -121,6 +121,8 @@ export default async function CampaignDetailPage({
         modelId: string;
         headline: string;
         cta: string;
+        finalCardDecoration?: string;
+        finalCardTheme?: string;
       }
     | undefined;
 
@@ -257,6 +259,14 @@ export default async function CampaignDetailPage({
               : "presentation",
         headline: variant.headline ?? headline,
         cta: variant.cta ?? cta,
+        finalCardDecoration:
+          typeof variantMetadata?.final_card_decoration === "string"
+            ? variantMetadata.final_card_decoration
+            : undefined,
+        finalCardTheme:
+          typeof variantMetadata?.final_card_theme === "string"
+            ? variantMetadata.final_card_theme
+            : undefined,
       };
       continue;
     }
