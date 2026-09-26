@@ -85,7 +85,7 @@ export function CreativePreview({
               <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/75">
                 {locality}
               </div>
-              <div className="mt-2 text-3xl font-black leading-[1.05]">
+              <div className="font-display mt-2 text-3xl font-black leading-[0.98]">
                 {headline}
               </div>
               <div className="mt-4 inline-flex rounded-full bg-white/95 px-3 py-1.5 text-sm font-black text-[#18202A]">
@@ -99,7 +99,7 @@ export function CreativePreview({
           <>
             <div className={`absolute top-4 w-[78%] ${sideClass} rounded-2xl bg-white/95 p-4 shadow-sm backdrop-blur`}>
               <BrandMark brand={brand} compact />
-              <div className="mt-3 text-2xl font-black leading-tight text-[#18202A]">
+              <div className="font-display mt-3 text-2xl font-black leading-[1.02] text-[#18202A]">
                 {headline}
               </div>
               <div className="mt-1.5 text-sm leading-5 text-[#667085]">
@@ -124,7 +124,7 @@ export function CreativePreview({
               {property.purpose}
             </div>
             <div className={`absolute bottom-4 w-[78%] ${sideClass} rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur`}>
-              <div className="text-xl font-black leading-tight text-[#18202A]">
+              <div className="font-display text-xl font-black leading-[1.02] text-[#18202A]">
                 {headline}
               </div>
               <div
@@ -147,7 +147,7 @@ export function CreativePreview({
             </div>
             <div className="absolute inset-x-0 bottom-0">
               <div className="bg-black/72 px-5 py-4 text-white backdrop-blur-sm">
-                <div className="text-xl font-black leading-tight">
+                <div className="font-display text-xl font-black leading-[1.02]">
                   {headline}
                 </div>
                 <FeatureRow features={features} inverse />
@@ -172,7 +172,7 @@ export function CreativePreview({
                   {price}
                 </span>
               </div>
-              <div className="mt-3 text-xl font-black leading-tight">
+              <div className="font-display mt-3 text-xl font-black leading-[1.02]">
                 {headline}
               </div>
               <div className="mt-1 text-sm text-[#667085]">
@@ -199,7 +199,7 @@ export function CreativePreview({
               <BrandMark brand={brand} compact />
             </div>
             <div className={`absolute bottom-5 w-[78%] ${resolvedPosition === "right" ? "right-5 left-auto text-right" : "left-5 right-auto text-left"} rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur`}>
-              <div className="text-2xl font-black leading-tight text-[#18202A]">
+              <div className="font-display text-2xl font-black leading-[1.02] text-[#18202A]">
                 {headline}
               </div>
               <div className="mt-1 text-sm text-[#667085]">
