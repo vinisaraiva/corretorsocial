@@ -190,7 +190,7 @@ export function VerticalCreativePreview({
               <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/75">
                 {locality}
               </div>
-              <div className="mt-2 text-3xl font-black leading-[1.02]">
+              <div className="font-display mt-2 text-3xl font-black leading-[0.98]">
                 {headline}
               </div>
               {subheadline && (
@@ -217,7 +217,7 @@ export function VerticalCreativePreview({
               {property.purpose}
             </div>
             <div className={`absolute bottom-[17%] ${blockPlacement} rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur`}>
-              <div className="text-xl font-black leading-tight text-[#18202A]">
+              <div className="font-display text-xl font-black leading-[1.02] text-[#18202A]">
                 {headline}
               </div>
               <div
@@ -244,7 +244,7 @@ export function VerticalCreativePreview({
               Oportunidade
             </div>
             <div className={`absolute bottom-[18%] ${blockPlacement} text-white`}>
-              <div className="text-2xl font-black leading-tight">{headline}</div>
+              <div className="font-display text-2xl font-black leading-[1.02]">{headline}</div>
               <FeaturePills items={verticalFeatures(property, 2)} inverse />
               <div className="mt-4 text-4xl font-black leading-none text-[#FDB022]">
                 {price}
@@ -269,7 +269,7 @@ export function VerticalCreativePreview({
               <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#667085]">
                 {locality}
               </div>
-              <div className="mt-2 text-2xl font-black leading-tight text-[#18202A]">
+              <div className="font-display mt-2 text-2xl font-black leading-[1.02] text-[#18202A]">
                 {headline}
               </div>
               {subheadline && (
