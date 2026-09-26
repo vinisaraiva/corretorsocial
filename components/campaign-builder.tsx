@@ -260,13 +260,17 @@ export function CampaignBuilder({
     useState<CarouselFinalCardDecoration>(() =>
       normalizeCarouselFinalCardDecoration(
         campaignData?.instagramCarousel?.finalCardDecoration ??
-          recommendation.instagramCarousel.finalCardDecoration,
+          (campaignData?.id
+            ? "curves"
+            : recommendation.instagramCarousel.finalCardDecoration),
       ),
     );
   const [carouselFinalCardTheme] = useState<CarouselFinalCardTheme>(() =>
     normalizeCarouselFinalCardTheme(
       campaignData?.instagramCarousel?.finalCardTheme ??
-        recommendation.instagramCarousel.finalCardTheme,
+        (campaignData?.id
+          ? "brand"
+          : recommendation.instagramCarousel.finalCardTheme),
     ),
   );
   const [blockPositions, setBlockPositions] = useState({
