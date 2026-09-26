@@ -17,6 +17,8 @@ import type { Property } from "@/types";
 import type { CampaignTemplateId } from "@/lib/campaign-templates";
 import {
   getCarouselModel,
+  type CarouselFinalCardDecoration,
+  type CarouselFinalCardTheme,
   type CarouselModelId,
 } from "@/lib/carousel-templates";
 import { formatBRL } from "@/lib/utils";
@@ -88,6 +90,160 @@ function brandAccent(hex: string) {
 
   const warm = r > g * 1.12 && r > b * 1.12;
   return warm ? "#163B4D" : "#F6A623";
+}
+
+function finalCardPalette(
+  theme: CarouselFinalCardTheme,
+  brandColor: string,
+) {
+  if (theme === "dark") {
+    return {
+      background: "#17384A",
+      foreground: "#FFFFFF",
+      detail:
+        contrastText(brandColor) === "#FFFFFF"
+          ? brandAccent(brandColor)
+          : brandColor,
+      contactBackground: "rgba(255,255,255,0.10)",
+      contactBorder: "rgba(255,255,255,0.20)",
+      iconBackground: "rgba(255,255,255,0.14)",
+      muted: "rgba(255,255,255,0.72)",
+    };
+  }
+
+  if (theme === "light") {
+    return {
+      background: "#F3F0E8",
+      foreground: "#18202A",
+      detail: brandColor,
+      contactBackground: "#FFFFFF",
+      contactBorder: "rgba(24,32,42,0.10)",
+      iconBackground: "rgba(24,32,42,0.06)",
+      muted: "rgba(24,32,42,0.64)",
+    };
+  }
+
+  const foreground = contrastText(brandColor);
+
+  return {
+    background: brandColor,
+    foreground,
+    detail: brandAccent(brandColor),
+    contactBackground:
+      foreground === "#FFFFFF"
+        ? "rgba(255,255,255,0.12)"
+        : "rgba(255,255,255,0.72)",
+    contactBorder:
+      foreground === "#FFFFFF"
+        ? "rgba(255,255,255,0.22)"
+        : "rgba(24,32,42,0.10)",
+    iconBackground:
+      foreground === "#FFFFFF"
+        ? "rgba(255,255,255,0.16)"
+        : "rgba(24,32,42,0.07)",
+    muted:
+      foreground === "#FFFFFF"
+        ? "rgba(255,255,255,0.72)"
+        : "rgba(24,32,42,0.64)",
+  };
+}
+
+function FinalCardDecoration({
+  variant,
+  detail,
+  foreground,
+}: {
+  variant: CarouselFinalCardDecoration;
+  detail: string;
+  foreground: string;
+}) {
+  const lineColor =
+    foreground === "#FFFFFF"
+      ? "rgba(255,255,255,0.42)"
+      : "rgba(24,32,42,0.22)";
+
+  if (variant === "lines") {
+    return (
+      <>
+        <div
+          className="absolute left-8 top-8 h-10 w-2 rounded-sm"
+          style={{ backgroundColor: detail }}
+        />
+        <div className="absolute right-7 top-9 space-y-2">
+          <div className="h-px w-20" style={{ backgroundColor: lineColor }} />
+          <div className="ml-5 h-px w-14" style={{ backgroundColor: lineColor }} />
+          <div className="ml-10 h-px w-8" style={{ backgroundColor: detail }} />
+        </div>
+        <div
+          className="absolute bottom-8 right-8 h-px w-28"
+          style={{ backgroundColor: lineColor }}
+        />
+      </>
+    );
+  }
+
+  if (variant === "frame") {
+    return (
+      <>
+        <div
+          className="absolute left-7 top-7 h-14 w-px"
+          style={{ backgroundColor: detail }}
+        />
+        <div
+          className="absolute left-7 top-7 h-px w-16"
+          style={{ backgroundColor: detail }}
+        />
+        <div
+          className="absolute bottom-7 right-7 h-14 w-px"
+          style={{ backgroundColor: lineColor }}
+        />
+        <div
+          className="absolute bottom-7 right-7 h-px w-16"
+          style={{ backgroundColor: lineColor }}
+        />
+      </>
+    );
+  }
+
+  if (variant === "blocks") {
+    return (
+      <>
+        <div
+          className="absolute right-0 top-0 h-24 w-16"
+          style={{ backgroundColor: detail }}
+        />
+        <div
+          className="absolute right-16 top-0 h-10 w-10"
+          style={{ backgroundColor: lineColor }}
+        />
+        <div
+          className="absolute bottom-0 left-0 h-16 w-24"
+          style={{ backgroundColor: detail }}
+        />
+        <div
+          className="absolute bottom-16 left-0 h-8 w-8"
+          style={{ backgroundColor: lineColor }}
+        />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div
+        className="absolute -right-7 -top-10 h-36 w-36 rounded-bl-[92px]"
+        style={{ backgroundColor: detail }}
+      />
+      <div
+        className="absolute -bottom-14 -left-12 h-28 w-28 rounded-tr-[72px]"
+        style={{ backgroundColor: detail }}
+      />
+      <div
+        className="absolute bottom-8 right-7 h-px w-24"
+        style={{ backgroundColor: lineColor }}
+      />
+    </>
+  );
 }
 
 function priceText(property: Property) {
@@ -389,6 +545,8 @@ function SlideArtwork({
   brand,
   templateId,
   modelId,
+  finalCardDecoration,
+  finalCardTheme,
   index,
   total,
   exportMode = false,
@@ -397,6 +555,8 @@ function SlideArtwork({
   brand: CarouselBrand;
   templateId: CampaignTemplateId;
   modelId: CarouselModelId;
+  finalCardDecoration: CarouselFinalCardDecoration;
+  finalCardTheme: CarouselFinalCardTheme;
   index: number;
   total: number;
   exportMode?: boolean;
@@ -409,6 +569,7 @@ function SlideArtwork({
   const factsLayout =
     slide.kind === "facts" ? factSlideImageHeight(slide, modelId) : null;
   const directSale = modelId === "direct-sale";
+  const finalPalette = finalCardPalette(finalCardTheme, brandColor);
 
   return (
     <div
@@ -562,27 +723,18 @@ function SlideArtwork({
       {slide.kind === "cta" && (
         <div
           className="absolute inset-0 overflow-hidden"
-          style={{ backgroundColor: accent, color: accentText }}
+          style={{
+            backgroundColor: finalPalette.background,
+            color: finalPalette.foreground,
+          }}
         >
-          <div
-            className="absolute -right-7 -top-10 h-36 w-36 rounded-bl-[92px]"
-            style={{ backgroundColor: brandAccent(accent) }}
-          />
-          <div
-            className="absolute -bottom-9 -left-8 h-28 w-28 rounded-tr-[72px]"
-            style={{ backgroundColor: brandAccent(accent) }}
-          />
-          <div
-            className="absolute bottom-8 right-7 h-px w-24"
-            style={{
-              backgroundColor:
-                accentText === "#FFFFFF"
-                  ? "rgba(255,255,255,0.46)"
-                  : "rgba(24,32,42,0.26)",
-            }}
+          <FinalCardDecoration
+            variant={finalCardDecoration}
+            detail={finalPalette.detail}
+            foreground={finalPalette.foreground}
           />
 
-          <div className="relative flex h-full flex-col px-8 pb-8 pt-8 text-left">
+          <div className="relative flex h-full flex-col px-8 pb-7 pt-8 text-left">
             <div className="flex min-h-12 items-start justify-between gap-5">
               {brand.logoUrl ? (
                 <div className="inline-flex rounded-md bg-white px-3 py-2 shadow-sm">
@@ -593,14 +745,17 @@ function SlideArtwork({
                   />
                 </div>
               ) : (
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] opacity-80">
+                <div
+                  className="text-[10px] font-black uppercase tracking-[0.18em]"
+                  style={{ color: finalPalette.muted }}
+                >
                   {brand.professionalName}
                 </div>
               )}
 
               <div
                 className="mt-1 h-8 w-2 rounded-sm"
-                style={{ backgroundColor: brandAccent(accent) }}
+                style={{ backgroundColor: finalPalette.detail }}
               />
             </div>
 
@@ -615,30 +770,22 @@ function SlideArtwork({
                 <div
                   className="inline-flex min-w-[78%] items-center gap-4 rounded-lg border px-4 py-3"
                   style={{
-                    backgroundColor:
-                      accentText === "#FFFFFF"
-                        ? "rgba(255,255,255,0.12)"
-                        : "rgba(255,255,255,0.72)",
-                    borderColor:
-                      accentText === "#FFFFFF"
-                        ? "rgba(255,255,255,0.22)"
-                        : "rgba(24,32,42,0.10)",
+                    backgroundColor: finalPalette.contactBackground,
+                    borderColor: finalPalette.contactBorder,
                   }}
                 >
                   <span
                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
-                    style={{
-                      backgroundColor:
-                        accentText === "#FFFFFF"
-                          ? "rgba(255,255,255,0.16)"
-                          : "rgba(24,32,42,0.07)",
-                    }}
+                    style={{ backgroundColor: finalPalette.iconBackground }}
                   >
                     <MessageCircle size={23} strokeWidth={2.35} />
                   </span>
 
                   <span className="min-w-0">
-                    <span className="block text-[9px] font-black uppercase tracking-[0.18em] opacity-70">
+                    <span
+                      className="block text-[9px] font-black uppercase tracking-[0.18em]"
+                      style={{ color: finalPalette.muted }}
+                    >
                       WhatsApp
                     </span>
                     <span className="font-display mt-1 block text-[24px] font-black leading-none tracking-[-0.02em]">
@@ -647,12 +794,15 @@ function SlideArtwork({
                   </span>
                 </div>
               ) : (
-                <div className="text-sm font-bold opacity-80">
+                <div className="text-sm font-bold" style={{ color: finalPalette.muted }}>
                   Entre em contato para mais informações.
                 </div>
               )}
 
-              <div className="mt-4 text-[11px] font-semibold tracking-[0.01em] opacity-[0.72]">
+              <div
+                className="mx-auto mt-5 max-w-[82%] px-3 text-center text-[11px] font-semibold tracking-[0.01em]"
+                style={{ color: finalPalette.muted }}
+              >
                 {slide.subtitle}
               </div>
             </div>
@@ -676,6 +826,8 @@ export function InstagramCarouselRenderSet({
   modelId,
   headline,
   cta,
+  finalCardDecoration,
+  finalCardTheme,
   renderGroup,
 }: {
   property: Property;
@@ -684,6 +836,8 @@ export function InstagramCarouselRenderSet({
   modelId: CarouselModelId;
   headline: string;
   cta: string;
+  finalCardDecoration: CarouselFinalCardDecoration;
+  finalCardTheme: CarouselFinalCardTheme;
   renderGroup: string;
 }) {
   const slides = useMemo(
@@ -707,6 +861,8 @@ export function InstagramCarouselRenderSet({
             brand={brand}
             templateId={templateId}
             modelId={modelId}
+            finalCardDecoration={finalCardDecoration}
+            finalCardTheme={finalCardTheme}
             index={index}
             total={slides.length}
             exportMode
@@ -724,6 +880,8 @@ export function InstagramCarouselPreview({
   modelId,
   headline,
   cta,
+  finalCardDecoration,
+  finalCardTheme,
   renderGroup = "true",
 }: {
   property: Property;
@@ -732,6 +890,8 @@ export function InstagramCarouselPreview({
   modelId: CarouselModelId;
   headline: string;
   cta: string;
+  finalCardDecoration: CarouselFinalCardDecoration;
+  finalCardTheme: CarouselFinalCardTheme;
   renderGroup?: string;
 }) {
   const slides = useMemo(
@@ -784,6 +944,8 @@ export function InstagramCarouselPreview({
         brand={brand}
         templateId={templateId}
         modelId={modelId}
+        finalCardDecoration={finalCardDecoration}
+        finalCardTheme={finalCardTheme}
         index={safeActive}
         total={slides.length}
       />
@@ -803,6 +965,8 @@ export function InstagramCarouselPreview({
               brand={brand}
               templateId={templateId}
               modelId={modelId}
+              finalCardDecoration={finalCardDecoration}
+              finalCardTheme={finalCardTheme}
               index={index}
               total={slides.length}
               exportMode
