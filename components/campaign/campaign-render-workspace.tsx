@@ -6,7 +6,11 @@ import { InstagramCarouselRenderSet } from "@/components/instagram-carousel-prev
 import { VerticalCreativePreview } from "@/components/vertical-creative-preview";
 import { suggestedBlockPositionFromTags, type BlockPosition } from "@/lib/campaign-layout";
 import type { CampaignTemplateId } from "@/lib/campaign-templates";
-import type { CarouselModelId } from "@/lib/carousel-templates";
+import type {
+  CarouselFinalCardDecoration,
+  CarouselFinalCardTheme,
+  CarouselModelId,
+} from "@/lib/carousel-templates";
 import type { VerticalTemplateId } from "@/lib/vertical-templates";
 import type { Property } from "@/types";
 
@@ -32,6 +36,8 @@ type CarouselRenderInput = {
   modelId: CarouselModelId;
   headline: string;
   cta: string;
+  finalCardDecoration: CarouselFinalCardDecoration;
+  finalCardTheme: CarouselFinalCardTheme;
 };
 
 export function CampaignRenderWorkspace({
@@ -122,6 +128,8 @@ export function CampaignRenderWorkspace({
           modelId={carousel.modelId}
           headline={carousel.headline}
           cta={carousel.cta}
+          finalCardDecoration={carousel.finalCardDecoration}
+          finalCardTheme={carousel.finalCardTheme}
           renderGroup="schedule-carousel"
         />
       )}
