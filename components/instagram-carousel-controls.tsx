@@ -81,6 +81,11 @@ export function InstagramCarouselControls({
             value={cta}
             onChange={(event) => onCtaChange(event.target.value)}
           />
+          <span className="mt-1.5 block text-[10px] font-medium leading-4 text-[#667085]">
+            A frase é sugerida automaticamente e pode ser alterada. O visual do
+            último card também varia entre composições e paletas profissionais,
+            permanecendo estável depois de salvo.
+          </span>
         </label>
       </div>
     </div>
