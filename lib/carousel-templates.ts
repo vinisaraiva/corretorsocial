@@ -52,3 +52,41 @@ export function defaultCarouselModel(
 ): CarouselModelId {
   return purpose === "Aluguel" ? "rent-practical" : "presentation";
 }
+
+
+export const carouselFinalCardDecorations = [
+  "curves",
+  "lines",
+  "frame",
+  "blocks",
+] as const;
+
+export type CarouselFinalCardDecoration =
+  (typeof carouselFinalCardDecorations)[number];
+
+export const carouselFinalCardThemes = [
+  "brand",
+  "dark",
+  "light",
+] as const;
+
+export type CarouselFinalCardTheme =
+  (typeof carouselFinalCardThemes)[number];
+
+export function normalizeCarouselFinalCardDecoration(
+  value?: string | null,
+): CarouselFinalCardDecoration {
+  return carouselFinalCardDecorations.includes(
+    value as CarouselFinalCardDecoration,
+  )
+    ? (value as CarouselFinalCardDecoration)
+    : "curves";
+}
+
+export function normalizeCarouselFinalCardTheme(
+  value?: string | null,
+): CarouselFinalCardTheme {
+  return carouselFinalCardThemes.includes(value as CarouselFinalCardTheme)
+    ? (value as CarouselFinalCardTheme)
+    : "brand";
+}
