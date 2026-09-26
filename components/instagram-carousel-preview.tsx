@@ -80,6 +80,16 @@ function contrastText(hex: string) {
   return luminance > 0.62 ? "#18202A" : "#FFFFFF";
 }
 
+function brandAccent(hex: string) {
+  const color = hex.replace("#", "");
+  const r = Number.parseInt(color.slice(0, 2), 16);
+  const g = Number.parseInt(color.slice(2, 4), 16);
+  const b = Number.parseInt(color.slice(4, 6), 16);
+
+  const warm = r > g * 1.12 && r > b * 1.12;
+  return warm ? "#163B4D" : "#F6A623";
+}
+
 function priceText(property: Property) {
   if (property.price <= 0) return "Preço sob consulta";
   return `${formatBRL(property.price)}${property.purpose === "Aluguel" ? "/mês" : ""}`;
@@ -197,7 +207,7 @@ function buildSlides(
       {
         kind: "cta",
         title: cta,
-        subtitle: "Entre em contato para saber mais.",
+        subtitle: "Atendimento rápido e direto.",
       },
     ];
   }
@@ -230,7 +240,7 @@ function buildSlides(
       {
         kind: "cta",
         title: cta,
-        subtitle: "Consulte disponibilidade e condições.",
+        subtitle: "Atendimento rápido e direto.",
       },
     ];
   }
@@ -269,7 +279,7 @@ function buildSlides(
     {
       kind: "cta",
       title: cta,
-      subtitle: "Entre em contato para saber mais.",
+      subtitle: "Atendimento rápido e direto.",
     },
   ];
 }
@@ -551,51 +561,101 @@ function SlideArtwork({
 
       {slide.kind === "cta" && (
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center"
+          className="absolute inset-0 overflow-hidden"
           style={{ backgroundColor: accent, color: accentText }}
         >
-          {brand.logoUrl ? (
-            <img
-              src={brand.logoUrl}
-              alt={brand.professionalName}
-              className="mb-7 max-h-12 max-w-40 object-contain"
-            />
-          ) : (
-            <div className="mb-5 text-xs font-black uppercase tracking-[0.18em]">
-              {brand.professionalName}
+          <div
+            className="absolute -right-7 -top-10 h-36 w-36 rounded-bl-[92px]"
+            style={{ backgroundColor: brandAccent(accent) }}
+          />
+          <div
+            className="absolute -bottom-9 -left-8 h-28 w-28 rounded-tr-[72px]"
+            style={{ backgroundColor: brandAccent(accent) }}
+          />
+          <div
+            className="absolute bottom-8 right-7 h-px w-24"
+            style={{
+              backgroundColor:
+                accentText === "#FFFFFF"
+                  ? "rgba(255,255,255,0.46)"
+                  : "rgba(24,32,42,0.26)",
+            }}
+          />
+
+          <div className="relative flex h-full flex-col px-8 pb-8 pt-8 text-left">
+            <div className="flex min-h-12 items-start justify-between gap-5">
+              {brand.logoUrl ? (
+                <div className="inline-flex rounded-md bg-white px-3 py-2 shadow-sm">
+                  <img
+                    src={brand.logoUrl}
+                    alt={brand.professionalName}
+                    className="max-h-8 max-w-32 object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] opacity-80">
+                  {brand.professionalName}
+                </div>
+              )}
+
+              <div
+                className="mt-1 h-8 w-2 rounded-sm"
+                style={{ backgroundColor: brandAccent(accent) }}
+              />
             </div>
-          )}
 
-          <div className="font-display max-w-[88%] text-4xl font-black leading-[0.98]">
-            {slide.title}
-          </div>
-
-          <div className="mt-3 text-sm font-bold opacity-80">
-            Fale diretamente pelo WhatsApp
-          </div>
-
-          {brand.whatsapp ? (
-            <div className="mt-6 flex items-center gap-3 rounded-2xl bg-white/[0.18] px-5 py-3 text-left shadow-sm backdrop-blur-sm">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.22]">
-                <MessageCircle size={23} strokeWidth={2.4} />
-              </span>
-              <span>
-                <span className="block text-[10px] font-black uppercase tracking-[0.14em] opacity-75">
-                  WhatsApp
-                </span>
-                <span className="mt-0.5 block text-xl font-black tracking-tight">
-                  {formatWhatsapp(brand.whatsapp)}
-                </span>
-              </span>
+            <div className="mt-10 max-w-[82%]">
+              <div className="font-display text-[42px] font-black leading-[0.94]">
+                {slide.title}
+              </div>
             </div>
-          ) : (
-            <div className="mt-5 rounded-2xl bg-white/[0.18] px-5 py-3 text-sm font-bold">
-              {slide.subtitle}
-            </div>
-          )}
 
-          <div className="mt-4 text-xs font-semibold opacity-70">
-            Atendimento rápido e direto
+            <div className="mt-auto">
+              {brand.whatsapp ? (
+                <div
+                  className="inline-flex min-w-[78%] items-center gap-4 rounded-lg border px-4 py-3"
+                  style={{
+                    backgroundColor:
+                      accentText === "#FFFFFF"
+                        ? "rgba(255,255,255,0.12)"
+                        : "rgba(255,255,255,0.72)",
+                    borderColor:
+                      accentText === "#FFFFFF"
+                        ? "rgba(255,255,255,0.22)"
+                        : "rgba(24,32,42,0.10)",
+                  }}
+                >
+                  <span
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+                    style={{
+                      backgroundColor:
+                        accentText === "#FFFFFF"
+                          ? "rgba(255,255,255,0.16)"
+                          : "rgba(24,32,42,0.07)",
+                    }}
+                  >
+                    <MessageCircle size={23} strokeWidth={2.35} />
+                  </span>
+
+                  <span className="min-w-0">
+                    <span className="block text-[9px] font-black uppercase tracking-[0.18em] opacity-70">
+                      WhatsApp
+                    </span>
+                    <span className="font-display mt-1 block text-[24px] font-black leading-none tracking-[-0.02em]">
+                      {formatWhatsapp(brand.whatsapp)}
+                    </span>
+                  </span>
+                </div>
+              ) : (
+                <div className="text-sm font-bold opacity-80">
+                  Entre em contato para mais informações.
+                </div>
+              )}
+
+              <div className="mt-4 text-[11px] font-semibold tracking-[0.01em] opacity-72">
+                {slide.subtitle}
+              </div>
+            </div>
           </div>
         </div>
       )}
