@@ -14,6 +14,7 @@ export type CampaignBrand = {
   professionalName: string;
   logoUrl?: string | null;
   primaryColor: string;
+  whatsapp?: string | null;
 };
 
 export function safeBrandColor(value: string) {
