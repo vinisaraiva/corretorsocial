@@ -197,7 +197,7 @@ function buildSlides(
       {
         kind: "cta",
         title: cta,
-        subtitle: price,
+        subtitle: "Entre em contato para saber mais.",
       },
     ];
   }
@@ -269,7 +269,7 @@ function buildSlides(
     {
       kind: "cta",
       title: cta,
-      subtitle: price,
+      subtitle: "Entre em contato para saber mais.",
     },
   ];
 }
@@ -474,7 +474,7 @@ function SlideArtwork({
                 <div
                   className={`${
                     slide.structuredItems?.length ? "text-xl" : "text-2xl"
-                  } font-black leading-tight text-[#18202A]`}
+                  } font-display font-black leading-[1.02] text-[#18202A]`}
                 >
                   {slide.title}
                 </div>
@@ -575,8 +575,8 @@ function SlideArtwork({
           </div>
 
           {brand.whatsapp ? (
-            <div className="mt-6 flex items-center gap-3 rounded-2xl bg-white/18 px-5 py-3 text-left shadow-sm backdrop-blur-sm">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/22">
+            <div className="mt-6 flex items-center gap-3 rounded-2xl bg-white/[0.18] px-5 py-3 text-left shadow-sm backdrop-blur-sm">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.22]">
                 <MessageCircle size={23} strokeWidth={2.4} />
               </span>
               <span>
@@ -589,7 +589,7 @@ function SlideArtwork({
               </span>
             </div>
           ) : (
-            <div className="mt-5 rounded-2xl bg-white/18 px-5 py-3 text-sm font-bold">
+            <div className="mt-5 rounded-2xl bg-white/[0.18] px-5 py-3 text-sm font-bold">
               {slide.subtitle}
             </div>
           )}
@@ -742,6 +742,7 @@ export function InstagramCarouselPreview({
               slide={slide}
               brand={brand}
               templateId={templateId}
+              modelId={modelId}
               index={index}
               total={slides.length}
               exportMode
