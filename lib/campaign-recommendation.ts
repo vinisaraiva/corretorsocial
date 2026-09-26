@@ -4,7 +4,11 @@ import {
   type CampaignTemplateId,
 } from "@/lib/campaign-templates";
 import {
+  carouselFinalCardDecorations,
+  carouselFinalCardThemes,
   defaultCarouselModel,
+  type CarouselFinalCardDecoration,
+  type CarouselFinalCardTheme,
   type CarouselModelId,
 } from "@/lib/carousel-templates";
 import { campaignTemplateToVertical } from "@/lib/campaign-layout";
@@ -34,6 +38,8 @@ export type CampaignRecommendation = {
     modelId: CarouselModelId;
     headline: string;
     cta: string;
+    finalCardDecoration: CarouselFinalCardDecoration;
+    finalCardTheme: CarouselFinalCardTheme;
   };
   media: {
     feedCover?: { id?: string; url: string };
@@ -65,6 +71,18 @@ const carouselCtasByPurpose = {
 function carouselCtaForPurpose(purpose: Property["purpose"]) {
   const options = carouselCtasByPurpose[purpose] ?? carouselCtasByPurpose.Venda;
   return options[Math.floor(Math.random() * options.length)];
+}
+
+function randomCarouselFinalCardDecoration(): CarouselFinalCardDecoration {
+  return carouselFinalCardDecorations[
+    Math.floor(Math.random() * carouselFinalCardDecorations.length)
+  ];
+}
+
+function randomCarouselFinalCardTheme(): CarouselFinalCardTheme {
+  return carouselFinalCardThemes[
+    Math.floor(Math.random() * carouselFinalCardThemes.length)
+  ];
 }
 
 function compact(value: string) {
@@ -243,6 +261,8 @@ export function buildCampaignRecommendation(
       modelId: defaultCarouselModel(property.purpose),
       headline,
       cta: carouselCta,
+      finalCardDecoration: randomCarouselFinalCardDecoration(),
+      finalCardTheme: randomCarouselFinalCardTheme(),
     },
     media: {
       feedCover: mediaSelection.feedCover
