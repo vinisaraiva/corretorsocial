@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Images,
   KeyRound,
+  MessageCircle,
   Ruler,
   type LucideIcon,
 } from "lucide-react";
@@ -24,6 +25,7 @@ type CarouselBrand = {
   professionalName: string;
   logoUrl?: string | null;
   primaryColor: string;
+  whatsapp?: string | null;
 };
 
 type StructuredFactKind =
@@ -81,6 +83,23 @@ function contrastText(hex: string) {
 function priceText(property: Property) {
   if (property.price <= 0) return "Preço sob consulta";
   return `${formatBRL(property.price)}${property.purpose === "Aluguel" ? "/mês" : ""}`;
+}
+
+function formatWhatsapp(value?: string | null) {
+  const digits = (value ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+
+  const local = digits.startsWith("55") ? digits.slice(2) : digits;
+
+  if (local.length === 11) {
+    return `(${local.slice(0, 2)}) ${local.slice(2, 7)}-${local.slice(7)}`;
+  }
+
+  if (local.length === 10) {
+    return `(${local.slice(0, 2)}) ${local.slice(2, 6)}-${local.slice(6)}`;
+  }
+
+  return value ?? "";
 }
 
 function plural(value: number, singular: string, pluralForm: string) {
@@ -162,17 +181,18 @@ function buildSlides(
         title: "Informações principais",
         items: [],
         structuredItems: structuredFacts.slice(0, 6),
+        image: images[1] ?? images[0],
       },
       {
         kind: "photo",
         title: "Conheça os ambientes",
-        image: images[1],
+        image: images[2] ?? images[1] ?? images[0],
       },
       {
         kind: "photo",
         title: "Mais detalhes do imóvel",
         subtitle: location,
-        image: images[2],
+        image: images[3] ?? images[2] ?? images[1] ?? images[0],
       },
       {
         kind: "cta",
@@ -263,8 +283,23 @@ function visualTreatment(templateId: CampaignTemplateId) {
   return "clean";
 }
 
-function factSlideImageHeight(slide: Extract<Slide, { kind: "facts" }>) {
+function factSlideImageHeight(
+  slide: Extract<Slide, { kind: "facts" }>,
+  modelId: CarouselModelId,
+) {
   const structuredCount = slide.structuredItems?.length ?? 0;
+
+  if (modelId === "direct-sale") {
+    return structuredCount > 4
+      ? {
+          imageClass: "h-[78%]",
+          panelClass: "top-[72%]",
+        }
+      : {
+          imageClass: "h-[82%]",
+          panelClass: "top-[76%]",
+        };
+  }
 
   if (structuredCount > 0) {
     if (structuredCount <= 3) {
@@ -305,19 +340,23 @@ function factSlideImageHeight(slide: Extract<Slide, { kind: "facts" }>) {
 function StructuredFactsGrid({
   items,
   accent,
+  compact = false,
 }: {
   items: StructuredFact[];
   accent: string;
+  compact?: boolean;
 }) {
   return (
-    <div className="mt-3 grid grid-cols-3 gap-1.5">
+    <div className={`${compact ? "mt-2" : "mt-3"} grid grid-cols-3 gap-1.5`}>
       {items.slice(0, 6).map((item) => {
         const Icon = structuredFactIcon(item.kind);
 
         return (
           <div
             key={item.kind}
-            className="flex min-h-12 items-center gap-1.5 rounded-xl bg-[#F2F4F7] px-2 py-1.5"
+            className={`flex items-center gap-1.5 rounded-xl bg-[#F2F4F7] px-2 ${
+              compact ? "min-h-10 py-1" : "min-h-12 py-1.5"
+            }`}
           >
             <span
               className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white"
@@ -339,6 +378,7 @@ function SlideArtwork({
   slide,
   brand,
   templateId,
+  modelId,
   index,
   total,
   exportMode = false,
@@ -346,6 +386,7 @@ function SlideArtwork({
   slide: Slide;
   brand: CarouselBrand;
   templateId: CampaignTemplateId;
+  modelId: CarouselModelId;
   index: number;
   total: number;
   exportMode?: boolean;
@@ -356,7 +397,8 @@ function SlideArtwork({
   const accent = treatment === "opportunity" ? "#F79009" : brandColor;
   const accentText = contrastText(accent);
   const factsLayout =
-    slide.kind === "facts" ? factSlideImageHeight(slide) : null;
+    slide.kind === "facts" ? factSlideImageHeight(slide, modelId) : null;
+  const directSale = modelId === "direct-sale";
 
   return (
     <div
@@ -386,7 +428,7 @@ function SlideArtwork({
             <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">
               {brand.professionalName}
             </div>
-            <div className="mt-2 text-3xl font-black leading-[1.04]">
+            <div className="font-display mt-2 text-3xl font-black leading-[0.98]">
               {slide.title}
             </div>
             <div
@@ -413,8 +455,14 @@ function SlideArtwork({
                 referrerPolicy="no-referrer"
               />
               <div
-                className={`absolute inset-x-0 bottom-0 rounded-t-3xl bg-white ${
-                  slide.structuredItems?.length ? "p-4" : "p-5"
+                className={`absolute inset-x-0 bottom-0 bg-white ${
+                  directSale ? "rounded-t-2xl px-4 pb-3 pt-3" : "rounded-t-3xl"
+                } ${
+                  directSale
+                    ? ""
+                    : slide.structuredItems?.length
+                      ? "p-4"
+                      : "p-5"
                 } ${factsLayout?.panelClass}`}
               >
                 <div
@@ -434,6 +482,7 @@ function SlideArtwork({
                   <StructuredFactsGrid
                     items={slide.structuredItems}
                     accent={accent}
+                    compact={directSale}
                   />
                 ) : (
                   <div className="mt-4 grid grid-cols-2 gap-2">
@@ -460,7 +509,7 @@ function SlideArtwork({
                 className="mb-3 h-1.5 w-12 rounded-full"
                 style={{ backgroundColor: accent }}
               />
-              <div className="text-2xl font-black leading-tight text-[#18202A]">
+              <div className="font-display text-2xl font-black leading-[1.02] text-[#18202A]">
                 {slide.title}
               </div>
               {slide.structuredItems?.length ? (
@@ -492,7 +541,7 @@ function SlideArtwork({
         <>
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
           <div className="absolute inset-x-5 bottom-6 text-white">
-            <div className="text-2xl font-black leading-tight">{slide.title}</div>
+            <div className="font-display text-2xl font-black leading-[1.02]">{slide.title}</div>
             {slide.subtitle && (
               <div className="mt-2 text-sm text-white/80">{slide.subtitle}</div>
             )}
@@ -509,15 +558,45 @@ function SlideArtwork({
             <img
               src={brand.logoUrl}
               alt={brand.professionalName}
-              className="mb-6 max-h-12 max-w-40 object-contain"
+              className="mb-7 max-h-12 max-w-40 object-contain"
             />
           ) : (
             <div className="mb-5 text-xs font-black uppercase tracking-[0.18em]">
               {brand.professionalName}
             </div>
           )}
-          <div className="text-3xl font-black leading-tight">{slide.title}</div>
-          <div className="mt-4 text-sm font-bold opacity-80">{slide.subtitle}</div>
+
+          <div className="font-display max-w-[88%] text-4xl font-black leading-[0.98]">
+            {slide.title}
+          </div>
+
+          <div className="mt-3 text-sm font-bold opacity-80">
+            Fale diretamente pelo WhatsApp
+          </div>
+
+          {brand.whatsapp ? (
+            <div className="mt-6 flex items-center gap-3 rounded-2xl bg-white/18 px-5 py-3 text-left shadow-sm backdrop-blur-sm">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/22">
+                <MessageCircle size={23} strokeWidth={2.4} />
+              </span>
+              <span>
+                <span className="block text-[10px] font-black uppercase tracking-[0.14em] opacity-75">
+                  WhatsApp
+                </span>
+                <span className="mt-0.5 block text-xl font-black tracking-tight">
+                  {formatWhatsapp(brand.whatsapp)}
+                </span>
+              </span>
+            </div>
+          ) : (
+            <div className="mt-5 rounded-2xl bg-white/18 px-5 py-3 text-sm font-bold">
+              {slide.subtitle}
+            </div>
+          )}
+
+          <div className="mt-4 text-xs font-semibold opacity-70">
+            Atendimento rápido e direto
+          </div>
         </div>
       )}
 
@@ -567,6 +646,7 @@ export function InstagramCarouselRenderSet({
             slide={slide}
             brand={brand}
             templateId={templateId}
+            modelId={modelId}
             index={index}
             total={slides.length}
             exportMode
@@ -643,6 +723,7 @@ export function InstagramCarouselPreview({
         slide={slides[safeActive]}
         brand={brand}
         templateId={templateId}
+        modelId={modelId}
         index={safeActive}
         total={slides.length}
       />
