@@ -68,20 +68,53 @@ const carouselCtasByPurpose = {
   ],
 } as const;
 
-function carouselCtaForPurpose(purpose: Property["purpose"]) {
-  const options = carouselCtasByPurpose[purpose] ?? carouselCtasByPurpose.Venda;
-  return options[Math.floor(Math.random() * options.length)];
+function deterministicIndex(seed: string, length: number) {
+  let hash = 2166136261;
+
+  for (let index = 0; index < seed.length; index += 1) {
+    hash ^= seed.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return Math.abs(hash >>> 0) % length;
 }
 
-function randomCarouselFinalCardDecoration(): CarouselFinalCardDecoration {
-  return carouselFinalCardDecorations[
-    Math.floor(Math.random() * carouselFinalCardDecorations.length)
+function campaignVariationSeed(property: Property, salt: string) {
+  return [
+    property.id,
+    property.purpose,
+    property.campaigns ?? 0,
+    salt,
+  ].join(":");
+}
+
+function carouselCtaForProperty(property: Property) {
+  const options =
+    carouselCtasByPurpose[property.purpose] ?? carouselCtasByPurpose.Venda;
+  return options[
+    deterministicIndex(campaignVariationSeed(property, "cta"), options.length)
   ];
 }
 
-function randomCarouselFinalCardTheme(): CarouselFinalCardTheme {
+function carouselFinalCardDecorationForProperty(
+  property: Property,
+): CarouselFinalCardDecoration {
+  return carouselFinalCardDecorations[
+    deterministicIndex(
+      campaignVariationSeed(property, "decoration"),
+      carouselFinalCardDecorations.length,
+    )
+  ];
+}
+
+function carouselFinalCardThemeForProperty(
+  property: Property,
+): CarouselFinalCardTheme {
   return carouselFinalCardThemes[
-    Math.floor(Math.random() * carouselFinalCardThemes.length)
+    deterministicIndex(
+      campaignVariationSeed(property, "theme"),
+      carouselFinalCardThemes.length,
+    )
   ];
 }
 
@@ -210,7 +243,7 @@ export function buildCampaignRecommendation(
   const style = DEFAULT_CAMPAIGN_TEMPLATE_ID;
   const verticalTemplate = campaignTemplateToVertical(style);
   const headline = truncate(strongestHeadline(property), 60);
-  const carouselCta = carouselCtaForPurpose(property.purpose);
+  const carouselCta = carouselCtaForProperty(property);
   const subheadline = truncate(supportLine(property), 80);
   const fallbackMedia = Array.from(
     new Set(
@@ -261,8 +294,8 @@ export function buildCampaignRecommendation(
       modelId: defaultCarouselModel(property.purpose),
       headline,
       cta: carouselCta,
-      finalCardDecoration: randomCarouselFinalCardDecoration(),
-      finalCardTheme: randomCarouselFinalCardTheme(),
+      finalCardDecoration: carouselFinalCardDecorationForProperty(property),
+      finalCardTheme: carouselFinalCardThemeForProperty(property),
     },
     media: {
       feedCover: mediaSelection.feedCover
