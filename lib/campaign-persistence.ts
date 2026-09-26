@@ -36,6 +36,8 @@ export type CampaignDraftInput = {
     headline: string;
     cta: string;
     slideCount: number;
+    finalCardDecoration: string;
+    finalCardTheme: string;
   };
   mediaSelection: {
     instagramFeed?: string;
@@ -61,6 +63,8 @@ type RenderMetadata = {
   block_position: "auto" | "left" | "right";
   carousel_type?: string;
   slide_count?: number;
+  final_card_decoration?: string;
+  final_card_theme?: string;
   media_ids?: string[];
   render_signature?: string;
   rendered_asset_paths?: string[];
@@ -202,6 +206,8 @@ export function buildCampaignVariantRows(
         block_position: "auto",
         carousel_type: input.instagramCarousel.modelId,
         slide_count: input.instagramCarousel.slideCount,
+        final_card_decoration: input.instagramCarousel.finalCardDecoration,
+        final_card_theme: input.instagramCarousel.finalCardTheme,
         media_ids: validCarouselMedia,
       },
     });
@@ -240,6 +246,9 @@ export function applyCampaignRenderState(input: {
       block_position: row.render_metadata.block_position,
       carousel_type: row.render_metadata.carousel_type ?? null,
       slide_count: row.render_metadata.slide_count ?? null,
+      final_card_decoration:
+        row.render_metadata.final_card_decoration ?? null,
+      final_card_theme: row.render_metadata.final_card_theme ?? null,
       media_ids: row.render_metadata.media_ids ?? [],
       render_context: input.renderContext,
       asset_format: "image/jpeg",
