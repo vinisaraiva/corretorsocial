@@ -652,7 +652,7 @@ function SlideArtwork({
                 </div>
               )}
 
-              <div className="mt-4 text-[11px] font-semibold tracking-[0.01em] opacity-72">
+              <div className="mt-4 text-[11px] font-semibold tracking-[0.01em] opacity-[0.72]">
                 {slide.subtitle}
               </div>
             </div>
