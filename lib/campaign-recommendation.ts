@@ -43,6 +43,30 @@ export type CampaignRecommendation = {
   };
 };
 
+const carouselCtasByPurpose = {
+  Venda: [
+    "Agende uma visita",
+    "Quero saber mais",
+    "Fale com o corretor",
+    "Conheça este imóvel",
+    "Tire suas dúvidas",
+    "Solicite mais informações",
+  ],
+  Aluguel: [
+    "Consulte disponibilidade",
+    "Agende uma visita",
+    "Quero saber mais",
+    "Fale com o corretor",
+    "Tire suas dúvidas",
+    "Conheça este imóvel",
+  ],
+} as const;
+
+function carouselCtaForPurpose(purpose: Property["purpose"]) {
+  const options = carouselCtasByPurpose[purpose] ?? carouselCtasByPurpose.Venda;
+  return options[Math.floor(Math.random() * options.length)];
+}
+
 function compact(value: string) {
   return value.replace(/\s+/g, " ").trim();
 }
@@ -168,6 +192,7 @@ export function buildCampaignRecommendation(
   const style = DEFAULT_CAMPAIGN_TEMPLATE_ID;
   const verticalTemplate = campaignTemplateToVertical(style);
   const headline = truncate(strongestHeadline(property), 60);
+  const carouselCta = carouselCtaForPurpose(property.purpose);
   const subheadline = truncate(supportLine(property), 80);
   const fallbackMedia = Array.from(
     new Set(
@@ -217,7 +242,7 @@ export function buildCampaignRecommendation(
     instagramCarousel: {
       modelId: defaultCarouselModel(property.purpose),
       headline,
-      cta: "Fale comigo no WhatsApp",
+      cta: carouselCta,
     },
     media: {
       feedCover: mediaSelection.feedCover
