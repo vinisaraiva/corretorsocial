@@ -61,7 +61,7 @@ async function persistCampaign(input: CampaignDraftInput) {
       .maybeSingle(),
     supabase
       .from("profiles")
-      .select("professional_name,logo_path,primary_color")
+      .select("professional_name,logo_path,primary_color,whatsapp")
       .eq("user_id", user.id)
       .maybeSingle(),
   ]);
@@ -188,6 +188,7 @@ async function persistCampaign(input: CampaignDraftInput) {
       professional_name: profile?.professional_name ?? null,
       logo_path: profile?.logo_path ?? null,
       primary_color: profile?.primary_color ?? null,
+      whatsapp: profile?.whatsapp ?? null,
     },
   };
 
