@@ -70,7 +70,7 @@ export default async function CampaignDetailPage({
         .eq("campaign_id", campaign.id),
       supabase
         .from("profiles")
-        .select("professional_name,logo_path,primary_color")
+        .select("professional_name,logo_path,primary_color,whatsapp")
         .eq("user_id", user.id)
         .maybeSingle(),
       supabase
@@ -306,6 +306,7 @@ export default async function CampaignDetailPage({
       profileResult.data?.professional_name ?? "Corretor Social",
     logoUrl,
     primaryColor: profileResult.data?.primary_color ?? "#176B5B",
+    whatsapp: profileResult.data?.whatsapp ?? null,
   };
 
   return (
