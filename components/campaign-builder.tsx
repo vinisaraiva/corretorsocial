@@ -54,7 +54,11 @@ import { VerticalTemplateControls } from "@/components/vertical-template-control
 import { VerticalCreativePreview } from "@/components/vertical-creative-preview";
 import {
   getCarouselModel,
+  normalizeCarouselFinalCardDecoration,
+  normalizeCarouselFinalCardTheme,
   normalizeCarouselModel,
+  type CarouselFinalCardDecoration,
+  type CarouselFinalCardTheme,
   type CarouselModelId,
 } from "@/lib/carousel-templates";
 import { InstagramCarouselPreview } from "@/components/instagram-carousel-preview";
@@ -130,6 +134,8 @@ type InitialCampaign = {
     modelId: string;
     headline: string;
     cta: string;
+    finalCardDecoration?: string;
+    finalCardTheme?: string;
   };
   mediaSelection?: {
     instagramFeed?: string;
@@ -249,6 +255,19 @@ export function CampaignBuilder({
   const [carouselCta, setCarouselCta] = useState(
     campaignData?.instagramCarousel?.cta ??
       recommendation.instagramCarousel.cta,
+  );
+  const [carouselFinalCardDecoration] =
+    useState<CarouselFinalCardDecoration>(() =>
+      normalizeCarouselFinalCardDecoration(
+        campaignData?.instagramCarousel?.finalCardDecoration ??
+          recommendation.instagramCarousel.finalCardDecoration,
+      ),
+    );
+  const [carouselFinalCardTheme] = useState<CarouselFinalCardTheme>(() =>
+    normalizeCarouselFinalCardTheme(
+      campaignData?.instagramCarousel?.finalCardTheme ??
+        recommendation.instagramCarousel.finalCardTheme,
+    ),
   );
   const [blockPositions, setBlockPositions] = useState({
     instagramFeed: normalizeBlockPosition(
@@ -548,6 +567,8 @@ export function CampaignBuilder({
             headline: carouselHeadline,
             cta: carouselCta,
             slideCount: selectedCarouselModel.slideCount,
+            finalCardDecoration: carouselFinalCardDecoration,
+            finalCardTheme: carouselFinalCardTheme,
           }
         : undefined,
       mediaSelection: {
@@ -1106,6 +1127,8 @@ export function CampaignBuilder({
               modelId={carouselModelId}
               headline={carouselHeadline}
               cta={carouselCta}
+              finalCardDecoration={carouselFinalCardDecoration}
+              finalCardTheme={carouselFinalCardTheme}
             />
           ) : isTiktokView ? (
             <VerticalCreativePreview
@@ -1749,6 +1772,8 @@ export function CampaignBuilder({
                 modelId: carouselModelId,
                 headline: carouselHeadline,
                 cta: carouselCta,
+                finalCardDecoration: carouselFinalCardDecoration,
+                finalCardTheme: carouselFinalCardTheme,
               }
             : undefined
         }
