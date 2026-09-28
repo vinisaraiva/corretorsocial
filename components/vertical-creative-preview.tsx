@@ -321,7 +321,7 @@ export function VerticalCreativePreview({
             <div className={`absolute bottom-[17%] ${blockPlacement} text-white`}>
               <div
                 className="mb-4 h-1 w-12"
-                style={{ backgroundColor: accent }}
+                style={{ backgroundColor: premiumDetail }}
               />
               <div className="text-[9px] font-black uppercase tracking-[0.18em] text-white/65">
                 {locality}
@@ -338,7 +338,10 @@ export function VerticalCreativePreview({
                 <span className="text-lg font-black">{price}</span>
                 <span
                   className="px-3 py-2 text-[10px] font-black"
-                  style={{ backgroundColor: accent, color: contrastText(accent) }}
+                  style={{
+                    backgroundColor: premiumDetail,
+                    color: contrastText(premiumDetail),
+                  }}
                 >
                   {cta}
                 </span>
