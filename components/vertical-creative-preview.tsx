@@ -246,42 +246,41 @@ export function VerticalCreativePreview({
 
         {templateId === "vertical-commercial" && (
           <>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/32 via-transparent to-transparent" />
+            <div className="absolute left-5 top-[12%] flex items-center gap-2">
+              <span
+                className="h-8 w-1.5"
+                style={{ backgroundColor: brandColor }}
+              />
+              <span className="rounded-sm bg-white/90 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-[#18202A] shadow-sm backdrop-blur-sm">
+                {property.purpose}
+              </span>
+            </div>
             <div
-              className="absolute left-0 top-[11%] h-12 w-[58%]"
-              style={{ backgroundColor: brandColor }}
-            />
-            <div
-              className="absolute right-0 top-[11%] h-24 w-12"
+              className="absolute right-0 top-[22%] h-16 w-1.5"
               style={{ backgroundColor: accent }}
             />
-            <div
-              className="absolute left-5 top-[13%] text-[9px] font-black uppercase tracking-[0.18em]"
-              style={{ color: brandText }}
-            >
-              {property.purpose}
-            </div>
-            <div className={`absolute bottom-[16%] ${blockPlacement} bg-white p-4 shadow-xl`}>
-              <div className="font-display text-[24px] font-black leading-[0.96] text-[#18202A]">
+            <div className={`absolute bottom-[17%] ${blockPlacement} max-w-[76%] bg-white/[0.94] px-4 py-3 shadow-lg backdrop-blur-sm`}>
+              <div
+                className="mb-3 h-1 w-9"
+                style={{ backgroundColor: brandColor }}
+              />
+              <div className="font-display text-[22px] font-black leading-[0.97] text-[#18202A]">
                 {headline}
               </div>
-              <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#667085]">
+              <div className="mt-2 text-[9px] font-bold uppercase tracking-[0.13em] text-[#667085]">
                 {locality}
               </div>
-              <div className="mt-3 flex items-end justify-between gap-3">
-                <div
-                  className="text-[25px] font-black leading-none"
-                  style={{ color: brandColor }}
-                >
+              <div className="mt-3 flex items-end justify-between gap-3 border-t border-[#EAECF0] pt-3">
+                <div className="min-w-0 text-[9px] font-bold leading-4 text-[#667085]">
+                  {verticalFeatures(property, 3).join(" · ")}
+                </div>
+                <div className="shrink-0 text-sm font-black" style={{ color: brandColor }}>
                   {price}
                 </div>
               </div>
-              <FeaturePills items={verticalFeatures(property, 3)} />
-              <div
-                className="mt-4 inline-flex px-3 py-2 text-xs font-black"
-                style={{ backgroundColor: brandColor, color: brandText }}
-              >
-                {cta}
+              <div className="mt-3 text-[10px] font-black" style={{ color: brandColor }}>
+                {cta} →
               </div>
             </div>
           </>
@@ -313,35 +312,35 @@ export function VerticalCreativePreview({
 
         {templateId === "vertical-branding" && (
           <>
-            <div className="absolute inset-0 bg-[#0F2633]/58" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0F2633]/84 via-[#0F2633]/14 to-black/5" />
             <div className="absolute inset-x-5 top-[11%]">
               <BrandMark brand={brand} inverse />
             </div>
-            <div className="absolute inset-5 border border-white/30" />
+            <div
+              className="absolute left-5 top-[25%] h-16 w-px"
+              style={{ backgroundColor: premiumDetail }}
+            />
+            <div
+              className="absolute left-5 top-[25%] h-px w-16"
+              style={{ backgroundColor: premiumDetail }}
+            />
             <div className={`absolute bottom-[17%] ${blockPlacement} text-white`}>
-              <div
-                className="mb-4 h-1 w-12"
-                style={{ backgroundColor: premiumDetail }}
-              />
-              <div className="text-[9px] font-black uppercase tracking-[0.18em] text-white/65">
+              <div className="text-[9px] font-black uppercase tracking-[0.18em] text-white/62">
                 {locality}
               </div>
-              <div className="font-editorial mt-2 text-[35px] font-semibold leading-[0.92]">
+              <div className="font-editorial mt-2 max-w-[92%] text-[34px] font-semibold leading-[0.92]">
                 {headline}
               </div>
               {subheadline && (
-                <div className="mt-3 max-w-[90%] text-sm leading-5 text-white/75">
+                <div className="mt-3 max-w-[88%] text-xs leading-5 text-white/68">
                   {subheadline}
                 </div>
               )}
-              <div className="mt-5 flex items-center justify-between gap-4 border-t border-white/25 pt-4">
-                <span className="text-lg font-black">{price}</span>
+              <div className="mt-4 flex items-center justify-between gap-4 border-t border-white/20 pt-3">
+                <span className="text-base font-black">{price}</span>
                 <span
-                  className="px-3 py-2 text-[10px] font-black"
-                  style={{
-                    backgroundColor: premiumDetail,
-                    color: contrastText(premiumDetail),
-                  }}
+                  className="border-b pb-1 text-[10px] font-black"
+                  style={{ borderColor: premiumDetail, color: premiumDetail }}
                 >
                   {cta}
                 </span>
@@ -352,7 +351,7 @@ export function VerticalCreativePreview({
 
         {templateId === "vertical-photo-grid" && (
           <>
-            <div className="absolute inset-x-0 top-0 h-[72%] grid grid-cols-[1.7fr_1fr] gap-1 bg-white">
+            <div className="absolute inset-x-0 top-0 h-[76%] grid grid-cols-[2.1fr_1fr] gap-1 bg-white">
               {images[0] ? (
                 <img
                   src={images[0]}
@@ -380,24 +379,29 @@ export function VerticalCreativePreview({
                 ) : null}
               </div>
             </div>
-            <div className="absolute inset-x-0 bottom-[15%] min-h-[20%] bg-[#F5F1E8] px-5 py-4 text-[#18202A]">
+            <div className="absolute inset-x-0 bottom-[15%] min-h-[18%] bg-[#F5F1E8] px-5 py-3 text-[#18202A]">
               <div className="flex items-center justify-between gap-3">
-                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#667085]">
+                <div className="text-[8px] font-black uppercase tracking-[0.18em] text-[#667085]">
                   {property.purpose} · {locality}
                 </div>
                 <BrandMark brand={brand} />
               </div>
-              <div className="mt-3 flex items-end justify-between gap-4">
-                <div className="font-display max-w-[66%] text-[26px] font-black leading-[0.96]">
-                  {headline}
+              <div className="mt-2 flex items-end justify-between gap-4">
+                <div className="max-w-[62%]">
+                  <div className="font-display text-[22px] font-black leading-[0.97]">
+                    {headline}
+                  </div>
+                  <div className="mt-2 text-[9px] font-bold text-[#667085]">
+                    {verticalFeatures(property, 2).join(" · ")}
+                  </div>
                 </div>
-                <div className="shrink-0 text-lg font-black">{price}</div>
-              </div>
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <FeaturePills items={verticalFeatures(property, 2)} />
-                <span className="text-[10px] font-black" style={{ color: brandColor }}>
-                  {cta} →
-                </span>
+                <div className="shrink-0 text-right">
+                  <div
+                    className="ml-auto h-1 w-7"
+                    style={{ backgroundColor: brandColor }}
+                  />
+                  <div className="mt-2 text-sm font-black">{price}</div>
+                </div>
               </div>
             </div>
           </>
@@ -536,15 +540,15 @@ export function VerticalTemplateThumbnail({
 
       {templateId === "vertical-commercial" && (
         <>
-          <div className="absolute left-0 top-[12%] h-5 w-1/2" style={{ backgroundColor: brandColor }} />
-          <div className="absolute right-0 top-[12%] h-10 w-5" style={{ backgroundColor: accent }} />
-          <div className="absolute inset-x-2 bottom-[18%] bg-white p-2">
-            <div className="h-2 w-3/4 bg-[#18202A]" />
-            <div className="mt-2 h-3 w-1/2" style={{ backgroundColor: brandColor }} />
-            <div className="mt-2 flex gap-1">
-              <div className="h-2 flex-1 bg-[#F2F4F7]" />
-              <div className="h-2 flex-1 bg-[#F2F4F7]" />
-            </div>
+          <div className="absolute left-3 top-[12%] flex items-center gap-1.5">
+            <div className="h-6 w-1" style={{ backgroundColor: brandColor }} />
+            <div className="h-3 w-10 bg-white/90" />
+          </div>
+          <div className="absolute right-0 top-[22%] h-8 w-1" style={{ backgroundColor: accent }} />
+          <div className="absolute bottom-[18%] left-3 w-[72%] bg-white/95 p-2">
+            <div className="h-1 w-6" style={{ backgroundColor: brandColor }} />
+            <div className="mt-2 h-2 w-4/5 bg-[#18202A]" />
+            <div className="mt-2 h-px w-full bg-[#E4E7EC]" />
           </div>
         </>
       )}
@@ -561,26 +565,26 @@ export function VerticalTemplateThumbnail({
 
       {templateId === "vertical-branding" && (
         <>
-          <div className="absolute inset-0 bg-[#0F2633]/55" />
-          <div className="absolute inset-2 border border-white/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0F2633]/82 via-[#0F2633]/14 to-transparent" />
+          <div className="absolute left-3 top-[25%] h-8 w-px" style={{ backgroundColor: premiumAccent(brandColor) }} />
+          <div className="absolute left-3 top-[25%] h-px w-8" style={{ backgroundColor: premiumAccent(brandColor) }} />
           <div className="absolute inset-x-3 bottom-[20%]">
-            <div className="mb-2 h-1 w-8" style={{ backgroundColor: accent }} />
             <div className="h-2 w-4/5 bg-white" />
-            <div className="mt-2 h-px w-full bg-white/30" />
+            <div className="mt-2 h-px w-full bg-white/25" />
           </div>
         </>
       )}
 
       {templateId === "vertical-photo-grid" && (
         <>
-          <div className="absolute inset-x-0 top-0 h-[72%] grid grid-cols-[1.7fr_1fr] gap-px bg-white">
+          <div className="absolute inset-x-0 top-0 h-[76%] grid grid-cols-[2.1fr_1fr] gap-px bg-white">
             <div className="bg-black/5" />
             <div className="grid grid-rows-2 gap-px">
               <div className="bg-black/10" />
               <div className="bg-black/15" />
             </div>
           </div>
-          <div className="absolute inset-x-0 bottom-[15%] h-[20%] bg-[#F5F1E8] p-2">
+          <div className="absolute inset-x-0 bottom-[15%] h-[18%] bg-[#F5F1E8] p-2">
             <div className="h-2 w-3/4 bg-[#18202A]" />
             <div className="mt-2 h-1.5 w-1/3" style={{ backgroundColor: brandColor }} />
           </div>
