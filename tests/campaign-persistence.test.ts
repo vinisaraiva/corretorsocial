@@ -11,7 +11,7 @@ import {
 function draft(overrides: Partial<CampaignDraftInput> = {}): CampaignDraftInput {
   return {
     propertyId: "property-1",
-    visualStyle: "clean-base",
+    visualStyle: "editorial-clean",
     headline: "  Apartamento com vista  ",
     subheadline: "  Perto da praia  ",
     cta: "  Fale comigo  ",
@@ -38,6 +38,8 @@ function draft(overrides: Partial<CampaignDraftInput> = {}): CampaignDraftInput 
       headline: "  Carousel headline  ",
       cta: "  Carousel CTA  ",
       slideCount: 5,
+      finalCardDecoration: "lines",
+      finalCardTheme: "brand",
     },
     mediaSelection: {
       instagramFeed: "media-feed",
