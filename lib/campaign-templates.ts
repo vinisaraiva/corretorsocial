@@ -61,6 +61,18 @@ export const campaignTemplates = [
     showsCtaOnArt: true,
     supportsBlockPosition: true,
   },
+  {
+    id: "minimal-contemporary",
+    name: "Minimal Contemporary",
+    description: "Poucos elementos, assinatura linear e máxima valorização da fotografia.",
+    useCase: "Uso recorrente, locação e imóveis que pedem comunicação limpa e contemporânea.",
+    supportsSubheadline: true,
+    showsLogo: true,
+    showsPrice: true,
+    showsFeatures: true,
+    showsCtaOnArt: true,
+    supportsBlockPosition: true,
+  },
 ] as const;
 
 export type CampaignTemplateId = (typeof campaignTemplates)[number]["id"];
@@ -76,6 +88,7 @@ const legacyTemplateMap: Record<string, CampaignTemplateId> = {
   opportunity: "geometric-direct",
   "info-card": "property-editorial",
   "brand-frame": "dark-premium",
+  Minimalista: "minimal-contemporary",
 };
 
 export function normalizeCampaignTemplate(
