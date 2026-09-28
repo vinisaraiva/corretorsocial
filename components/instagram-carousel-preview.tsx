@@ -642,7 +642,7 @@ function SlideArtwork({
               />
               <div
                 className="absolute right-0 top-0 h-28 w-20"
-                style={{ backgroundColor: premiumAccent(brandColor) }}
+                style={{ backgroundColor: brandAccent(brandColor) }}
               />
               <div
                 className="absolute left-5 top-5 text-[10px] font-black uppercase tracking-[0.18em]"
@@ -872,7 +872,7 @@ function SlideArtwork({
               />
               <div
                 className="absolute right-0 top-0 h-16 w-8"
-                style={{ backgroundColor: premiumAccent(brandColor) }}
+                style={{ backgroundColor: brandAccent(brandColor) }}
               />
             </>
           )}
