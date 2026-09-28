@@ -141,67 +141,75 @@ export function CreativePreview({
 
         {templateId === "geometric-direct" && (
           <>
+            <div className="absolute left-5 top-5 flex items-center gap-2">
+              <span
+                className="h-8 w-1.5"
+                style={{ backgroundColor: brandColor }}
+              />
+              <span className="rounded-sm bg-white/90 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-[#18202A] shadow-sm backdrop-blur-sm">
+                {property.purpose}
+              </span>
+            </div>
+
             <div
-              className="absolute left-0 top-0 h-16 w-[58%]"
-              style={{ backgroundColor: brandColor }}
-            />
-            <div
-              className="absolute right-0 top-0 h-28 w-20"
+              className="absolute right-0 top-[18%] h-16 w-2"
               style={{ backgroundColor: accent }}
             />
-            <div
-              className="absolute left-5 top-5 text-[10px] font-black uppercase tracking-[0.18em]"
-              style={{ color: brandText }}
-            >
-              {property.purpose}
-            </div>
-            <div className="absolute bottom-4 left-4 w-[84%] bg-white px-4 py-3 shadow-xl">
-              <div className="flex items-end justify-between gap-4">
-                <div className="max-w-[66%]">
-                  <div className="font-display text-[24px] font-black leading-[0.96] text-[#18202A]">
-                    {headline}
-                  </div>
-                  <div className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em] text-[#667085]">
-                    {locality}
-                  </div>
+
+            <div className="absolute bottom-4 left-4 w-[74%] bg-white/[0.94] px-4 py-3 shadow-lg backdrop-blur-sm">
+              <div
+                className="mb-3 h-1 w-10"
+                style={{ backgroundColor: brandColor }}
+              />
+              <div className="font-display text-[22px] font-black leading-[0.97] text-[#18202A]">
+                {headline}
+              </div>
+              <div className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em] text-[#667085]">
+                {locality}
+              </div>
+              <div className="mt-3 flex items-end justify-between gap-3 border-t border-[#EAECF0] pt-3">
+                <div className="min-w-0 text-[9px] font-bold leading-4 text-[#667085]">
+                  {features.slice(0, 3).join(" · ")}
                 </div>
                 <div className="shrink-0 text-right">
                   <div className="text-[8px] font-black uppercase tracking-[0.14em] text-[#98A2B3]">
                     valor
                   </div>
-                  <div className="mt-0.5 text-base font-black" style={{ color: brandColor }}>
+                  <div className="mt-0.5 text-sm font-black" style={{ color: brandColor }}>
                     {price}
                   </div>
                 </div>
               </div>
-              <FeatureRow features={features.slice(0, 3)} compact />
             </div>
           </>
         )}
 
         {templateId === "dark-premium" && (
           <>
-            <div className="absolute inset-0 bg-[#0F2633]/55" />
-            <div className="absolute inset-5 border border-white/35" />
-            <div className="absolute left-7 top-7">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0F2633]/82 via-[#0F2633]/16 to-black/5" />
+            <div className="absolute left-5 top-5">
               <BrandMark brand={brand} inverse />
             </div>
-            <div className="absolute bottom-8 left-8 right-8 text-white">
-              <div
-                className="mb-4 h-1 w-12"
-                style={{ backgroundColor: premiumDetail }}
-              />
-              <div className="text-[10px] font-black uppercase tracking-[0.18em] text-white/65">
+            <div
+              className="absolute left-5 top-[23%] h-16 w-px"
+              style={{ backgroundColor: premiumDetail }}
+            />
+            <div
+              className="absolute left-5 top-[23%] h-px w-16"
+              style={{ backgroundColor: premiumDetail }}
+            />
+            <div className="absolute bottom-6 left-6 right-6 text-white">
+              <div className="text-[9px] font-black uppercase tracking-[0.19em] text-white/62">
                 {locality}
               </div>
-              <div className="font-editorial mt-2 max-w-[88%] text-[39px] font-semibold leading-[0.92]">
+              <div className="font-editorial mt-2 max-w-[84%] text-[37px] font-semibold leading-[0.92]">
                 {headline}
               </div>
-              <div className="mt-5 flex items-center justify-between border-t border-white/25 pt-4">
-                <span className="text-xs font-bold text-white/70">
+              <div className="mt-4 flex items-end justify-between gap-5 border-t border-white/20 pt-3">
+                <span className="max-w-[58%] text-[11px] font-semibold leading-4 text-white/68">
                   {subheadline || property.purpose}
                 </span>
-                <span className="text-xl font-black">{price}</span>
+                <span className="text-lg font-black">{price}</span>
               </div>
             </div>
           </>
@@ -209,28 +217,30 @@ export function CreativePreview({
 
         {templateId === "photo-grid" && (
           <>
-            <div className="absolute inset-x-0 bottom-0 min-h-[26%] bg-[#F5F1E8] px-5 pb-4 pt-3 text-[#18202A]">
+            <div className="absolute inset-x-0 bottom-0 min-h-[22%] bg-[#F5F1E8] px-5 pb-4 pt-3 text-[#18202A]">
               <div className="flex items-center justify-between gap-4">
-                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#667085]">
+                <div className="text-[8px] font-black uppercase tracking-[0.18em] text-[#667085]">
                   {property.purpose} · {locality}
                 </div>
                 <BrandMark brand={brand} compact />
               </div>
               <div className="mt-2 flex items-end justify-between gap-4">
-                <div className="max-w-[68%]">
-                  <div className="font-display text-[24px] font-black leading-[0.96]">
+                <div className="max-w-[64%]">
+                  <div className="font-display text-[21px] font-black leading-[0.98]">
                     {headline}
                   </div>
+                  <div className="mt-2 text-[9px] font-bold text-[#667085]">
+                    {features.slice(0, 2).join(" · ")}
+                  </div>
                 </div>
-                <div className="text-right">
+                <div className="shrink-0 text-right">
                   <div
-                    className="h-1 w-8"
+                    className="ml-auto h-1 w-7"
                     style={{ backgroundColor: brandColor }}
                   />
-                  <div className="mt-2 text-base font-black">{price}</div>
+                  <div className="mt-2 text-sm font-black">{price}</div>
                 </div>
               </div>
-              <FeatureRow features={features} compact />
             </div>
           </>
         )}
@@ -371,33 +381,33 @@ export function TemplateThumbnail({
 
       {templateId === "geometric-direct" && (
         <>
-          <div className="absolute left-0 top-0 h-7 w-1/2" style={{ backgroundColor: brandColor }} />
-          <div className="absolute right-0 top-0 h-12 w-8" style={{ backgroundColor: accent }} />
-          <div className="absolute inset-x-2 bottom-2 bg-white p-2">
-            <div className="h-2 w-3/4 bg-[#18202A]" />
-            <div className="mt-2 flex gap-1">
-              <div className="h-3 flex-1 bg-[#F2F4F7]" />
-              <div className="h-3 flex-1 bg-[#F2F4F7]" />
-              <div className="h-3 flex-1 bg-[#F2F4F7]" />
-            </div>
+          <div className="absolute left-3 top-3 flex items-center gap-1.5">
+            <div className="h-6 w-1" style={{ backgroundColor: brandColor }} />
+            <div className="h-3 w-10 bg-white/90" />
+          </div>
+          <div className="absolute right-0 top-[20%] h-8 w-1.5" style={{ backgroundColor: accent }} />
+          <div className="absolute bottom-2 left-2 w-[72%] bg-white/95 p-2">
+            <div className="h-1 w-6" style={{ backgroundColor: brandColor }} />
+            <div className="mt-2 h-2 w-4/5 bg-[#18202A]" />
+            <div className="mt-2 h-px w-full bg-[#E4E7EC]" />
           </div>
         </>
       )}
 
       {templateId === "dark-premium" && (
         <>
-          <div className="absolute inset-0 bg-[#0F2633]/55" />
-          <div className="absolute inset-2 border border-white/50" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0F2633]/80 via-[#0F2633]/15 to-transparent" />
+          <div className="absolute left-3 top-[24%] h-8 w-px" style={{ backgroundColor: premiumAccent(brandColor) }} />
+          <div className="absolute left-3 top-[24%] h-px w-8" style={{ backgroundColor: premiumAccent(brandColor) }} />
           <div className="absolute inset-x-4 bottom-4">
-            <div className="mb-2 h-1 w-8" style={{ backgroundColor: accent }} />
             <div className="h-2 w-4/5 bg-white" />
-            <div className="mt-2 h-px w-full bg-white/35" />
+            <div className="mt-2 h-px w-full bg-white/25" />
           </div>
         </>
       )}
 
       {templateId === "photo-grid" && (
-        <div className="absolute inset-x-0 bottom-0 h-[26%] bg-[#F5F1E8] p-2">
+        <div className="absolute inset-x-0 bottom-0 h-[22%] bg-[#F5F1E8] p-2">
           <div className="h-2 w-3/4 bg-[#18202A]" />
           <div className="mt-2 h-1.5 w-1/3" style={{ backgroundColor: brandColor }} />
         </div>
@@ -546,7 +556,7 @@ function PhotoGrid({
   if (!main) return <PropertyImage property={property} />;
 
   return (
-    <div className="absolute inset-x-0 top-0 h-[74%] grid grid-cols-[1.75fr_1fr] gap-1 bg-white">
+    <div className="absolute inset-x-0 top-0 h-[78%] grid grid-cols-[2.1fr_1fr] gap-1 bg-white">
       <img
         src={main}
         alt={property.title}
