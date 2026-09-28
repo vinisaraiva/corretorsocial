@@ -31,6 +31,27 @@ function contrastText(hex: string) {
   return luminance > 0.62 ? "#18202A" : "#FFFFFF";
 }
 
+function supportingAccent(hex: string) {
+  const color = hex.replace("#", "");
+  const r = Number.parseInt(color.slice(0, 2), 16);
+  const g = Number.parseInt(color.slice(2, 4), 16);
+  const b = Number.parseInt(color.slice(4, 6), 16);
+  const warm = r > g * 1.15 && r > b * 1.15;
+
+  return warm ? "#17384A" : "#F4A340";
+}
+
+function propertyImages(property: Property) {
+  return Array.from(
+    new Set(
+      [property.image, ...(property.images ?? [])]
+        .filter((item): item is string => Boolean(item))
+        .map((item) => item.trim())
+        .filter(Boolean),
+    ),
+  );
+}
+
 export function CreativePreview({
   property,
   brand,
@@ -56,6 +77,7 @@ export function CreativePreview({
 }) {
   const brandColor = safeBrandColor(brand.primaryColor);
   const brandText = contrastText(brandColor);
+  const accent = supportingAccent(brandColor);
   const locality = [property.location, property.city]
     .filter(Boolean)
     .join(" · ");
@@ -64,12 +86,8 @@ export function CreativePreview({
   const resolvedPosition = selectedTemplateSupportsPosition(templateId)
     ? resolveBlockPosition(blockPosition, undefined, suggestedBlockPosition)
     : "left";
-  const sideClass =
-    resolvedPosition === "right"
-      ? "right-4 left-auto text-right"
-      : "left-4 right-auto text-left";
-  const innerAlignment =
-    resolvedPosition === "right" ? "ml-auto text-right" : "mr-auto text-left";
+  const alignRight = resolvedPosition === "right";
+  const images = propertyImages(property);
 
   return (
     <div className="mx-auto max-w-[430px] overflow-hidden rounded-2xl border border-[#E4E7EC] bg-white shadow-sm">
@@ -77,147 +95,169 @@ export function CreativePreview({
         className="relative aspect-[4/5] overflow-hidden bg-[#EAECF0]"
         data-render-target={renderTarget}
       >
-        <PropertyImage property={property} />
-
-        {templateId === "clean-base" && (
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/55 to-transparent p-5 pt-28 text-white">
-            <div className={`max-w-[78%] ${innerAlignment}`}>
-              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/75">
-                {locality}
-              </div>
-              <div className="font-display mt-2 text-3xl font-black leading-[0.98]">
-                {headline}
-              </div>
-              <div className="mt-4 inline-flex rounded-full bg-white/95 px-3 py-1.5 text-sm font-black text-[#18202A]">
-                {price}
-              </div>
-            </div>
-          </div>
+        {templateId === "photo-grid" ? (
+          <PhotoGrid property={property} images={images} />
+        ) : (
+          <PropertyImage property={property} />
         )}
 
-        {templateId === "clean-top" && (
+        {templateId === "editorial-clean" && (
           <>
-            <div className={`absolute top-4 w-[78%] ${sideClass} rounded-2xl bg-white/95 p-4 shadow-sm backdrop-blur`}>
-              <BrandMark brand={brand} compact />
-              <div className="font-display mt-3 text-2xl font-black leading-[1.02] text-[#18202A]">
-                {headline}
-              </div>
-              <div className="mt-1.5 text-sm leading-5 text-[#667085]">
-                {subheadline}
-              </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/10 to-black/10" />
+            <div
+              className={`absolute top-5 ${alignRight ? "right-5" : "left-5"}`}
+            >
+              <BrandMark brand={brand} inverse />
             </div>
             <div
-              className={`absolute bottom-4 ${resolvedPosition === "right" ? "right-4" : "left-4"} rounded-xl px-4 py-2 text-base font-black shadow`}
-              style={{ backgroundColor: brandColor, color: brandText }}
+              className={`absolute bottom-5 max-w-[82%] ${alignRight ? "right-5 text-right" : "left-5 text-left"} text-white`}
             >
-              {price}
+              <div className="text-[10px] font-black uppercase tracking-[0.18em] text-white/70">
+                {property.purpose} · {locality}
+              </div>
+              <div className="font-display mt-2 text-[34px] font-black leading-[0.94]">
+                {headline}
+              </div>
+              <div className={`mt-4 flex items-center gap-3 ${alignRight ? "justify-end" : ""}`}>
+                <span className="h-px w-10 bg-white/60" />
+                <span className="text-base font-black">{price}</span>
+              </div>
             </div>
           </>
         )}
 
-        {templateId === "commercial" && (
+        {templateId === "geometric-direct" && (
           <>
             <div
-              className="absolute left-4 top-4 rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] shadow"
-              style={{ backgroundColor: brandColor, color: brandText }}
+              className="absolute left-0 top-0 h-16 w-[58%]"
+              style={{ backgroundColor: brandColor }}
+            />
+            <div
+              className="absolute right-0 top-0 h-28 w-20"
+              style={{ backgroundColor: accent }}
+            />
+            <div
+              className="absolute left-5 top-5 text-[10px] font-black uppercase tracking-[0.18em]"
+              style={{ color: brandText }}
             >
               {property.purpose}
             </div>
-            <div className={`absolute bottom-4 w-[78%] ${sideClass} rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur`}>
-              <div className="font-display text-xl font-black leading-[1.02] text-[#18202A]">
-                {headline}
-              </div>
-              <div
-                className="mt-3 text-3xl font-black"
-                style={{ color: brandColor }}
-              >
-                {price}
-              </div>
-              <FeatureRow features={features} />
-            </div>
-          </>
-        )}
-
-        {templateId === "opportunity" && (
-          <>
-            <div className="absolute inset-x-0 top-5 flex justify-start">
-              <div className="rounded-r-full bg-[#F79009] px-5 py-2 text-xs font-black uppercase tracking-[0.16em] text-white shadow">
-                Oportunidade
-              </div>
-            </div>
-            <div className="absolute inset-x-0 bottom-0">
-              <div className="bg-black/72 px-5 py-4 text-white backdrop-blur-sm">
-                <div className="font-display text-xl font-black leading-[1.02]">
-                  {headline}
-                </div>
-                <FeatureRow features={features} inverse />
-              </div>
-              <div className="bg-[#F79009] px-5 py-3 text-center text-3xl font-black text-white">
-                {price}
-              </div>
-            </div>
-          </>
-        )}
-
-        {templateId === "info-card" && (
-          <>
-            <div className="absolute inset-x-0 top-0 h-[57%]" />
-            <div className={`absolute bottom-0 min-h-[43%] w-[84%] ${resolvedPosition === "right" ? "right-0 left-auto text-right" : "left-0 right-auto text-left"} bg-white p-5 text-[#18202A]`}>
-              <div className="flex items-center justify-between gap-3">
-                <BrandMark brand={brand} compact />
-                <span
-                  className="text-lg font-black"
-                  style={{ color: brandColor }}
-                >
-                  {price}
-                </span>
-              </div>
-              <div className="font-display mt-3 text-xl font-black leading-[1.02]">
-                {headline}
-              </div>
-              <div className="mt-1 text-sm text-[#667085]">
-                {subheadline}
-              </div>
-              <FeatureRow features={features} />
-              <div
-                className="mt-4 rounded-xl px-3 py-2 text-center text-sm font-black"
-                style={{ backgroundColor: brandColor, color: brandText }}
-              >
-                {cta}
-              </div>
-            </div>
-          </>
-        )}
-
-        {templateId === "brand-frame" && (
-          <>
-            <div
-              className="absolute inset-0 border-[10px]"
-              style={{ borderColor: brandColor }}
-            />
-            <div className="absolute left-5 top-5 rounded-xl bg-white/95 px-3 py-2 shadow backdrop-blur">
-              <BrandMark brand={brand} compact />
-            </div>
-            <div className={`absolute bottom-5 w-[78%] ${resolvedPosition === "right" ? "right-5 left-auto text-right" : "left-5 right-auto text-left"} rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur`}>
-              <div className="font-display text-2xl font-black leading-[1.02] text-[#18202A]">
-                {headline}
-              </div>
-              <div className="mt-1 text-sm text-[#667085]">
-                {subheadline}
-              </div>
-              <div className="mt-3 flex items-end justify-between gap-3">
-                <div
-                  className="text-xl font-black"
-                  style={{ color: brandColor }}
-                >
-                  {price}
+            <div className="absolute inset-x-4 bottom-4 bg-white p-4 shadow-xl">
+              <div className="flex items-start justify-between gap-4">
+                <div className="max-w-[68%]">
+                  <div className="font-display text-[26px] font-black leading-[0.96] text-[#18202A]">
+                    {headline}
+                  </div>
+                  <div className="mt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">
+                    {locality}
+                  </div>
                 </div>
                 <div
-                  className="rounded-full px-3 py-1.5 text-[11px] font-black"
+                  className="shrink-0 px-3 py-2 text-right"
                   style={{ backgroundColor: brandColor, color: brandText }}
                 >
-                  {cta}
+                  <div className="text-[8px] font-black uppercase tracking-[0.14em] opacity-75">
+                    valor
+                  </div>
+                  <div className="mt-0.5 text-sm font-black">{price}</div>
                 </div>
+              </div>
+              <FeatureRow features={features} compact />
+            </div>
+          </>
+        )}
+
+        {templateId === "dark-premium" && (
+          <>
+            <div className="absolute inset-0 bg-[#0F2633]/55" />
+            <div className="absolute inset-5 border border-white/35" />
+            <div className="absolute left-7 top-7">
+              <BrandMark brand={brand} inverse />
+            </div>
+            <div className="absolute bottom-8 left-8 right-8 text-white">
+              <div
+                className="mb-4 h-1 w-12"
+                style={{ backgroundColor: accent }}
+              />
+              <div className="text-[10px] font-black uppercase tracking-[0.18em] text-white/65">
+                {locality}
+              </div>
+              <div className="font-display mt-2 max-w-[86%] text-[35px] font-black leading-[0.94]">
+                {headline}
+              </div>
+              <div className="mt-5 flex items-center justify-between border-t border-white/25 pt-4">
+                <span className="text-xs font-bold text-white/70">
+                  {subheadline || property.purpose}
+                </span>
+                <span className="text-xl font-black">{price}</span>
+              </div>
+            </div>
+          </>
+        )}
+
+        {templateId === "photo-grid" && (
+          <>
+            <div className="absolute inset-x-0 bottom-0 min-h-[30%] bg-[#F5F1E8] px-5 pb-5 pt-4 text-[#18202A]">
+              <div className="flex items-center justify-between gap-4">
+                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#667085]">
+                  {property.purpose} · {locality}
+                </div>
+                <BrandMark brand={brand} compact />
+              </div>
+              <div className="mt-3 flex items-end justify-between gap-4">
+                <div className="max-w-[65%]">
+                  <div className="font-display text-[26px] font-black leading-[0.96]">
+                    {headline}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div
+                    className="h-1 w-8"
+                    style={{ backgroundColor: brandColor }}
+                  />
+                  <div className="mt-2 text-base font-black">{price}</div>
+                </div>
+              </div>
+              <FeatureRow features={features} compact />
+            </div>
+          </>
+        )}
+
+        {templateId === "property-editorial" && (
+          <>
+            <div className="absolute inset-x-0 bottom-0 min-h-[38%] bg-white px-5 pb-5 pt-4 text-[#18202A]">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div
+                    className="h-1 w-10"
+                    style={{ backgroundColor: brandColor }}
+                  />
+                  <div className="mt-3 text-[9px] font-black uppercase tracking-[0.17em] text-[#667085]">
+                    {property.purpose} · {locality}
+                  </div>
+                </div>
+                <BrandMark brand={brand} compact />
+              </div>
+              <div className="font-display mt-3 max-w-[88%] text-[28px] font-black leading-[0.96]">
+                {headline}
+              </div>
+              <div className="mt-3 flex items-end justify-between gap-4">
+                <FeatureRow features={features} compact noMargin />
+                <div className="shrink-0 text-right">
+                  <div className="text-[8px] font-black uppercase tracking-[0.14em] text-[#98A2B3]">
+                    valor
+                  </div>
+                  <div
+                    className="mt-0.5 text-lg font-black"
+                    style={{ color: brandColor }}
+                  >
+                    {price}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-2 text-[10px] font-bold text-[#667085]">
+                <span className="h-px flex-1 bg-[#D0D5DD]" />
+                <span>{cta}</span>
               </div>
             </div>
           </>
@@ -259,10 +299,14 @@ export function TemplateThumbnail({
   templateId: CampaignTemplateId;
 }) {
   const brandColor = safeBrandColor(brand.primaryColor);
+  const accent = supportingAccent(brandColor);
+  const images = propertyImages(property);
 
   return (
     <div className="relative aspect-[4/5] overflow-hidden bg-[#EAECF0]">
-      {property.image ? (
+      {templateId === "photo-grid" ? (
+        <PhotoGrid property={property} images={images} thumbnail />
+      ) : property.image ? (
         <img
           src={property.image}
           alt=""
@@ -273,67 +317,60 @@ export function TemplateThumbnail({
         <div className="absolute inset-0 bg-[#D0D5DD]" />
       )}
 
-      {templateId === "clean-base" && (
-        <div className="absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-black/90 to-transparent p-2">
-          <div className="mt-7 h-2 w-3/4 rounded bg-white" />
-          <div className="mt-1.5 h-2 w-1/2 rounded bg-white/80" />
-        </div>
-      )}
-
-      {templateId === "clean-top" && (
+      {templateId === "editorial-clean" && (
         <>
-          <div className="absolute inset-x-2 top-2 rounded bg-white/95 p-2">
-            <div className="h-1.5 w-1/3 rounded" style={{ backgroundColor: brandColor }} />
-            <div className="mt-1.5 h-2 w-4/5 rounded bg-[#18202A]" />
-            <div className="mt-1 h-1.5 w-2/3 rounded bg-[#98A2B3]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/5" />
+          <div className="absolute inset-x-3 bottom-3">
+            <div className="h-2 w-4/5 rounded bg-white" />
+            <div className="mt-2 h-px w-10 bg-white/70" />
+            <div className="mt-1.5 h-2 w-1/3 rounded bg-white/85" />
           </div>
-          <div className="absolute bottom-2 right-2 h-4 w-1/3 rounded" style={{ backgroundColor: brandColor }} />
         </>
       )}
 
-      {templateId === "commercial" && (
+      {templateId === "geometric-direct" && (
         <>
-          <div className="absolute left-2 top-2 h-4 w-1/4 rounded" style={{ backgroundColor: brandColor }} />
-          <div className="absolute inset-x-2 bottom-2 rounded bg-white/95 p-2">
-            <div className="h-2 w-3/4 rounded bg-[#18202A]" />
-            <div className="mt-1.5 h-3 w-1/2 rounded" style={{ backgroundColor: brandColor }} />
+          <div className="absolute left-0 top-0 h-7 w-1/2" style={{ backgroundColor: brandColor }} />
+          <div className="absolute right-0 top-0 h-12 w-8" style={{ backgroundColor: accent }} />
+          <div className="absolute inset-x-2 bottom-2 bg-white p-2">
+            <div className="h-2 w-3/4 bg-[#18202A]" />
             <div className="mt-2 flex gap-1">
-              <div className="h-2 flex-1 rounded bg-[#EAECF0]" />
-              <div className="h-2 flex-1 rounded bg-[#EAECF0]" />
-              <div className="h-2 flex-1 rounded bg-[#EAECF0]" />
+              <div className="h-3 flex-1 bg-[#F2F4F7]" />
+              <div className="h-3 flex-1 bg-[#F2F4F7]" />
+              <div className="h-3 flex-1 bg-[#F2F4F7]" />
             </div>
           </div>
         </>
       )}
 
-      {templateId === "opportunity" && (
+      {templateId === "dark-premium" && (
         <>
-          <div className="absolute left-0 top-3 h-4 w-1/2 rounded-r-full bg-[#F79009]" />
-          <div className="absolute inset-x-0 bottom-5 h-10 bg-black/70 p-2">
-            <div className="h-2 w-3/4 rounded bg-white" />
+          <div className="absolute inset-0 bg-[#0F2633]/55" />
+          <div className="absolute inset-2 border border-white/50" />
+          <div className="absolute inset-x-4 bottom-4">
+            <div className="mb-2 h-1 w-8" style={{ backgroundColor: accent }} />
+            <div className="h-2 w-4/5 bg-white" />
+            <div className="mt-2 h-px w-full bg-white/35" />
           </div>
-          <div className="absolute inset-x-0 bottom-0 h-5 bg-[#F79009]" />
         </>
       )}
 
-      {templateId === "info-card" && (
-        <div className="absolute inset-x-0 bottom-0 h-[43%] bg-white p-2">
-          <div className="h-1.5 w-1/3 rounded" style={{ backgroundColor: brandColor }} />
-          <div className="mt-2 h-2 w-4/5 rounded bg-[#18202A]" />
-          <div className="mt-1 h-1.5 w-2/3 rounded bg-[#98A2B3]" />
-          <div className="mt-2 h-4 rounded" style={{ backgroundColor: brandColor }} />
+      {templateId === "photo-grid" && (
+        <div className="absolute inset-x-0 bottom-0 h-[30%] bg-[#F5F1E8] p-2">
+          <div className="h-2 w-3/4 bg-[#18202A]" />
+          <div className="mt-2 h-1.5 w-1/3" style={{ backgroundColor: brandColor }} />
         </div>
       )}
 
-      {templateId === "brand-frame" && (
-        <>
-          <div className="absolute inset-0 border-[5px]" style={{ borderColor: brandColor }} />
-          <div className="absolute left-2 top-2 h-4 w-1/3 rounded bg-white/95" />
-          <div className="absolute inset-x-2 bottom-2 rounded bg-white/95 p-2">
-            <div className="h-2 w-4/5 rounded bg-[#18202A]" />
-            <div className="mt-1.5 h-2 w-1/2 rounded" style={{ backgroundColor: brandColor }} />
+      {templateId === "property-editorial" && (
+        <div className="absolute inset-x-0 bottom-0 h-[38%] bg-white p-2">
+          <div className="h-1 w-1/4" style={{ backgroundColor: brandColor }} />
+          <div className="mt-2 h-2 w-4/5 bg-[#18202A]" />
+          <div className="mt-2 flex gap-1">
+            <div className="h-2 flex-1 bg-[#F2F4F7]" />
+            <div className="h-2 flex-1 bg-[#F2F4F7]" />
           </div>
-        </>
+        </div>
       )}
     </div>
   );
@@ -342,22 +379,30 @@ export function TemplateThumbnail({
 function BrandMark({
   brand,
   compact = false,
+  inverse = false,
 }: {
   brand: CampaignBrand;
   compact?: boolean;
+  inverse?: boolean;
 }) {
   if (brand.logoUrl) {
     return (
-      <img
-        src={brand.logoUrl}
-        alt={brand.professionalName}
-        className={compact ? "max-h-7 max-w-28 object-contain" : "max-h-10 max-w-36 object-contain"}
-      />
+      <span
+        className={`inline-flex items-center justify-center ${inverse ? "rounded bg-white/92 px-2.5 py-1.5" : ""}`}
+      >
+        <img
+          src={brand.logoUrl}
+          alt={brand.professionalName}
+          className={compact ? "max-h-6 max-w-24 object-contain" : "max-h-8 max-w-28 object-contain"}
+        />
+      </span>
     );
   }
 
   return (
-    <span className="text-xs font-black uppercase tracking-wide text-[#18202A]">
+    <span
+      className={`text-[10px] font-black uppercase tracking-[0.16em] ${inverse ? "text-white/85" : "text-[#18202A]"}`}
+    >
       {brand.professionalName}
     </span>
   );
@@ -365,23 +410,21 @@ function BrandMark({
 
 function FeatureRow({
   features,
-  inverse = false,
+  compact = false,
+  noMargin = false,
 }: {
   features: string[];
-  inverse?: boolean;
+  compact?: boolean;
+  noMargin?: boolean;
 }) {
   if (features.length === 0) return null;
 
   return (
-    <div className="mt-3 flex flex-wrap gap-1.5">
+    <div className={`${noMargin ? "" : compact ? "mt-2" : "mt-3"} flex flex-wrap gap-1.5`}>
       {features.map((feature) => (
         <span
           key={feature}
-          className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
-            inverse
-              ? "bg-white/15 text-white"
-              : "bg-[#F2F4F7] text-[#475467]"
-          }`}
+          className={`${compact ? "px-2 py-1 text-[9px]" : "px-2.5 py-1 text-[10px]"} rounded-full bg-[#F2F4F7] font-bold text-[#475467]`}
         >
           {feature}
         </span>
@@ -389,7 +432,6 @@ function FeatureRow({
     </div>
   );
 }
-
 
 function featureItems(property: Property) {
   return [
@@ -399,7 +441,7 @@ function featureItems(property: Property) {
     property.parking ? `${property.parking} vagas` : null,
   ]
     .filter((item): item is string => Boolean(item))
-    .slice(0, 3);
+    .slice(0, 4);
 }
 
 function priceText(property: Property) {
@@ -428,6 +470,52 @@ function PropertyImage({ property }: { property: Property }) {
           Adicione fotos para enriquecer o criativo
         </p>
       </div>
+    </div>
+  );
+}
+
+function PhotoGrid({
+  property,
+  images,
+  thumbnail = false,
+}: {
+  property: Property;
+  images: string[];
+  thumbnail?: boolean;
+}) {
+  const main = images[0];
+  const second = images[1] ?? main;
+  const third = images[2] ?? second ?? main;
+
+  if (!main) return <PropertyImage property={property} />;
+
+  return (
+    <div className="absolute inset-x-0 top-0 h-[70%] grid grid-cols-[1.55fr_1fr] gap-1 bg-white">
+      <img
+        src={main}
+        alt={property.title}
+        className="h-full w-full object-cover"
+        referrerPolicy="no-referrer"
+      />
+      <div className="grid grid-rows-2 gap-1">
+        <img
+          src={second}
+          alt=""
+          className="h-full w-full object-cover"
+          referrerPolicy="no-referrer"
+        />
+        <img
+          src={third}
+          alt=""
+          className="h-full w-full object-cover"
+          referrerPolicy="no-referrer"
+        />
+      </div>
+      {!thumbnail && images.length > 3 ? (
+        <div className="absolute right-3 top-[calc(50%+2px)] rounded bg-black/60 px-2 py-1 text-[9px] font-black text-white">
+          +{images.length - 3} fotos
+        </div>
+      ) : null}
     </div>
   );
 }
