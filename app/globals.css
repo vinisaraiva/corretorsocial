@@ -139,3 +139,9 @@ button:disabled,
   font-family: var(--font-display), var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
   letter-spacing: -0.025em;
 }
+
+
+.font-editorial {
+  font-family: var(--font-editorial), Georgia, "Times New Roman", serif;
+  letter-spacing: -0.018em;
+}
