@@ -142,27 +142,26 @@ export function CreativePreview({
             >
               {property.purpose}
             </div>
-            <div className="absolute inset-x-4 bottom-4 bg-white p-4 shadow-xl">
-              <div className="flex items-start justify-between gap-4">
-                <div className="max-w-[68%]">
-                  <div className="font-display text-[26px] font-black leading-[0.96] text-[#18202A]">
+            <div className="absolute bottom-4 left-4 w-[84%] bg-white px-4 py-3 shadow-xl">
+              <div className="flex items-end justify-between gap-4">
+                <div className="max-w-[66%]">
+                  <div className="font-display text-[24px] font-black leading-[0.96] text-[#18202A]">
                     {headline}
                   </div>
-                  <div className="mt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">
+                  <div className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em] text-[#667085]">
                     {locality}
                   </div>
                 </div>
-                <div
-                  className="shrink-0 px-3 py-2 text-right"
-                  style={{ backgroundColor: brandColor, color: brandText }}
-                >
-                  <div className="text-[8px] font-black uppercase tracking-[0.14em] opacity-75">
+                <div className="shrink-0 text-right">
+                  <div className="text-[8px] font-black uppercase tracking-[0.14em] text-[#98A2B3]">
                     valor
                   </div>
-                  <div className="mt-0.5 text-sm font-black">{price}</div>
+                  <div className="mt-0.5 text-base font-black" style={{ color: brandColor }}>
+                    {price}
+                  </div>
                 </div>
               </div>
-              <FeatureRow features={features} compact />
+              <FeatureRow features={features.slice(0, 3)} compact />
             </div>
           </>
         )}
@@ -182,7 +181,7 @@ export function CreativePreview({
               <div className="text-[10px] font-black uppercase tracking-[0.18em] text-white/65">
                 {locality}
               </div>
-              <div className="font-display mt-2 max-w-[86%] text-[35px] font-black leading-[0.94]">
+              <div className="font-editorial mt-2 max-w-[88%] text-[39px] font-semibold leading-[0.92]">
                 {headline}
               </div>
               <div className="mt-5 flex items-center justify-between border-t border-white/25 pt-4">
@@ -197,16 +196,16 @@ export function CreativePreview({
 
         {templateId === "photo-grid" && (
           <>
-            <div className="absolute inset-x-0 bottom-0 min-h-[30%] bg-[#F5F1E8] px-5 pb-5 pt-4 text-[#18202A]">
+            <div className="absolute inset-x-0 bottom-0 min-h-[26%] bg-[#F5F1E8] px-5 pb-4 pt-3 text-[#18202A]">
               <div className="flex items-center justify-between gap-4">
                 <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#667085]">
                   {property.purpose} · {locality}
                 </div>
                 <BrandMark brand={brand} compact />
               </div>
-              <div className="mt-3 flex items-end justify-between gap-4">
-                <div className="max-w-[65%]">
-                  <div className="font-display text-[26px] font-black leading-[0.96]">
+              <div className="mt-2 flex items-end justify-between gap-4">
+                <div className="max-w-[68%]">
+                  <div className="font-display text-[24px] font-black leading-[0.96]">
                     {headline}
                   </div>
                 </div>
@@ -223,9 +222,38 @@ export function CreativePreview({
           </>
         )}
 
+        {templateId === "minimal-contemporary" && (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+            <div className={`absolute top-5 ${alignRight ? "right-5" : "left-5"}`}>
+              <BrandMark brand={brand} inverse />
+            </div>
+            <div className={`absolute bottom-5 ${alignRight ? "right-5 text-right" : "left-5 text-left"} w-[76%] bg-[#FAF8F4]/95 px-4 py-4 shadow-sm backdrop-blur-sm`}>
+              <div className="flex items-start gap-3">
+                <span
+                  className="mt-1 h-10 w-0.5 shrink-0"
+                  style={{ backgroundColor: brandColor }}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#667085]">
+                    {property.purpose} · {locality}
+                  </div>
+                  <div className="font-display mt-2 text-[25px] font-black leading-[0.97] text-[#18202A]">
+                    {headline}
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <FeatureRow features={features.slice(0, 2)} compact noMargin />
+                    <span className="shrink-0 text-sm font-black text-[#18202A]">{price}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
         {templateId === "property-editorial" && (
           <>
-            <div className="absolute inset-x-0 bottom-0 min-h-[38%] bg-white px-5 pb-5 pt-4 text-[#18202A]">
+            <div className="absolute inset-x-0 bottom-0 min-h-[34%] bg-[#FAF8F4] px-5 pb-4 pt-4 text-[#18202A]">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div
@@ -238,7 +266,7 @@ export function CreativePreview({
                 </div>
                 <BrandMark brand={brand} compact />
               </div>
-              <div className="font-display mt-3 max-w-[88%] text-[28px] font-black leading-[0.96]">
+              <div className="font-editorial mt-2 max-w-[88%] text-[31px] font-semibold leading-[0.95]">
                 {headline}
               </div>
               <div className="mt-3 flex items-end justify-between gap-4">
@@ -255,9 +283,9 @@ export function CreativePreview({
                   </div>
                 </div>
               </div>
-              <div className="mt-3 flex items-center gap-2 text-[10px] font-bold text-[#667085]">
-                <span className="h-px flex-1 bg-[#D0D5DD]" />
-                <span>{cta}</span>
+              <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#DED8CF] pt-3 text-[10px] font-bold text-[#667085]">
+                <span className="truncate">{cta}</span>
+                <span className="text-base" style={{ color: brandColor }}>→</span>
               </div>
             </div>
           </>
@@ -356,14 +384,14 @@ export function TemplateThumbnail({
       )}
 
       {templateId === "photo-grid" && (
-        <div className="absolute inset-x-0 bottom-0 h-[30%] bg-[#F5F1E8] p-2">
+        <div className="absolute inset-x-0 bottom-0 h-[26%] bg-[#F5F1E8] p-2">
           <div className="h-2 w-3/4 bg-[#18202A]" />
           <div className="mt-2 h-1.5 w-1/3" style={{ backgroundColor: brandColor }} />
         </div>
       )}
 
       {templateId === "property-editorial" && (
-        <div className="absolute inset-x-0 bottom-0 h-[38%] bg-white p-2">
+        <div className="absolute inset-x-0 bottom-0 h-[34%] bg-[#FAF8F4] p-2">
           <div className="h-1 w-1/4" style={{ backgroundColor: brandColor }} />
           <div className="mt-2 h-2 w-4/5 bg-[#18202A]" />
           <div className="mt-2 flex gap-1">
@@ -371,6 +399,21 @@ export function TemplateThumbnail({
             <div className="h-2 flex-1 bg-[#F2F4F7]" />
           </div>
         </div>
+      )}
+
+      {templateId === "minimal-contemporary" && (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+          <div className="absolute bottom-3 left-3 w-[72%] bg-[#FAF8F4]/95 p-2">
+            <div className="flex gap-2">
+              <div className="h-7 w-0.5" style={{ backgroundColor: brandColor }} />
+              <div className="flex-1">
+                <div className="h-2 w-4/5 bg-[#18202A]" />
+                <div className="mt-2 h-1.5 w-1/3 bg-[#98A2B3]" />
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
@@ -490,7 +533,7 @@ function PhotoGrid({
   if (!main) return <PropertyImage property={property} />;
 
   return (
-    <div className="absolute inset-x-0 top-0 h-[70%] grid grid-cols-[1.55fr_1fr] gap-1 bg-white">
+    <div className="absolute inset-x-0 top-0 h-[74%] grid grid-cols-[1.75fr_1fr] gap-1 bg-white">
       <img
         src={main}
         alt={property.title}
