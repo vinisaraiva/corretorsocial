@@ -313,7 +313,7 @@ export function VerticalCreativePreview({
               <div className="text-[9px] font-black uppercase tracking-[0.18em] text-white/65">
                 {locality}
               </div>
-              <div className="font-display mt-2 text-[32px] font-black leading-[0.94]">
+              <div className="font-editorial mt-2 text-[35px] font-semibold leading-[0.92]">
                 {headline}
               </div>
               {subheadline && (
