@@ -1201,7 +1201,7 @@ export function CampaignBuilder({
                     </p>
                   </div>
                   <span className="rounded-full bg-[#E9F4F1] px-2.5 py-1 text-[10px] font-bold text-[#176B5B]">
-                    Padrão: Clean Base
+                    Padrão: Editorial Clean
                   </span>
                 </div>
 
