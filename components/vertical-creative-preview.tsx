@@ -42,6 +42,17 @@ function supportingAccent(hex: string) {
   return warm ? "#17384A" : "#F4A340";
 }
 
+function propertyImages(property: Property) {
+  return Array.from(
+    new Set(
+      [property.image, ...(property.images ?? [])]
+        .filter((item): item is string => Boolean(item))
+        .map((item) => item.trim())
+        .filter(Boolean),
+    ),
+  );
+}
+
 function priceText(property: Property) {
   if (property.price <= 0) return "Preço sob consulta";
 
@@ -169,6 +180,7 @@ export function VerticalCreativePreview({
     .filter(Boolean)
     .join(" · ");
   const safeZone = verticalSafeZones[platform];
+  const images = propertyImages(property);
   const template = getVerticalTemplate(templateId);
   const resolvedPosition = template.supportsBlockPosition
     ? resolveBlockPosition(blockPosition, platform, suggestedBlockPosition)
@@ -322,6 +334,129 @@ export function VerticalCreativePreview({
           </>
         )}
 
+        {templateId === "vertical-photo-grid" && (
+          <>
+            <div className="absolute inset-x-0 top-0 h-[72%] grid grid-cols-[1.7fr_1fr] gap-1 bg-white">
+              {images[0] ? (
+                <img
+                  src={images[0]}
+                  alt={property.title}
+                  className="h-full w-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : null}
+              <div className="grid grid-rows-2 gap-1">
+                {(images[1] ?? images[0]) ? (
+                  <img
+                    src={images[1] ?? images[0]}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : null}
+                {(images[2] ?? images[1] ?? images[0]) ? (
+                  <img
+                    src={images[2] ?? images[1] ?? images[0]}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : null}
+              </div>
+            </div>
+            <div className="absolute inset-x-0 bottom-[15%] min-h-[20%] bg-[#F5F1E8] px-5 py-4 text-[#18202A]">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#667085]">
+                  {property.purpose} · {locality}
+                </div>
+                <BrandMark brand={brand} />
+              </div>
+              <div className="mt-3 flex items-end justify-between gap-4">
+                <div className="font-display max-w-[66%] text-[26px] font-black leading-[0.96]">
+                  {headline}
+                </div>
+                <div className="shrink-0 text-lg font-black">{price}</div>
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <FeaturePills items={verticalFeatures(property, 2)} />
+                <span className="text-[10px] font-black" style={{ color: brandColor }}>
+                  {cta} →
+                </span>
+              </div>
+            </div>
+          </>
+        )}
+
+        {templateId === "vertical-editorial" && (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent" />
+            <div className="absolute inset-x-0 bottom-[15%] min-h-[31%] bg-[#FAF8F4]/96 px-5 py-5 text-[#18202A] backdrop-blur-sm">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div
+                    className="h-1 w-10"
+                    style={{ backgroundColor: brandColor }}
+                  />
+                  <div className="mt-3 text-[9px] font-black uppercase tracking-[0.17em] text-[#667085]">
+                    {property.purpose} · {locality}
+                  </div>
+                </div>
+                <BrandMark brand={brand} />
+              </div>
+              <div className="font-editorial mt-3 max-w-[88%] text-[34px] font-semibold leading-[0.94]">
+                {headline}
+              </div>
+              {subheadline && (
+                <div className="mt-2 max-w-[90%] text-xs leading-5 text-[#667085]">
+                  {subheadline}
+                </div>
+              )}
+              <div className="mt-4 flex items-center justify-between border-t border-[#DED8CF] pt-3">
+                <span className="text-lg font-black">{price}</span>
+                <span className="text-[10px] font-black" style={{ color: brandColor }}>
+                  {cta} →
+                </span>
+              </div>
+            </div>
+          </>
+        )}
+
+        {templateId === "vertical-minimal" && (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/48 via-transparent to-black/5" />
+            <div className="absolute inset-x-5 top-[12%]">
+              <BrandMark brand={brand} inverse />
+            </div>
+            <div className={`absolute bottom-[17%] ${blockPlacement} bg-[#FAF8F4]/95 px-4 py-4 text-[#18202A] shadow-sm backdrop-blur-sm`}>
+              <div className="flex gap-3">
+                <span
+                  className="mt-1 h-12 w-0.5 shrink-0"
+                  style={{ backgroundColor: brandColor }}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#667085]">
+                    {property.purpose} · {locality}
+                  </div>
+                  <div className="font-display mt-2 text-[27px] font-black leading-[0.96]">
+                    {headline}
+                  </div>
+                  {subheadline && (
+                    <div className="mt-2 text-xs leading-5 text-[#667085]">
+                      {subheadline}
+                    </div>
+                  )}
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <span className="text-base font-black">{price}</span>
+                    <span className="text-[10px] font-black" style={{ color: brandColor }}>
+                      {cta} →
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
         <div
           data-render-ignore="true"
           className="pointer-events-none absolute inset-x-0 top-0 border-b border-dashed border-white/20"
@@ -416,6 +551,46 @@ export function VerticalTemplateThumbnail({
             <div className="mb-2 h-1 w-8" style={{ backgroundColor: accent }} />
             <div className="h-2 w-4/5 bg-white" />
             <div className="mt-2 h-px w-full bg-white/30" />
+          </div>
+        </>
+      )}
+
+      {templateId === "vertical-photo-grid" && (
+        <>
+          <div className="absolute inset-x-0 top-0 h-[72%] grid grid-cols-[1.7fr_1fr] gap-px bg-white">
+            <div className="bg-black/5" />
+            <div className="grid grid-rows-2 gap-px">
+              <div className="bg-black/10" />
+              <div className="bg-black/15" />
+            </div>
+          </div>
+          <div className="absolute inset-x-0 bottom-[15%] h-[20%] bg-[#F5F1E8] p-2">
+            <div className="h-2 w-3/4 bg-[#18202A]" />
+            <div className="mt-2 h-1.5 w-1/3" style={{ backgroundColor: brandColor }} />
+          </div>
+        </>
+      )}
+
+      {templateId === "vertical-editorial" && (
+        <div className="absolute inset-x-0 bottom-[15%] h-[31%] bg-[#FAF8F4]/95 p-2">
+          <div className="h-1 w-1/4" style={{ backgroundColor: brandColor }} />
+          <div className="mt-2 h-2 w-4/5 bg-[#18202A]" />
+          <div className="mt-2 h-px w-full bg-[#DED8CF]" />
+          <div className="mt-2 h-2 w-1/3 bg-[#98A2B3]" />
+        </div>
+      )}
+
+      {templateId === "vertical-minimal" && (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+          <div className="absolute bottom-[18%] left-3 w-[72%] bg-[#FAF8F4]/95 p-2">
+            <div className="flex gap-2">
+              <div className="h-8 w-0.5" style={{ backgroundColor: brandColor }} />
+              <div className="flex-1">
+                <div className="h-2 w-4/5 bg-[#18202A]" />
+                <div className="mt-2 h-1.5 w-1/3 bg-[#98A2B3]" />
+              </div>
+            </div>
           </div>
         </>
       )}
