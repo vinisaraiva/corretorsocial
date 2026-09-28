@@ -388,7 +388,7 @@ function BrandMark({
   if (brand.logoUrl) {
     return (
       <span
-        className={`inline-flex items-center justify-center ${inverse ? "rounded bg-white/92 px-2.5 py-1.5" : ""}`}
+        className={`inline-flex items-center justify-center ${inverse ? "rounded bg-white/[0.92] px-2.5 py-1.5" : ""}`}
       >
         <img
           src={brand.logoUrl}
