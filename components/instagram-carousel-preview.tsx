@@ -641,7 +641,7 @@ function SlideArtwork({
                   className="mb-4 h-1 w-12"
                   style={{ backgroundColor: brandAccent(brandColor) }}
                 />
-                <div className="font-display max-w-[88%] text-[36px] font-black leading-[0.93]">
+                <div className="font-editorial max-w-[90%] text-[40px] font-semibold leading-[0.91]">
                   {slide.title}
                 </div>
                 <div className="mt-5 border-t border-white/25 pt-4 text-xs font-bold text-white/75">
@@ -684,11 +684,36 @@ function SlideArtwork({
                 <div className="text-[9px] font-black uppercase tracking-[0.17em] text-[#667085]">
                   {brand.professionalName}
                 </div>
-                <div className="font-display mt-2 max-w-[88%] text-[29px] font-black leading-[0.96]">
+                <div className="font-editorial mt-2 max-w-[90%] text-[32px] font-semibold leading-[0.94]">
                   {slide.title}
                 </div>
                 <div className="mt-3 text-xs font-bold text-[#667085]">
                   {slide.subtitle}
+                </div>
+              </div>
+            </>
+          )}
+
+          {treatment === "minimal-contemporary" && (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/42 via-transparent to-transparent" />
+              <div className="absolute left-5 top-5 text-[9px] font-black uppercase tracking-[0.18em] text-white/80">
+                {brand.professionalName}
+              </div>
+              <div className="absolute bottom-5 left-5 w-[76%] bg-[#FAF8F4]/95 px-4 py-4 text-[#18202A] shadow-sm backdrop-blur-sm">
+                <div className="flex gap-3">
+                  <span
+                    className="mt-1 h-11 w-0.5 shrink-0"
+                    style={{ backgroundColor: brandColor }}
+                  />
+                  <div>
+                    <div className="font-display text-[28px] font-black leading-[0.96]">
+                      {slide.title}
+                    </div>
+                    <div className="mt-3 text-[10px] font-bold text-[#667085]">
+                      {slide.subtitle}
+                    </div>
+                  </div>
                 </div>
               </div>
             </>
@@ -726,7 +751,11 @@ function SlideArtwork({
                 <div
                   className={`${
                     slide.structuredItems?.length ? "text-xl" : "text-2xl"
-                  } font-display font-black leading-[1.02] text-[#18202A]`}
+                  } ${
+                    treatment === "dark-premium" || treatment === "property-editorial"
+                      ? "font-editorial font-semibold"
+                      : "font-display font-black"
+                  } leading-[1.02] text-[#18202A]`}
                 >
                   {slide.title}
                 </div>
@@ -761,7 +790,13 @@ function SlideArtwork({
                 className="mb-3 h-1.5 w-12 rounded-full"
                 style={{ backgroundColor: accent }}
               />
-              <div className="font-display text-2xl font-black leading-[1.02] text-[#18202A]">
+              <div
+                className={`text-2xl leading-[1.02] text-[#18202A] ${
+                  treatment === "dark-premium" || treatment === "property-editorial"
+                    ? "font-editorial font-semibold"
+                    : "font-display font-black"
+                }`}
+              >
                 {slide.title}
               </div>
               {slide.structuredItems?.length ? (
@@ -824,7 +859,13 @@ function SlideArtwork({
                     : brandColor,
               }}
             />
-            <div className="font-display max-w-[86%] text-[28px] font-black leading-[0.98]">
+            <div
+              className={`max-w-[86%] text-[28px] leading-[0.98] ${
+                treatment === "dark-premium" || treatment === "property-editorial"
+                  ? "font-editorial font-semibold"
+                  : "font-display font-black"
+              }`}
+            >
               {slide.title}
             </div>
             {slide.subtitle && (
@@ -876,7 +917,13 @@ function SlideArtwork({
             </div>
 
             <div className="mt-10 max-w-[82%]">
-              <div className="font-display text-[42px] font-black leading-[0.94]">
+              <div
+                className={`text-[42px] leading-[0.94] ${
+                  treatment === "dark-premium" || treatment === "property-editorial"
+                    ? "font-editorial font-semibold"
+                    : "font-display font-black"
+                }`}
+              >
                 {slide.title}
               </div>
             </div>
