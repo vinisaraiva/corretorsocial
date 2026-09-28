@@ -31,6 +31,18 @@ function contrastText(hex: string) {
   return luminance > 0.62 ? "#18202A" : "#FFFFFF";
 }
 
+function premiumAccent(hex: string) {
+  const color = hex.replace("#", "");
+  const channels = [0, 2, 4].map((offset) =>
+    Number.parseInt(color.slice(offset, offset + 2), 16),
+  );
+  const mixed = channels.map((channel) =>
+    Math.round(channel + (255 - channel) * 0.38),
+  );
+
+  return `#${mixed.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+}
+
 function supportingAccent(hex: string) {
   const color = hex.replace("#", "");
   const r = Number.parseInt(color.slice(0, 2), 16);
@@ -78,6 +90,7 @@ export function CreativePreview({
   const brandColor = safeBrandColor(brand.primaryColor);
   const brandText = contrastText(brandColor);
   const accent = supportingAccent(brandColor);
+  const premiumDetail = premiumAccent(brandColor);
   const locality = [property.location, property.city]
     .filter(Boolean)
     .join(" · ");
@@ -176,7 +189,7 @@ export function CreativePreview({
             <div className="absolute bottom-8 left-8 right-8 text-white">
               <div
                 className="mb-4 h-1 w-12"
-                style={{ backgroundColor: accent }}
+                style={{ backgroundColor: premiumDetail }}
               />
               <div className="text-[10px] font-black uppercase tracking-[0.18em] text-white/65">
                 {locality}
