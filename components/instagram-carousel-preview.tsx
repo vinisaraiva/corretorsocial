@@ -575,6 +575,19 @@ function SlideArtwork({
           ? "brand"
           : finalCardTheme;
   const finalPalette = finalCardPalette(resolvedFinalTheme, brandColor);
+  const resolvedFinalDecoration: CarouselFinalCardDecoration =
+    treatment === "dark-premium"
+      ? "frame"
+      : treatment === "property-editorial" ||
+          treatment === "minimal-contemporary"
+        ? "lines"
+        : treatment === "photo-grid"
+          ? "blocks"
+          : treatment === "geometric-direct"
+            ? finalCardDecoration === "lines" || finalCardDecoration === "blocks"
+              ? finalCardDecoration
+              : "blocks"
+            : finalCardDecoration;
 
   return (
     <div
@@ -896,7 +909,7 @@ function SlideArtwork({
           }}
         >
           <FinalCardDecoration
-            variant={finalCardDecoration}
+            variant={resolvedFinalDecoration}
             detail={finalPalette.detail}
             foreground={finalPalette.foreground}
           />
