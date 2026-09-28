@@ -441,12 +441,7 @@ function buildSlides(
 }
 
 function visualTreatment(templateId: CampaignTemplateId) {
-  if (templateId === "opportunity") return "opportunity";
-  if (templateId === "brand-frame") return "branding";
-  if (templateId === "commercial" || templateId === "info-card") {
-    return "commercial";
-  }
-  return "clean";
+  return templateId;
 }
 
 function factSlideImageHeight(
@@ -564,7 +559,7 @@ function SlideArtwork({
   const brandColor = safeBrandColor(brand.primaryColor);
   const brandText = contrastText(brandColor);
   const treatment = visualTreatment(templateId);
-  const accent = treatment === "opportunity" ? "#F79009" : brandColor;
+  const accent = brandColor;
   const accentText = contrastText(accent);
   const factsLayout =
     slide.kind === "facts" ? factSlideImageHeight(slide, modelId) : null;
@@ -588,30 +583,116 @@ function SlideArtwork({
 
       {slide.kind === "cover" && (
         <>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/20" />
-          {treatment === "branding" && (
-            <div
-              className="absolute inset-0 border-[10px]"
-              style={{ borderColor: brandColor }}
-            />
+          {treatment === "editorial-clean" && (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/10 to-black/10" />
+              <div className="absolute left-5 top-5 text-[10px] font-black uppercase tracking-[0.18em] text-white/75">
+                {brand.professionalName}
+              </div>
+              <div className="absolute inset-x-5 bottom-6 text-white">
+                <div className="font-display max-w-[88%] text-[34px] font-black leading-[0.94]">
+                  {slide.title}
+                </div>
+                <div className="mt-4 flex items-center gap-3">
+                  <span className="h-px w-10 bg-white/60" />
+                  <span className="text-xs font-black">{slide.subtitle}</span>
+                </div>
+              </div>
+            </>
           )}
-          <div className="absolute inset-x-5 bottom-6 text-white">
-            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">
-              {brand.professionalName}
-            </div>
-            <div className="font-display mt-2 text-3xl font-black leading-[0.98]">
-              {slide.title}
-            </div>
-            <div
-              className="mt-4 inline-flex rounded-full px-3 py-1.5 text-xs font-black"
-              style={{
-                backgroundColor: treatment === "clean" ? "#FFFFFF" : accent,
-                color: treatment === "clean" ? "#18202A" : accentText,
-              }}
-            >
-              {slide.subtitle}
-            </div>
-          </div>
+
+          {treatment === "geometric-direct" && (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+              <div
+                className="absolute left-0 top-0 h-16 w-[58%]"
+                style={{ backgroundColor: brandColor }}
+              />
+              <div
+                className="absolute right-0 top-0 h-28 w-20"
+                style={{ backgroundColor: brandAccent(brandColor) }}
+              />
+              <div
+                className="absolute left-5 top-5 text-[10px] font-black uppercase tracking-[0.18em]"
+                style={{ color: brandText }}
+              >
+                {brand.professionalName}
+              </div>
+              <div className="absolute inset-x-5 bottom-6 text-white">
+                <div className="font-display max-w-[88%] text-[34px] font-black leading-[0.94]">
+                  {slide.title}
+                </div>
+                <div className="mt-4 inline-flex bg-white px-3 py-2 text-xs font-black text-[#18202A]">
+                  {slide.subtitle}
+                </div>
+              </div>
+            </>
+          )}
+
+          {treatment === "dark-premium" && (
+            <>
+              <div className="absolute inset-0 bg-[#0F2633]/58" />
+              <div className="absolute inset-5 border border-white/35" />
+              <div className="absolute left-7 top-7 text-[10px] font-black uppercase tracking-[0.18em] text-white/70">
+                {brand.professionalName}
+              </div>
+              <div className="absolute bottom-8 left-8 right-8 text-white">
+                <div
+                  className="mb-4 h-1 w-12"
+                  style={{ backgroundColor: brandAccent(brandColor) }}
+                />
+                <div className="font-display max-w-[88%] text-[36px] font-black leading-[0.93]">
+                  {slide.title}
+                </div>
+                <div className="mt-5 border-t border-white/25 pt-4 text-xs font-bold text-white/75">
+                  {slide.subtitle}
+                </div>
+              </div>
+            </>
+          )}
+
+          {treatment === "photo-grid" && (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+              <div className="absolute left-5 top-5 flex items-center gap-2">
+                <span
+                  className="h-8 w-2"
+                  style={{ backgroundColor: brandColor }}
+                />
+                <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white">
+                  {brand.professionalName}
+                </span>
+              </div>
+              <div className="absolute inset-x-5 bottom-6 text-white">
+                <div className="font-display max-w-[84%] text-[34px] font-black leading-[0.94]">
+                  {slide.title}
+                </div>
+                <div className="mt-4 inline-flex border border-white/45 bg-black/25 px-3 py-2 text-xs font-black backdrop-blur-sm">
+                  {slide.subtitle}
+                </div>
+              </div>
+            </>
+          )}
+
+          {treatment === "property-editorial" && (
+            <>
+              <div className="absolute inset-x-0 bottom-0 min-h-[34%] bg-[#F5F1E8] px-5 pb-5 pt-4 text-[#18202A]">
+                <div
+                  className="mb-3 h-1 w-10"
+                  style={{ backgroundColor: brandColor }}
+                />
+                <div className="text-[9px] font-black uppercase tracking-[0.17em] text-[#667085]">
+                  {brand.professionalName}
+                </div>
+                <div className="font-display mt-2 max-w-[88%] text-[29px] font-black leading-[0.96]">
+                  {slide.title}
+                </div>
+                <div className="mt-3 text-xs font-bold text-[#667085]">
+                  {slide.subtitle}
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
 
@@ -710,11 +791,46 @@ function SlideArtwork({
 
       {slide.kind === "photo" && (
         <>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-transparent to-transparent" />
+
+          {treatment === "dark-premium" && (
+            <div className="absolute inset-5 border border-white/30" />
+          )}
+
+          {treatment === "geometric-direct" && (
+            <>
+              <div
+                className="absolute left-0 top-0 h-10 w-[42%]"
+                style={{ backgroundColor: brandColor }}
+              />
+              <div
+                className="absolute right-0 top-0 h-16 w-8"
+                style={{ backgroundColor: brandAccent(brandColor) }}
+              />
+            </>
+          )}
+
+          {treatment === "property-editorial" && (
+            <div className="absolute bottom-0 left-0 h-[30%] w-2 bg-white" />
+          )}
+
           <div className="absolute inset-x-5 bottom-6 text-white">
-            <div className="font-display text-2xl font-black leading-[1.02]">{slide.title}</div>
+            <div
+              className="mb-3 h-1 w-10"
+              style={{
+                backgroundColor:
+                  treatment === "dark-premium"
+                    ? brandAccent(brandColor)
+                    : brandColor,
+              }}
+            />
+            <div className="font-display max-w-[86%] text-[28px] font-black leading-[0.98]">
+              {slide.title}
+            </div>
             {slide.subtitle && (
-              <div className="mt-2 text-sm text-white/80">{slide.subtitle}</div>
+              <div className="mt-2 max-w-[82%] text-sm text-white/80">
+                {slide.subtitle}
+              </div>
             )}
           </div>
         </>
@@ -791,6 +907,12 @@ function SlideArtwork({
                     <span className="font-display mt-1 block text-[24px] font-black leading-none tracking-[-0.02em]">
                       {formatWhatsapp(brand.whatsapp)}
                     </span>
+                    <span
+                      className="mt-2 block text-[10px] font-semibold leading-4"
+                      style={{ color: finalPalette.muted }}
+                    >
+                      {slide.subtitle}
+                    </span>
                   </span>
                 </div>
               ) : (
@@ -799,12 +921,7 @@ function SlideArtwork({
                 </div>
               )}
 
-              <div
-                className="mx-auto mt-5 max-w-[82%] px-3 text-center text-[11px] font-semibold tracking-[0.01em]"
-                style={{ color: finalPalette.muted }}
-              >
-                {slide.subtitle}
-              </div>
+
             </div>
           </div>
         </div>
