@@ -18,11 +18,15 @@ export function campaignTemplateToVertical(
 ): VerticalTemplateId {
   switch (templateId) {
     case "geometric-direct":
-    case "property-editorial":
       return "vertical-commercial";
     case "dark-premium":
       return "vertical-branding";
     case "photo-grid":
+      return "vertical-photo-grid";
+    case "property-editorial":
+      return "vertical-editorial";
+    case "minimal-contemporary":
+      return "vertical-minimal";
     case "editorial-clean":
     default:
       return "vertical-clean";
