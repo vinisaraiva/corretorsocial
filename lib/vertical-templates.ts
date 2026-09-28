@@ -1,9 +1,9 @@
 export const verticalTemplates = [
   {
     id: "vertical-clean",
-    storyName: "Story Clean",
-    tiktokName: "TikTok Clean",
-    description: "Foto dominante, marca discreta e chamada curta.",
+    storyName: "Story Editorial",
+    tiktokName: "TikTok Editorial",
+    description: "Foto dominante, tipografia forte e composição editorial limpa.",
     supportsSubheadline: true,
     headlineLimit: 46,
     subheadlineLimit: 64,
@@ -12,9 +12,9 @@ export const verticalTemplates = [
   },
   {
     id: "vertical-commercial",
-    storyName: "Story Comercial",
-    tiktokName: "TikTok Comercial",
-    description: "Preço, finalidade e características em leitura rápida.",
+    storyName: "Story Geométrico",
+    tiktokName: "TikTok Geométrico",
+    description: "Blocos geométricos, preço e características em leitura comercial rápida.",
     supportsSubheadline: false,
     headlineLimit: 42,
     subheadlineLimit: 0,
@@ -34,9 +34,9 @@ export const verticalTemplates = [
   },
   {
     id: "vertical-branding",
-    storyName: "Story Branding",
-    tiktokName: "TikTok Branding",
-    description: "Moldura de marca, logo e CTA bem visível.",
+    storyName: "Story Dark Premium",
+    tiktokName: "TikTok Dark Premium",
+    description: "Tratamento escuro premium, logo discreto e CTA de alto contraste.",
     supportsSubheadline: true,
     headlineLimit: 44,
     subheadlineLimit: 60,
