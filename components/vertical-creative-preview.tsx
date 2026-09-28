@@ -185,7 +185,6 @@ export function VerticalCreativePreview({
   renderTarget?: string;
 }) {
   const brandColor = safeBrandColor(brand.primaryColor);
-  const brandText = contrastText(brandColor);
   const accent = supportingAccent(brandColor);
   const premiumDetail = premiumAccent(brandColor);
   const price = priceText(property);
