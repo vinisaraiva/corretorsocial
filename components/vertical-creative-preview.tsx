@@ -32,6 +32,16 @@ function contrastText(hex: string) {
   return luminance > 0.62 ? "#18202A" : "#FFFFFF";
 }
 
+function supportingAccent(hex: string) {
+  const color = hex.replace("#", "");
+  const r = Number.parseInt(color.slice(0, 2), 16);
+  const g = Number.parseInt(color.slice(2, 4), 16);
+  const b = Number.parseInt(color.slice(4, 6), 16);
+  const warm = r > g * 1.15 && r > b * 1.15;
+
+  return warm ? "#17384A" : "#F4A340";
+}
+
 function priceText(property: Property) {
   if (property.price <= 0) return "Preço sob consulta";
 
@@ -58,18 +68,20 @@ function BrandMark({
 }) {
   if (brand.logoUrl) {
     return (
-      <img
-        src={brand.logoUrl}
-        alt={brand.professionalName}
-        className="max-h-8 max-w-32 object-contain"
-      />
+      <span className={inverse ? "inline-flex rounded bg-white/[0.92] px-2.5 py-1.5" : ""}>
+        <img
+          src={brand.logoUrl}
+          alt={brand.professionalName}
+          className="max-h-8 max-w-32 object-contain"
+        />
+      </span>
     );
   }
 
   return (
     <span
-      className={`text-xs font-black uppercase tracking-[0.16em] ${
-        inverse ? "text-white" : "text-[#18202A]"
+      className={`text-[10px] font-black uppercase tracking-[0.18em] ${
+        inverse ? "text-white/85" : "text-[#18202A]"
       }`}
     >
       {brand.professionalName}
@@ -113,9 +125,9 @@ function FeaturePills({
       {items.map((item) => (
         <span
           key={item}
-          className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
+          className={`px-2.5 py-1 text-[10px] font-bold ${
             inverse
-              ? "bg-white/15 text-white"
+              ? "border border-white/25 bg-white/10 text-white"
               : "bg-[#F2F4F7] text-[#475467]"
           }`}
         >
@@ -151,6 +163,7 @@ export function VerticalCreativePreview({
 }) {
   const brandColor = safeBrandColor(brand.primaryColor);
   const brandText = contrastText(brandColor);
+  const accent = supportingAccent(brandColor);
   const price = priceText(property);
   const locality = [property.location, property.city]
     .filter(Boolean)
@@ -160,14 +173,11 @@ export function VerticalCreativePreview({
   const resolvedPosition = template.supportsBlockPosition
     ? resolveBlockPosition(blockPosition, platform, suggestedBlockPosition)
     : "left";
-  const contentWidth =
-    platform === "tiktok" ? "w-[72%]" : "w-[82%]";
+  const contentWidth = platform === "tiktok" ? "w-[72%]" : "w-[82%]";
   const blockPlacement =
     resolvedPosition === "right"
       ? `right-5 left-auto ${contentWidth} text-right`
       : `left-5 right-auto ${contentWidth} text-left`;
-  const ctaJustify =
-    resolvedPosition === "right" ? "justify-end" : "justify-start";
 
   return (
     <div className="mx-auto w-full max-w-[330px] overflow-hidden rounded-2xl border border-[#E4E7EC] bg-[#EAECF0] shadow-sm">
@@ -182,25 +192,27 @@ export function VerticalCreativePreview({
 
         {templateId === "vertical-clean" && (
           <>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/5 to-black/15" />
             <div className="absolute inset-x-5 top-[12%]">
               <BrandMark brand={brand} inverse />
             </div>
-            <div className={`absolute bottom-[19%] ${blockPlacement} text-white`}>
-              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/75">
-                {locality}
+            <div className={`absolute bottom-[17%] ${blockPlacement} text-white`}>
+              <div className="text-[9px] font-black uppercase tracking-[0.2em] text-white/65">
+                {property.purpose} · {locality}
               </div>
-              <div className="font-display mt-2 text-3xl font-black leading-[0.98]">
+              <div className="font-display mt-2 text-[34px] font-black leading-[0.94]">
                 {headline}
               </div>
               {subheadline && (
-                <div className="mt-2 max-w-[90%] text-sm leading-5 text-white/85">
+                <div className="mt-3 max-w-[92%] text-sm leading-5 text-white/78">
                   {subheadline}
                 </div>
               )}
-            </div>
-            <div className={`absolute bottom-[11%] flex ${blockPlacement} ${ctaJustify}`}>
-              <div className="inline-flex rounded-full bg-white px-4 py-2 text-xs font-black text-[#18202A] shadow">
+              <div className="mt-5 flex items-center gap-3">
+                <span className="h-px w-10 bg-white/55" />
+                <span className="text-sm font-black">{price}</span>
+              </div>
+              <div className="mt-5 inline-flex border border-white/35 bg-white/10 px-4 py-2 text-xs font-black backdrop-blur-sm">
                 {cta}
               </div>
             </div>
@@ -209,26 +221,39 @@ export function VerticalCreativePreview({
 
         {templateId === "vertical-commercial" && (
           <>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
             <div
-              className="absolute left-5 top-[12%] rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] shadow"
-              style={{ backgroundColor: brandColor, color: brandText }}
+              className="absolute left-0 top-[11%] h-12 w-[58%]"
+              style={{ backgroundColor: brandColor }}
+            />
+            <div
+              className="absolute right-0 top-[11%] h-24 w-12"
+              style={{ backgroundColor: accent }}
+            />
+            <div
+              className="absolute left-5 top-[13%] text-[9px] font-black uppercase tracking-[0.18em]"
+              style={{ color: brandText }}
             >
               {property.purpose}
             </div>
-            <div className={`absolute bottom-[17%] ${blockPlacement} rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur`}>
-              <div className="font-display text-xl font-black leading-[1.02] text-[#18202A]">
+            <div className={`absolute bottom-[16%] ${blockPlacement} bg-white p-4 shadow-xl`}>
+              <div className="font-display text-[24px] font-black leading-[0.96] text-[#18202A]">
                 {headline}
               </div>
-              <div
-                className="mt-3 text-3xl font-black"
-                style={{ color: brandColor }}
-              >
-                {price}
+              <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#667085]">
+                {locality}
+              </div>
+              <div className="mt-3 flex items-end justify-between gap-3">
+                <div
+                  className="text-[25px] font-black leading-none"
+                  style={{ color: brandColor }}
+                >
+                  {price}
+                </div>
               </div>
               <FeaturePills items={verticalFeatures(property, 3)} />
               <div
-                className="mt-4 rounded-xl px-3 py-2 text-center text-xs font-black"
+                className="mt-4 inline-flex px-3 py-2 text-xs font-black"
                 style={{ backgroundColor: brandColor, color: brandText }}
               >
                 {cta}
@@ -239,17 +264,22 @@ export function VerticalCreativePreview({
 
         {templateId === "vertical-opportunity" && (
           <>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/5 to-transparent" />
-            <div className="absolute left-0 top-[13%] rounded-r-full bg-[#F79009] px-5 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/10 to-transparent" />
+            <div className="absolute left-0 top-[13%] bg-[#F79009] px-5 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow">
               Oportunidade
             </div>
             <div className={`absolute bottom-[18%] ${blockPlacement} text-white`}>
-              <div className="font-display text-2xl font-black leading-[1.02]">{headline}</div>
-              <FeaturePills items={verticalFeatures(property, 2)} inverse />
-              <div className="mt-4 text-4xl font-black leading-none text-[#FDB022]">
-                {price}
+              <div className="font-display text-[30px] font-black leading-[0.95]">
+                {headline}
               </div>
-              <div className="mt-4 inline-flex rounded-full bg-[#F79009] px-4 py-2 text-xs font-black text-white">
+              <FeaturePills items={verticalFeatures(property, 2)} inverse />
+              <div className="mt-5 flex items-center gap-3">
+                <span className="h-px w-8 bg-[#FDB022]" />
+                <span className="text-[28px] font-black leading-none text-[#FDB022]">
+                  {price}
+                </span>
+              </div>
+              <div className="mt-5 inline-flex bg-[#F79009] px-4 py-2 text-xs font-black text-white">
                 {cta}
               </div>
             </div>
@@ -258,38 +288,35 @@ export function VerticalCreativePreview({
 
         {templateId === "vertical-branding" && (
           <>
-            <div
-              className="absolute inset-0 border-[10px]"
-              style={{ borderColor: brandColor }}
-            />
-            <div className="absolute left-6 top-[12%] rounded-xl bg-white/95 px-3 py-2 shadow">
-              <BrandMark brand={brand} />
+            <div className="absolute inset-0 bg-[#0F2633]/58" />
+            <div className="absolute inset-x-5 top-[11%]">
+              <BrandMark brand={brand} inverse />
             </div>
-            <div className={`absolute bottom-[16%] ${resolvedPosition === "right" ? "right-6 left-auto" : "left-6 right-auto"} ${contentWidth} rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur ${resolvedPosition === "right" ? "text-right" : "text-left"}`}>
-              <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#667085]">
+            <div className="absolute inset-5 border border-white/30" />
+            <div className={`absolute bottom-[17%] ${blockPlacement} text-white`}>
+              <div
+                className="mb-4 h-1 w-12"
+                style={{ backgroundColor: accent }}
+              />
+              <div className="text-[9px] font-black uppercase tracking-[0.18em] text-white/65">
                 {locality}
               </div>
-              <div className="font-display mt-2 text-2xl font-black leading-[1.02] text-[#18202A]">
+              <div className="font-display mt-2 text-[32px] font-black leading-[0.94]">
                 {headline}
               </div>
               {subheadline && (
-                <div className="mt-1.5 text-sm leading-5 text-[#667085]">
+                <div className="mt-3 max-w-[90%] text-sm leading-5 text-white/75">
                   {subheadline}
                 </div>
               )}
-              <div className="mt-4 flex items-center justify-between gap-3">
-                <div
-                  className="text-lg font-black"
-                  style={{ color: brandColor }}
-                >
-                  {price}
-                </div>
-                <div
-                  className="rounded-full px-3 py-1.5 text-[10px] font-black"
-                  style={{ backgroundColor: brandColor, color: brandText }}
+              <div className="mt-5 flex items-center justify-between gap-4 border-t border-white/25 pt-4">
+                <span className="text-lg font-black">{price}</span>
+                <span
+                  className="px-3 py-2 text-[10px] font-black"
+                  style={{ backgroundColor: accent, color: contrastText(accent) }}
                 >
                   {cta}
-                </div>
+                </span>
               </div>
             </div>
           </>
@@ -308,7 +335,7 @@ export function VerticalCreativePreview({
         {safeZone.rightPercent > 0 && (
           <div
             data-render-ignore="true"
-            className="pointer-events-none absolute right-0 top-0 bottom-0 border-l border-dashed border-white/20"
+            className="pointer-events-none absolute bottom-0 right-0 top-0 border-l border-dashed border-white/20"
             style={{ width: `${safeZone.rightPercent}%` }}
           />
         )}
@@ -330,6 +357,7 @@ export function VerticalTemplateThumbnail({
   templateId: VerticalTemplateId;
 }) {
   const brandColor = safeBrandColor(brand.primaryColor);
+  const accent = supportingAccent(brandColor);
 
   return (
     <div className="relative aspect-[9/16] overflow-hidden bg-[#EAECF0]">
@@ -346,55 +374,48 @@ export function VerticalTemplateThumbnail({
 
       {templateId === "vertical-clean" && (
         <>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
           <div className="absolute inset-x-2 bottom-[20%]">
-            <div className="h-2 w-4/5 rounded bg-white" />
-            <div className="mt-1 h-1.5 w-2/3 rounded bg-white/70" />
+            <div className="h-2 w-4/5 bg-white" />
+            <div className="mt-2 h-px w-8 bg-white/60" />
+            <div className="mt-1.5 h-1.5 w-1/3 bg-white/80" />
           </div>
         </>
       )}
 
       {templateId === "vertical-commercial" && (
         <>
-          <div
-            className="absolute left-2 top-[12%] h-3 w-1/3 rounded-full"
-            style={{ backgroundColor: brandColor }}
-          />
-          <div className="absolute inset-x-2 bottom-[18%] rounded bg-white/95 p-2">
-            <div className="h-2 w-3/4 rounded bg-[#18202A]" />
-            <div
-              className="mt-1.5 h-3 w-1/2 rounded"
-              style={{ backgroundColor: brandColor }}
-            />
-            <div className="mt-2 h-3 rounded" style={{ backgroundColor: brandColor }} />
+          <div className="absolute left-0 top-[12%] h-5 w-1/2" style={{ backgroundColor: brandColor }} />
+          <div className="absolute right-0 top-[12%] h-10 w-5" style={{ backgroundColor: accent }} />
+          <div className="absolute inset-x-2 bottom-[18%] bg-white p-2">
+            <div className="h-2 w-3/4 bg-[#18202A]" />
+            <div className="mt-2 h-3 w-1/2" style={{ backgroundColor: brandColor }} />
+            <div className="mt-2 flex gap-1">
+              <div className="h-2 flex-1 bg-[#F2F4F7]" />
+              <div className="h-2 flex-1 bg-[#F2F4F7]" />
+            </div>
           </div>
         </>
       )}
 
       {templateId === "vertical-opportunity" && (
         <>
-          <div className="absolute left-0 top-[13%] h-3 w-1/2 rounded-r-full bg-[#F79009]" />
+          <div className="absolute left-0 top-[13%] h-4 w-1/2 bg-[#F79009]" />
           <div className="absolute inset-x-2 bottom-[20%]">
-            <div className="h-2 w-3/4 rounded bg-white" />
-            <div className="mt-2 h-4 w-2/3 rounded bg-[#FDB022]" />
+            <div className="h-2 w-3/4 bg-white" />
+            <div className="mt-2 h-4 w-2/3 bg-[#FDB022]" />
           </div>
         </>
       )}
 
       {templateId === "vertical-branding" && (
         <>
-          <div
-            className="absolute inset-0 border-[4px]"
-            style={{ borderColor: brandColor }}
-          />
-          <div className="absolute left-2 top-[12%] h-4 w-1/3 rounded bg-white/95" />
-          <div className="absolute inset-x-2 bottom-[18%] rounded bg-white/95 p-2">
-            <div className="h-2 w-4/5 rounded bg-[#18202A]" />
-            <div className="mt-1 h-1.5 w-2/3 rounded bg-[#98A2B3]" />
-            <div
-              className="mt-2 h-3 w-1/2 rounded"
-              style={{ backgroundColor: brandColor }}
-            />
+          <div className="absolute inset-0 bg-[#0F2633]/55" />
+          <div className="absolute inset-2 border border-white/40" />
+          <div className="absolute inset-x-3 bottom-[20%]">
+            <div className="mb-2 h-1 w-8" style={{ backgroundColor: accent }} />
+            <div className="h-2 w-4/5 bg-white" />
+            <div className="mt-2 h-px w-full bg-white/30" />
           </div>
         </>
       )}
