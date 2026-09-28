@@ -566,10 +566,8 @@ function SlideArtwork({
   exportMode?: boolean;
 }) {
   const brandColor = safeBrandColor(brand.primaryColor);
-  const brandText = contrastText(brandColor);
   const treatment = visualTreatment(templateId);
   const accent = brandColor;
-  const accentText = contrastText(accent);
   const factsLayout =
     slide.kind === "facts" ? factSlideImageHeight(slide, modelId) : null;
   const directSale = modelId === "direct-sale";
