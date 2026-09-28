@@ -82,6 +82,18 @@ function contrastText(hex: string) {
   return luminance > 0.62 ? "#18202A" : "#FFFFFF";
 }
 
+function premiumAccent(hex: string) {
+  const color = hex.replace("#", "");
+  const channels = [0, 2, 4].map((offset) =>
+    Number.parseInt(color.slice(offset, offset + 2), 16),
+  );
+  const mixed = channels.map((channel) =>
+    Math.round(channel + (255 - channel) * 0.38),
+  );
+
+  return `#${mixed.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+}
+
 function brandAccent(hex: string) {
   const color = hex.replace("#", "");
   const r = Number.parseInt(color.slice(0, 2), 16);
@@ -100,10 +112,7 @@ function finalCardPalette(
     return {
       background: "#17384A",
       foreground: "#FFFFFF",
-      detail:
-        contrastText(brandColor) === "#FFFFFF"
-          ? brandAccent(brandColor)
-          : brandColor,
+      detail: premiumAccent(brandColor),
       contactBackground: "rgba(255,255,255,0.10)",
       contactBorder: "rgba(255,255,255,0.20)",
       iconBackground: "rgba(255,255,255,0.14)",
@@ -633,7 +642,7 @@ function SlideArtwork({
               />
               <div
                 className="absolute right-0 top-0 h-28 w-20"
-                style={{ backgroundColor: brandAccent(brandColor) }}
+                style={{ backgroundColor: premiumAccent(brandColor) }}
               />
               <div
                 className="absolute left-5 top-5 text-[10px] font-black uppercase tracking-[0.18em]"
@@ -662,7 +671,7 @@ function SlideArtwork({
               <div className="absolute bottom-8 left-8 right-8 text-white">
                 <div
                   className="mb-4 h-1 w-12"
-                  style={{ backgroundColor: brandAccent(brandColor) }}
+                  style={{ backgroundColor: premiumAccent(brandColor) }}
                 />
                 <div className="font-editorial max-w-[90%] text-[40px] font-semibold leading-[0.91]">
                   {slide.title}
@@ -863,7 +872,7 @@ function SlideArtwork({
               />
               <div
                 className="absolute right-0 top-0 h-16 w-8"
-                style={{ backgroundColor: brandAccent(brandColor) }}
+                style={{ backgroundColor: premiumAccent(brandColor) }}
               />
             </>
           )}
@@ -878,7 +887,7 @@ function SlideArtwork({
               style={{
                 backgroundColor:
                   treatment === "dark-premium"
-                    ? brandAccent(brandColor)
+                    ? premiumAccent(brandColor)
                     : brandColor,
               }}
             />
