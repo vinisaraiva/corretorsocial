@@ -564,7 +564,17 @@ function SlideArtwork({
   const factsLayout =
     slide.kind === "facts" ? factSlideImageHeight(slide, modelId) : null;
   const directSale = modelId === "direct-sale";
-  const finalPalette = finalCardPalette(finalCardTheme, brandColor);
+  const resolvedFinalTheme: CarouselFinalCardTheme =
+    treatment === "dark-premium"
+      ? "dark"
+      : treatment === "property-editorial" ||
+          treatment === "minimal-contemporary" ||
+          treatment === "photo-grid"
+        ? "light"
+        : treatment === "geometric-direct"
+          ? "brand"
+          : finalCardTheme;
+  const finalPalette = finalCardPalette(resolvedFinalTheme, brandColor);
 
   return (
     <div
