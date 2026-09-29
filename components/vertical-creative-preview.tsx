@@ -172,6 +172,7 @@ export function VerticalCreativePreview({
   blockPosition,
   suggestedBlockPosition,
   renderTarget,
+  artOnly = false,
 }: {
   property: Property;
   brand: VerticalBrand;
@@ -183,6 +184,7 @@ export function VerticalCreativePreview({
   blockPosition: BlockPosition;
   suggestedBlockPosition?: "left" | "right" | null;
   renderTarget?: string;
+  artOnly?: boolean;
 }) {
   const brandColor = safeBrandColor(brand.primaryColor);
   const accent = supportingAccent(brandColor);
@@ -494,9 +496,11 @@ export function VerticalCreativePreview({
           />
         )}
       </div>
-      <div className="bg-white px-3 py-2 text-center text-[10px] font-semibold text-[#667085]">
-        Prévia 9:16 · zonas seguras adaptadas para {safeZone.label}
-      </div>
+      {!artOnly ? (
+        <div className="bg-white px-3 py-2 text-center text-[10px] font-semibold text-[#667085]">
+          Prévia 9:16 · zonas seguras adaptadas para {safeZone.label}
+        </div>
+      ) : null}
     </div>
   );
 }
