@@ -275,6 +275,16 @@ export function CreativePreview({
 
         {templateId === "property-editorial" && (
           <>
+            {images[1] ? (
+              <div className="absolute bottom-[28%] right-5 z-10 h-28 w-[31%] overflow-hidden rounded-xl border-4 border-[#FAF8F4] bg-[#EAECF0] shadow-lg">
+                <img
+                  src={images[1]}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            ) : null}
             <div className="absolute inset-x-0 bottom-0 min-h-[34%] bg-[#FAF8F4] px-5 pb-4 pt-4 text-[#18202A]">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -413,14 +423,26 @@ export function TemplateThumbnail({
       )}
 
       {templateId === "property-editorial" && (
-        <div className="absolute inset-x-0 bottom-0 h-[34%] bg-[#FAF8F4] p-2">
-          <div className="h-1 w-1/4" style={{ backgroundColor: brandColor }} />
-          <div className="mt-2 h-2 w-4/5 bg-[#18202A]" />
-          <div className="mt-2 flex gap-1">
-            <div className="h-2 flex-1 bg-[#F2F4F7]" />
-            <div className="h-2 flex-1 bg-[#F2F4F7]" />
+        <>
+          {images[1] ? (
+            <div className="absolute bottom-[28%] right-2 z-10 h-[22%] w-[30%] overflow-hidden rounded-md border-2 border-[#FAF8F4] bg-[#EAECF0]">
+              <img
+                src={images[1]}
+                alt=""
+                className="h-full w-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          ) : null}
+          <div className="absolute inset-x-0 bottom-0 h-[34%] bg-[#FAF8F4] p-2">
+            <div className="h-1 w-1/4" style={{ backgroundColor: brandColor }} />
+            <div className="mt-2 h-2 w-4/5 bg-[#18202A]" />
+            <div className="mt-2 flex gap-1">
+              <div className="h-2 flex-1 bg-[#F2F4F7]" />
+              <div className="h-2 flex-1 bg-[#F2F4F7]" />
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {templateId === "minimal-contemporary" && (
