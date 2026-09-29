@@ -322,7 +322,8 @@ export function CampaignBuilder({
   >([]);
   const [renderedLabel, setRenderedLabel] = useState("");
   const [compareStyles, setCompareStyles] = useState(false);
-  const [compareFormat, setCompareFormat] = useState<"feed" | "story">("feed");
+  const [compareFormat, setCompareFormat] =
+    useState<"feed" | "story" | "carousel">("feed");
   const [staging, setStaging] = useState(false);
   const [stagingStyle, setStagingStyle] =
     useState<(typeof stagingStyles)[number]>("Moderno");
@@ -1840,6 +1841,19 @@ export function CampaignBuilder({
                 >
                   Story 9:16
                 </button>
+                {carouselEligible ? (
+                  <button
+                    type="button"
+                    onClick={() => setCompareFormat("carousel")}
+                    className={`rounded-md px-3 py-1.5 text-[10px] font-extrabold transition ${
+                      compareFormat === "carousel"
+                        ? "bg-white text-[#18202A] shadow-sm"
+                        : "text-[#667085]"
+                    }`}
+                  >
+                    Carrossel
+                  </button>
+                ) : null}
               </div>
 
               <button
@@ -1877,7 +1891,7 @@ export function CampaignBuilder({
                     )}
                     artOnly
                   />
-                ) : (
+                ) : compareFormat === "story" ? (
                   <VerticalCreativePreview
                     property={storyProperty}
                     brand={brand}
@@ -1891,6 +1905,19 @@ export function CampaignBuilder({
                       storyMedia?.aiTags,
                     )}
                     artOnly
+                  />
+                ) : (
+                  <InstagramCarouselPreview
+                    property={carouselProperty}
+                    brand={brand}
+                    templateId={template.id}
+                    modelId={carouselModelId}
+                    headline={carouselHeadline}
+                    cta={carouselCta}
+                    finalCardDecoration={carouselFinalCardDecoration}
+                    finalCardTheme={carouselFinalCardTheme}
+                    renderGroup={`compare-${template.id}`}
+                    comparisonMode
                   />
                 )}
 
@@ -1924,6 +1951,15 @@ export function CampaignBuilder({
                     />
                     <MiniBadge
                       label={`${template.idealFeatureCount} atributos ideais`}
+                    />
+                    <MiniBadge
+                      label={
+                        compareFormat === "feed"
+                          ? "Feed 4:5"
+                          : compareFormat === "story"
+                            ? "Story 9:16"
+                            : `Carrossel · ${selectedCarouselModel.slideCount} páginas`
+                      }
                     />
                   </div>
 
