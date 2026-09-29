@@ -75,6 +75,7 @@ export function CreativePreview({
   blockPosition,
   suggestedBlockPosition,
   renderTarget = "feed",
+  artOnly = false,
 }: {
   property: Property;
   brand: CampaignBrand;
@@ -86,6 +87,7 @@ export function CreativePreview({
   blockPosition: BlockPosition;
   suggestedBlockPosition?: "left" | "right" | null;
   renderTarget?: string;
+  artOnly?: boolean;
 }) {
   const brandColor = safeBrandColor(brand.primaryColor);
   const accent = supportingAccent(brandColor);
@@ -324,21 +326,23 @@ export function CreativePreview({
         )}
       </div>
 
-      <div className="p-4">
-        <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[#98A2B3]">
-          Legenda — prévia
+      {!artOnly ? (
+        <div className="p-4">
+          <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[#98A2B3]">
+            Legenda — prévia
+          </div>
+          <p className="text-sm leading-6 text-[#475467]">{copy}</p>
+          <p className="mt-3 text-sm font-bold text-[#176B5B]">
+            #Imóveis #
+            {property.location.replace(/[^\p{L}\p{N}]/gu, "") || "Imóvel"}{" "}
+            #CorretorDeImóveis
+          </p>
+          <div className="mt-4 flex items-center gap-2 rounded-lg bg-[#F9FAFB] p-3 text-sm font-bold">
+            <MessageCircle size={18} className="text-[#176B5B]" />
+            {cta}
+          </div>
         </div>
-        <p className="text-sm leading-6 text-[#475467]">{copy}</p>
-        <p className="mt-3 text-sm font-bold text-[#176B5B]">
-          #Imóveis #
-          {property.location.replace(/[^\p{L}\p{N}]/gu, "") || "Imóvel"}{" "}
-          #CorretorDeImóveis
-        </p>
-        <div className="mt-4 flex items-center gap-2 rounded-lg bg-[#F9FAFB] p-3 text-sm font-bold">
-          <MessageCircle size={18} className="text-[#176B5B]" />
-          {cta}
-        </div>
-      </div>
+      ) : null}
     </div>
   );
 }
