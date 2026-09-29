@@ -996,7 +996,7 @@ function SlideArtwork({
               </div>
             </div>
 
-            <div className="mt-auto">
+            <div className="absolute inset-x-0 bottom-[17%]">
               {brand.whatsapp ? (
                 <div
                   className="mx-auto flex w-[72%] items-center gap-3 rounded-xl border px-3.5 py-3"
