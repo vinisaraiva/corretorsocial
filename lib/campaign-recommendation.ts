@@ -18,6 +18,7 @@ import { buildMediaSelection } from "@/lib/media-intelligence";
 
 export type CampaignRecommendation = {
   style: CampaignTemplateId;
+  styleReason: string;
   headline: string;
   subheadline: string;
   cta: string;
@@ -116,6 +117,119 @@ function carouselFinalCardThemeForProperty(
       carouselFinalCardThemes.length,
     )
   ];
+}
+
+function normalizedSignalText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function propertySignalText(property: Property) {
+  return normalizedSignalText(
+    [
+      property.title,
+      property.description,
+      property.location,
+      property.city,
+      ...(property.highlights ?? []),
+    ]
+      .filter(Boolean)
+      .join(" "),
+  );
+}
+
+function uniquePropertyMediaCount(property: Property) {
+  return new Set(
+    [
+      ...(property.media ?? []).map((item) => item.url),
+      ...(property.images ?? []),
+      ...(property.image ? [property.image] : []),
+    ]
+      .map((item) => item?.trim())
+      .filter((item): item is string => Boolean(item)),
+  ).size;
+}
+
+function containsAnySignal(text: string, signals: string[]) {
+  return signals.some((signal) => text.includes(signal));
+}
+
+export function recommendCampaignStyle(property: Property): {
+  style: CampaignTemplateId;
+  reason: string;
+} {
+  const signalText = propertySignalText(property);
+  const mediaCount = uniquePropertyMediaCount(property);
+
+  const commercialSignals = [
+    "oportunidade",
+    "abaixo do valor",
+    "preco reduzido",
+    "imperdivel",
+    "aceita proposta",
+    "bom negocio",
+    "investidor",
+    "investimento",
+  ];
+
+  const premiumSignals = [
+    "alto padrao",
+    "luxo",
+    "luxuoso",
+    "cobertura",
+    "penthouse",
+    "frente mar",
+    "beira mar",
+    "vista mar",
+    "vista para o mar",
+  ];
+
+  if (containsAnySignal(signalText, commercialSignals)) {
+    return {
+      style: "geometric-direct",
+      reason:
+        "O cadastro enfatiza oportunidade ou condição comercial, então a recomendação prioriza leitura rápida e conversão.",
+    };
+  }
+
+  if (containsAnySignal(signalText, premiumSignals)) {
+    return {
+      style: "dark-premium",
+      reason:
+        "O cadastro traz sinais de posicionamento premium, então a recomendação usa uma composição mais sofisticada e contida.",
+    };
+  }
+
+  if (property.purpose === "Aluguel") {
+    return {
+      style: "minimal-contemporary",
+      reason:
+        "Para locação, a recomendação prioriza uma peça limpa, recorrente e com leitura rápida.",
+    };
+  }
+
+  if (mediaCount >= 4) {
+    return {
+      style: "photo-grid",
+      reason: `Há ${mediaCount} imagens disponíveis, então a recomendação aproveita a variedade de ambientes com uma foto hero dominante.`,
+    };
+  }
+
+  if (mediaCount >= 2 && (property.highlights?.length ?? 0) >= 2) {
+    return {
+      style: "property-editorial",
+      reason:
+        "O cadastro tem mais de uma foto e bons diferenciais, permitindo uma composição editorial mais rica sem perder clareza.",
+    };
+  }
+
+  return {
+    style: DEFAULT_CAMPAIGN_TEMPLATE_ID,
+    reason:
+      "A recomendação padrão preserva máxima versatilidade e protagonismo da fotografia.",
+  };
 }
 
 function compact(value: string) {
@@ -240,7 +354,8 @@ function googleCaption(property: Property) {
 export function buildCampaignRecommendation(
   property: Property,
 ): CampaignRecommendation {
-  const style = DEFAULT_CAMPAIGN_TEMPLATE_ID;
+  const styleRecommendation = recommendCampaignStyle(property);
+  const style = styleRecommendation.style;
   const verticalTemplate = campaignTemplateToVertical(style);
   const headline = truncate(strongestHeadline(property), 60);
   const carouselCta = carouselCtaForProperty(property);
@@ -264,6 +379,7 @@ export function buildCampaignRecommendation(
 
   return {
     style,
+    styleReason: styleRecommendation.reason,
     headline,
     subheadline,
     cta: "Fale comigo no WhatsApp",
