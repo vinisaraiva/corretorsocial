@@ -26,8 +26,11 @@ import {
 } from "@/app/campanhas/actions";
 import {
   campaignTemplates,
+  emphasisLabel,
   getCampaignTemplate,
   normalizeCampaignTemplate,
+  ornamentationLabel,
+  secondaryPhotoLabel,
   type CampaignTemplateId,
 } from "@/lib/campaign-templates";
 import {
@@ -1235,6 +1238,14 @@ export function CampaignBuilder({
                         <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-[#667085]">
                           {template.description}
                         </p>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          <span className="rounded-full bg-[#F2F4F7] px-2 py-0.5 text-[9px] font-bold text-[#667085]">
+                            {secondaryPhotoLabel(template.secondaryPhotoUsage)}
+                          </span>
+                          <span className="rounded-full bg-[#F2F4F7] px-2 py-0.5 text-[9px] font-bold text-[#667085]">
+                            {ornamentationLabel(template.ornamentationLevel)}
+                          </span>
+                        </div>
                       </div>
                     </button>
                   ))}
@@ -1497,10 +1508,26 @@ export function CampaignBuilder({
                     {selectedTemplate.supportsSubheadline && (
                       <MiniBadge label="Subheadline" />
                     )}
-                    {selectedTemplate.showsPrice && <MiniBadge label="Preço" />}
-                    {selectedTemplate.showsFeatures && (
-                      <MiniBadge label="Características" />
+                    {selectedTemplate.showsPrice && (
+                      <MiniBadge
+                        label={`Preço: ${emphasisLabel(selectedTemplate.priceEmphasis)}`}
+                      />
                     )}
+                    {selectedTemplate.showsFeatures && (
+                      <MiniBadge
+                        label={`Até ${selectedTemplate.idealFeatureCount} atributos`}
+                      />
+                    )}
+                    <MiniBadge
+                      label={secondaryPhotoLabel(
+                        selectedTemplate.secondaryPhotoUsage,
+                      )}
+                    />
+                    <MiniBadge
+                      label={ornamentationLabel(
+                        selectedTemplate.ornamentationLevel,
+                      )}
+                    />
                   </>
                 )}
               </div>
