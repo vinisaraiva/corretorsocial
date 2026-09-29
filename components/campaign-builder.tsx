@@ -57,6 +57,7 @@ import {
 import { VerticalTemplateControls } from "@/components/vertical-template-controls";
 import { VerticalCreativePreview } from "@/components/vertical-creative-preview";
 import {
+  carouselFinalCardDecorationFromSeed,
   getCarouselModel,
   normalizeCarouselFinalCardDecoration,
   normalizeCarouselFinalCardTheme,
@@ -187,6 +188,32 @@ export function CampaignBuilder({
     [property],
   );
 
+  const initialTemplateId = normalizeCampaignTemplate(
+    campaignData?.visualStyle ?? recommendation.style,
+  );
+  const initialCarouselModelId = normalizeCarouselModel(
+    campaignData?.instagramCarousel?.modelId ??
+      recommendation.instagramCarousel.modelId,
+    property.purpose,
+  );
+  const carouselVariationSeedBase =
+    campaignData?.id ?? `${property.id}:${property.campaigns ?? 0}`;
+
+  const carouselDecorationFor = (
+    style: CampaignTemplateId,
+    model: CarouselModelId,
+  ) => {
+    const styleOffset = Math.max(
+      0,
+      campaignTemplates.findIndex((template) => template.id === style),
+    );
+
+    return carouselFinalCardDecorationFromSeed(
+      `${carouselVariationSeedBase}:${model}`,
+      styleOffset,
+    );
+  };
+
   const [persistedCampaignId, setPersistedCampaignId] = useState(
     campaignData?.id,
   );
@@ -194,11 +221,8 @@ export function CampaignBuilder({
   const [instagramFormat, setInstagramFormat] =
     useState<InstagramCampaignFormat>("feed");
   const [adjusting, setAdjusting] = useState(false);
-  const [templateId, setTemplateId] = useState<CampaignTemplateId>(() =>
-    normalizeCampaignTemplate(
-      campaignData?.visualStyle ?? recommendation.style,
-    ),
-  );
+  const [templateId, setTemplateId] =
+    useState<CampaignTemplateId>(initialTemplateId);
   const [headline, setHeadline] = useState(
     campaignData?.headline ?? recommendation.headline,
   );
@@ -245,13 +269,7 @@ export function CampaignBuilder({
     campaignData?.tiktokVertical?.cta ?? recommendation.tiktokVertical.cta,
   );
   const [carouselModelId, setCarouselModelId] =
-    useState<CarouselModelId>(() =>
-      normalizeCarouselModel(
-        campaignData?.instagramCarousel?.modelId ??
-          recommendation.instagramCarousel.modelId,
-        property.purpose,
-      ),
-    );
+    useState<CarouselModelId>(initialCarouselModelId);
   const [carouselHeadline, setCarouselHeadline] = useState(
     campaignData?.instagramCarousel?.headline ??
       recommendation.instagramCarousel.headline,
@@ -260,15 +278,15 @@ export function CampaignBuilder({
     campaignData?.instagramCarousel?.cta ??
       recommendation.instagramCarousel.cta,
   );
-  const [carouselFinalCardDecoration] =
-    useState<CarouselFinalCardDecoration>(() =>
-      normalizeCarouselFinalCardDecoration(
-        campaignData?.instagramCarousel?.finalCardDecoration ??
-          (campaignData?.id
-            ? "curves"
-            : recommendation.instagramCarousel.finalCardDecoration),
-      ),
-    );
+  const [carouselFinalCardDecoration, setCarouselFinalCardDecoration] =
+    useState<CarouselFinalCardDecoration>(() => {
+      const savedDecoration =
+        campaignData?.instagramCarousel?.finalCardDecoration;
+
+      return savedDecoration
+        ? normalizeCarouselFinalCardDecoration(savedDecoration)
+        : carouselDecorationFor(initialTemplateId, initialCarouselModelId);
+    });
   const [carouselFinalCardTheme] = useState<CarouselFinalCardTheme>(() =>
     normalizeCarouselFinalCardTheme(
       campaignData?.instagramCarousel?.finalCardTheme ??
@@ -504,6 +522,9 @@ export function CampaignBuilder({
 
   function applyGlobalStyle(value: CampaignTemplateId) {
     setTemplateId(value);
+    setCarouselFinalCardDecoration(
+      carouselDecorationFor(value, carouselModelId),
+    );
     const verticalTemplate = campaignTemplateToVertical(value);
     setStoryTemplateId(verticalTemplate);
     setTiktokTemplateId(verticalTemplate);
@@ -1293,6 +1314,9 @@ export function CampaignBuilder({
                     cta={carouselCta}
                     onModelChange={(value) => {
                       setCarouselModelId(value);
+                      setCarouselFinalCardDecoration(
+                        carouselDecorationFor(templateId, value),
+                      );
                       markChanged();
                     }}
                     onHeadlineChange={(value) => {
@@ -1914,7 +1938,10 @@ export function CampaignBuilder({
                     modelId={carouselModelId}
                     headline={carouselHeadline}
                     cta={carouselCta}
-                    finalCardDecoration={carouselFinalCardDecoration}
+                    finalCardDecoration={carouselDecorationFor(
+                      template.id,
+                      carouselModelId,
+                    )}
                     finalCardTheme={carouselFinalCardTheme}
                     renderGroup={`compare-${template.id}`}
                     comparisonMode
