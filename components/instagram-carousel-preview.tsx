@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import {
+  ArrowRight,
   Bath,
   BedDouble,
   CarFront,
@@ -195,19 +196,28 @@ function FinalCardDecoration({
     return (
       <>
         <div
-          className="absolute left-7 top-7 h-14 w-px"
+          className="absolute -right-7 -top-5 h-28 w-32 rounded-bl-[34px] border-b border-l"
+          style={{ borderColor: detail }}
+        />
+        <div
+          className="absolute -right-3 top-0 h-20 w-16 rounded-bl-[28px]"
           style={{ backgroundColor: detail }}
         />
         <div
-          className="absolute left-7 top-7 h-px w-16"
-          style={{ backgroundColor: detail }}
-        />
-        <div
-          className="absolute bottom-7 right-7 h-14 w-px"
+          className="absolute right-16 top-0 h-12 w-14 rounded-bl-[22px]"
           style={{ backgroundColor: lineColor }}
         />
+
         <div
-          className="absolute bottom-7 right-7 h-px w-16"
+          className="absolute -bottom-8 -left-8 h-28 w-36 rounded-tr-[34px] border-r border-t"
+          style={{ borderColor: detail }}
+        />
+        <div
+          className="absolute -bottom-4 left-0 h-16 w-20 rounded-tr-[26px]"
+          style={{ backgroundColor: detail }}
+        />
+        <div
+          className="absolute bottom-12 left-0 h-10 w-14 rounded-tr-[18px]"
           style={{ backgroundColor: lineColor }}
         />
       </>
@@ -218,19 +228,20 @@ function FinalCardDecoration({
     return (
       <>
         <div
-          className="absolute right-0 top-0 h-24 w-16"
+          className="absolute right-0 top-0 h-24 w-16 rounded-bl-[26px]"
           style={{ backgroundColor: detail }}
         />
         <div
-          className="absolute right-16 top-0 h-10 w-10"
+          className="absolute right-16 top-0 h-12 w-12 rounded-bl-[20px]"
           style={{ backgroundColor: lineColor }}
         />
+
         <div
-          className="absolute bottom-0 left-0 h-16 w-24"
+          className="absolute bottom-0 left-0 h-16 w-20 rounded-tr-[26px]"
           style={{ backgroundColor: detail }}
         />
         <div
-          className="absolute bottom-16 left-0 h-8 w-8"
+          className="absolute bottom-12 left-0 h-10 w-12 rounded-tr-[18px]"
           style={{ backgroundColor: lineColor }}
         />
       </>
@@ -583,18 +594,7 @@ function SlideArtwork({
           : finalCardTheme;
   const finalPalette = finalCardPalette(resolvedFinalTheme, brandColor);
   const resolvedFinalDecoration: CarouselFinalCardDecoration =
-    treatment === "dark-premium"
-      ? "frame"
-      : treatment === "property-editorial" ||
-          treatment === "minimal-contemporary"
-        ? "lines"
-        : treatment === "photo-grid"
-          ? "blocks"
-          : treatment === "geometric-direct"
-            ? finalCardDecoration === "lines" || finalCardDecoration === "blocks"
-              ? finalCardDecoration
-              : "blocks"
-            : finalCardDecoration;
+    finalCardDecoration;
 
   return (
     <div
@@ -959,7 +959,7 @@ function SlideArtwork({
             foreground={finalPalette.foreground}
           />
 
-          <div className="relative flex h-full flex-col px-8 pb-7 pt-8 text-left">
+          <div className="relative flex h-full flex-col px-8 pb-10 pt-8 text-left">
             <div className="flex min-h-12 items-start justify-between gap-5">
               {brand.logoUrl ? (
                 <div className="inline-flex rounded-md bg-white px-3 py-2 shadow-sm">
@@ -984,9 +984,9 @@ function SlideArtwork({
               />
             </div>
 
-            <div className="mt-10 max-w-[82%]">
+            <div className="mt-10 max-w-[78%]">
               <div
-                className={`text-[42px] leading-[0.94] ${
+                className={`text-[39px] leading-[0.95] ${
                   treatment === "dark-premium" || treatment === "property-editorial"
                     ? "font-editorial font-semibold"
                     : "font-display font-black"
@@ -999,44 +999,54 @@ function SlideArtwork({
             <div className="mt-auto">
               {brand.whatsapp ? (
                 <div
-                  className="inline-flex min-w-[78%] items-center gap-4 rounded-lg border px-4 py-3"
+                  className="mx-auto flex w-[72%] items-center gap-3 rounded-xl border px-3.5 py-3"
                   style={{
                     backgroundColor: finalPalette.contactBackground,
                     borderColor: finalPalette.contactBorder,
                   }}
                 >
                   <span
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
                     style={{ backgroundColor: finalPalette.iconBackground }}
                   >
-                    <MessageCircle size={23} strokeWidth={2.35} />
+                    <MessageCircle size={21} strokeWidth={2.35} />
                   </span>
 
-                  <span className="min-w-0">
+                  <span
+                    className="h-11 w-px shrink-0"
+                    style={{ backgroundColor: finalPalette.contactBorder }}
+                  />
+
+                  <span className="min-w-0 flex-1">
                     <span
-                      className="block text-[9px] font-black uppercase tracking-[0.18em]"
+                      className="block text-[8px] font-black uppercase tracking-[0.2em]"
                       style={{ color: finalPalette.muted }}
                     >
                       WhatsApp
                     </span>
-                    <span className="font-display mt-1 block text-[24px] font-black leading-none tracking-[-0.02em]">
+                    <span className="font-display mt-1 block truncate text-[20px] font-black leading-none tracking-[-0.02em]">
                       {formatWhatsapp(brand.whatsapp)}
                     </span>
                     <span
-                      className="mt-2 block text-[10px] font-semibold leading-4"
+                      className="mt-1.5 block text-[9px] font-semibold leading-4"
                       style={{ color: finalPalette.muted }}
                     >
                       {slide.subtitle}
                     </span>
                   </span>
+
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center">
+                    <ArrowRight size={23} strokeWidth={2.1} />
+                  </span>
                 </div>
               ) : (
-                <div className="text-sm font-bold" style={{ color: finalPalette.muted }}>
+                <div
+                  className="mx-auto w-[72%] text-center text-sm font-bold"
+                  style={{ color: finalPalette.muted }}
+                >
                   Entre em contato para mais informações.
                 </div>
               )}
-
-
             </div>
           </div>
         </div>
