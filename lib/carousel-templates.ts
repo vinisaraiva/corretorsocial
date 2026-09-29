@@ -64,6 +64,34 @@ export const carouselFinalCardDecorations = [
 export type CarouselFinalCardDecoration =
   (typeof carouselFinalCardDecorations)[number];
 
+function mixedHash(value: string) {
+  let hash = 2166136261;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  hash ^= hash >>> 16;
+  hash = Math.imul(hash, 0x7feb352d);
+  hash ^= hash >>> 15;
+  hash = Math.imul(hash, 0x846ca68b);
+  hash ^= hash >>> 16;
+
+  return hash >>> 0;
+}
+
+export function carouselFinalCardDecorationFromSeed(
+  seed: string,
+  offset = 0,
+): CarouselFinalCardDecoration {
+  const index =
+    (mixedHash(seed) + Math.abs(offset)) %
+    carouselFinalCardDecorations.length;
+
+  return carouselFinalCardDecorations[index];
+}
+
 export const carouselFinalCardThemes = [
   "brand",
   "dark",
