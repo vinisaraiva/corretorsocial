@@ -278,7 +278,7 @@ export function CreativePreview({
         {templateId === "property-editorial" && (
           <>
             {images[1] ? (
-              <div className="absolute bottom-[28%] right-5 z-10 h-28 w-[31%] overflow-hidden rounded-xl border-4 border-[#FAF8F4] bg-[#EAECF0] shadow-lg">
+              <div className="absolute bottom-[16.5%] right-5 z-10 h-[21%] w-[31%] overflow-hidden rounded-xl border-4 border-[#FAF8F4] bg-[#EAECF0] shadow-lg">
                 <img
                   src={images[1]}
                   alt=""
@@ -287,39 +287,48 @@ export function CreativePreview({
                 />
               </div>
             ) : null}
-            <div className="absolute inset-x-0 bottom-0 min-h-[34%] bg-[#FAF8F4] px-5 pb-4 pt-4 text-[#18202A]">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div
-                    className="h-1 w-10"
-                    style={{ backgroundColor: brandColor }}
-                  />
-                  <div className="mt-3 text-[9px] font-black uppercase tracking-[0.17em] text-[#667085]">
-                    {property.purpose} · {locality}
-                  </div>
-                </div>
-                <BrandMark brand={brand} compact />
+
+            <div className="absolute inset-x-0 bottom-0 h-[20%] overflow-hidden bg-[#FAF8F4] px-5 pb-3 pt-3 text-[#18202A]">
+              <div
+                className="h-1 w-10"
+                style={{ backgroundColor: brandColor }}
+              />
+
+              <div className="mt-2 text-[8px] font-black uppercase tracking-[0.17em] text-[#667085]">
+                {property.purpose} · {locality}
               </div>
-              <div className="font-editorial mt-2 max-w-[88%] text-[31px] font-semibold leading-[0.95]">
+
+              <div className="font-editorial mt-1.5 line-clamp-1 max-w-[66%] text-[24px] font-semibold leading-[0.95]">
                 {headline}
               </div>
-              <div className="mt-3 flex items-end justify-between gap-4">
-                <FeatureRow features={features} compact noMargin />
-                <div className="shrink-0 text-right">
-                  <div className="text-[8px] font-black uppercase tracking-[0.14em] text-[#98A2B3]">
-                    valor
+
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <FeatureRow
+                  features={features.slice(0, 3)}
+                  compact
+                  noMargin
+                />
+
+                <div className="ml-auto flex shrink-0 items-end gap-3 text-right">
+                  <div>
+                    <div className="text-[7px] font-black uppercase tracking-[0.14em] text-[#98A2B3]">
+                      valor
+                    </div>
+                    <div
+                      className="mt-0.5 text-[17px] font-black leading-none"
+                      style={{ color: brandColor }}
+                    >
+                      {price}
+                    </div>
                   </div>
-                  <div
-                    className="mt-0.5 text-lg font-black"
+                  <span
+                    className="text-xl leading-none"
                     style={{ color: brandColor }}
+                    aria-hidden="true"
                   >
-                    {price}
-                  </div>
+                    →
+                  </span>
                 </div>
-              </div>
-              <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#DED8CF] pt-3 text-[10px] font-bold text-[#667085]">
-                <span className="truncate">{cta}</span>
-                <span className="text-base" style={{ color: brandColor }}>→</span>
               </div>
             </div>
           </>
@@ -429,7 +438,7 @@ export function TemplateThumbnail({
       {templateId === "property-editorial" && (
         <>
           {images[1] ? (
-            <div className="absolute bottom-[28%] right-2 z-10 h-[22%] w-[30%] overflow-hidden rounded-md border-2 border-[#FAF8F4] bg-[#EAECF0]">
+            <div className="absolute bottom-[16%] right-2 z-10 h-[21%] w-[30%] overflow-hidden rounded-md border-2 border-[#FAF8F4] bg-[#EAECF0]">
               <img
                 src={images[1]}
                 alt=""
@@ -438,12 +447,14 @@ export function TemplateThumbnail({
               />
             </div>
           ) : null}
-          <div className="absolute inset-x-0 bottom-0 h-[34%] bg-[#FAF8F4] p-2">
+          <div className="absolute inset-x-0 bottom-0 h-[20%] bg-[#FAF8F4] p-2">
             <div className="h-1 w-1/4" style={{ backgroundColor: brandColor }} />
-            <div className="mt-2 h-2 w-4/5 bg-[#18202A]" />
-            <div className="mt-2 flex gap-1">
-              <div className="h-2 flex-1 bg-[#F2F4F7]" />
-              <div className="h-2 flex-1 bg-[#F2F4F7]" />
+            <div className="mt-1.5 h-1.5 w-2/5 bg-[#98A2B3]" />
+            <div className="mt-1.5 h-2 w-3/5 bg-[#18202A]" />
+            <div className="mt-1.5 flex gap-1">
+              <div className="h-1.5 w-1/5 rounded bg-[#E4E7EC]" />
+              <div className="h-1.5 w-1/5 rounded bg-[#E4E7EC]" />
+              <div className="h-1.5 w-1/5 rounded bg-[#E4E7EC]" />
             </div>
           </div>
         </>
