@@ -7,6 +7,7 @@ import {
   ImageDown,
   CheckCircle2,
   ChevronDown,
+  LayoutGrid,
   LoaderCircle,
   Save,
   Sparkles,
@@ -320,6 +321,7 @@ export function CampaignBuilder({
     Array<{ path: string; url: string }>
   >([]);
   const [renderedLabel, setRenderedLabel] = useState("");
+  const [compareStyles, setCompareStyles] = useState(false);
   const [staging, setStaging] = useState(false);
   const [stagingStyle, setStagingStyle] =
     useState<(typeof stagingStyles)[number]>("Moderno");
@@ -1261,6 +1263,116 @@ export function CampaignBuilder({
                     </button>
                   ))}
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => setCompareStyles((value) => !value)}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-[#D0D5DD] bg-white px-3 py-2.5 text-xs font-extrabold text-[#344054] transition hover:border-[#98A2B3] hover:bg-[#F9FAFB]"
+                >
+                  <LayoutGrid size={16} />
+                  {compareStyles
+                    ? "Fechar comparação dos estilos"
+                    : "Comparar os 6 estilos neste imóvel"}
+                </button>
+
+                {compareStyles ? (
+                  <div className="mt-4 rounded-2xl border border-[#E4E7EC] bg-[#F9FAFB] p-3">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <div className="text-xs font-extrabold uppercase tracking-wide text-[#667085]">
+                          Comparação visual
+                        </div>
+                        <p className="mt-1 text-[11px] leading-5 text-[#667085]">
+                          Mesmo imóvel, mesma foto principal e mesmo conteúdo. Compare apenas a linguagem visual.
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-bold text-[#667085] ring-1 ring-[#E4E7EC]">
+                        Feed 4:5
+                      </span>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                      {campaignTemplates.map((template) => (
+                        <div
+                          key={`compare-${template.id}`}
+                          className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${
+                            templateId === template.id
+                              ? "border-[#176B5B] ring-2 ring-[#176B5B]/10"
+                              : "border-[#E4E7EC]"
+                          }`}
+                        >
+                          <CreativePreview
+                            property={feedProperty}
+                            brand={brand}
+                            templateId={template.id}
+                            headline={headline}
+                            subheadline={subheadline}
+                            copy={captions.instagram}
+                            cta={cta}
+                            blockPosition={blockPositions.instagramFeed}
+                            suggestedBlockPosition={suggestedBlockPositionFromTags(
+                              feedMedia?.aiTags,
+                            )}
+                            artOnly
+                          />
+
+                          <div className="p-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="text-sm font-extrabold text-[#18202A]">
+                                  {template.name}
+                                </div>
+                                <p className="mt-1 text-[10px] leading-4 text-[#667085]">
+                                  {template.photoGuidance}
+                                </p>
+                              </div>
+                              {recommendation.style === template.id ? (
+                                <span className="shrink-0 rounded-full bg-[#E9F4F1] px-2 py-1 text-[8px] font-black uppercase tracking-wide text-[#176B5B]">
+                                  Recomendado
+                                </span>
+                              ) : null}
+                            </div>
+
+                            <div className="mt-3 flex flex-wrap gap-1">
+                              <MiniBadge
+                                label={secondaryPhotoLabel(
+                                  template.secondaryPhotoUsage,
+                                )}
+                              />
+                              <MiniBadge
+                                label={`Preço: ${emphasisLabel(
+                                  template.priceEmphasis,
+                                )}`}
+                              />
+                              <MiniBadge
+                                label={ornamentationLabel(
+                                  template.ornamentationLevel,
+                                )}
+                              />
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                applyGlobalStyle(template.id);
+                                setCompareStyles(false);
+                              }}
+                              className={`mt-3 w-full rounded-lg px-3 py-2 text-xs font-extrabold transition ${
+                                templateId === template.id
+                                  ? "bg-[#E9F4F1] text-[#176B5B]"
+                                  : "bg-[#18202A] text-white hover:bg-[#344054]"
+                              }`}
+                            >
+                              {templateId === template.id
+                                ? "Estilo atual"
+                                : "Usar este estilo"}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               {isCarouselView ? (
