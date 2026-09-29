@@ -201,7 +201,7 @@ export function buildCampaignVariantRows(
       cta: input.instagramCarousel.cta.trim() || null,
       render_metadata: {
         visual_style: input.visualStyle,
-        source: "deterministic_carousel_v0_1",
+        source: "deterministic_carousel_v0_2",
         subheadline: "",
         block_position: "auto",
         carousel_type: input.instagramCarousel.modelId,
