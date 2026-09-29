@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { VISUAL_SYSTEM_VERSION } from "@/lib/campaign-templates";
 import type {
   InstagramPublishFormat,
   PublishProvider,
@@ -65,6 +66,7 @@ type RenderMetadata = {
   slide_count?: number;
   final_card_decoration?: string;
   final_card_theme?: string;
+  visual_system_version?: string;
   media_ids?: string[];
   render_signature?: string;
   rendered_asset_paths?: string[];
@@ -150,6 +152,7 @@ export function buildCampaignVariantRows(
           : variant.key === "facebook"
             ? input.blockPositions.facebook
             : input.blockPositions.google,
+      visual_system_version: VISUAL_SYSTEM_VERSION,
       media_ids:
         variant.key === "instagram"
           ? validSingleMedia(input.mediaSelection.instagramFeed)
@@ -171,6 +174,7 @@ export function buildCampaignVariantRows(
       source: "deterministic_vertical_v0_1",
       subheadline: input.instagramStory.subheadline.trim(),
       block_position: input.blockPositions.instagramStory,
+      visual_system_version: VISUAL_SYSTEM_VERSION,
       media_ids: validSingleMedia(input.mediaSelection.instagramStory),
     },
   });
@@ -187,6 +191,7 @@ export function buildCampaignVariantRows(
       source: "deterministic_vertical_v0_1",
       subheadline: input.tiktokVertical.subheadline.trim(),
       block_position: input.blockPositions.tiktok,
+      visual_system_version: VISUAL_SYSTEM_VERSION,
       media_ids: validSingleMedia(input.mediaSelection.tiktok),
     },
   });
@@ -208,6 +213,7 @@ export function buildCampaignVariantRows(
         slide_count: input.instagramCarousel.slideCount,
         final_card_decoration: input.instagramCarousel.finalCardDecoration,
         final_card_theme: input.instagramCarousel.finalCardTheme,
+        visual_system_version: VISUAL_SYSTEM_VERSION,
         media_ids: validCarouselMedia,
       },
     });
@@ -249,6 +255,8 @@ export function applyCampaignRenderState(input: {
       final_card_decoration:
         row.render_metadata.final_card_decoration ?? null,
       final_card_theme: row.render_metadata.final_card_theme ?? null,
+      visual_system_version:
+        row.render_metadata.visual_system_version ?? VISUAL_SYSTEM_VERSION,
       media_ids: row.render_metadata.media_ids ?? [],
       render_context: input.renderContext,
       asset_format: "image/jpeg",
