@@ -1,5 +1,15 @@
 export const DEFAULT_CAMPAIGN_TEMPLATE_ID = "editorial-clean" as const;
 
+export type SecondaryPhotoUsage =
+  | "frequent"
+  | "optional"
+  | "selective"
+  | "signature"
+  | "rare";
+
+export type VisualEmphasis = "discreet" | "medium" | "strong" | "editorial";
+export type OrnamentationLevel = "minimal" | "restrained" | "rich";
+
 export const campaignTemplates = [
   {
     id: "editorial-clean",
@@ -12,11 +22,18 @@ export const campaignTemplates = [
     showsFeatures: false,
     showsCtaOnArt: false,
     supportsBlockPosition: true,
+    secondaryPhotoUsage: "optional",
+    priceEmphasis: "medium",
+    ctaEmphasis: "discreet",
+    ornamentationLevel: "restrained",
+    idealFeatureCount: 3,
+    photoGuidance: "Uma foto hero deve dominar a peça; foto secundária entra apenas quando agrega.",
+    recommendedFor: "Uso geral, boas fotografias e comunicação elegante sem excesso.",
   },
   {
     id: "geometric-direct",
     name: "Geometric Direct",
-    description: "Blocos geométricos, contraste alto e leitura comercial rápida.",
+    description: "Geometria controlada, contraste alto e leitura comercial rápida.",
     useCase: "Venda direta, oportunidade e anúncios com apelo comercial.",
     supportsSubheadline: false,
     showsLogo: true,
@@ -24,11 +41,18 @@ export const campaignTemplates = [
     showsFeatures: true,
     showsCtaOnArt: false,
     supportsBlockPosition: false,
+    secondaryPhotoUsage: "selective",
+    priceEmphasis: "strong",
+    ctaEmphasis: "strong",
+    ornamentationLevel: "rich",
+    idealFeatureCount: 3,
+    photoGuidance: "Shapes e blocos nunca podem competir com a fotografia principal.",
+    recommendedFor: "Oportunidades, venda direta e imóveis com mensagem comercial forte.",
   },
   {
     id: "dark-premium",
     name: "Dark Premium",
-    description: "Tratamento escuro editorial com poucos elementos e alto contraste.",
+    description: "Tratamento escuro editorial, detalhes finos e alto valor percebido.",
     useCase: "Imóveis premium, lançamentos e posicionamento mais sofisticado.",
     supportsSubheadline: true,
     showsLogo: true,
@@ -36,11 +60,18 @@ export const campaignTemplates = [
     showsFeatures: false,
     showsCtaOnArt: false,
     supportsBlockPosition: true,
+    secondaryPhotoUsage: "selective",
+    priceEmphasis: "medium",
+    ctaEmphasis: "discreet",
+    ornamentationLevel: "rich",
+    idealFeatureCount: 3,
+    photoGuidance: "Foto secundária só entra quando sustenta a linguagem premium e não quebra a imponência da hero.",
+    recommendedFor: "Alto padrão, coberturas, vista privilegiada e fotografias de maior qualidade.",
   },
   {
     id: "photo-grid",
     name: "Photo Grid",
-    description: "Composição fotográfica em grade com informações enxutas.",
+    description: "Narrativa fotográfica com uma imagem hero e ambientes secundários.",
     useCase: "Imóveis com várias fotos fortes e ambientes variados.",
     supportsSubheadline: true,
     showsLogo: true,
@@ -48,6 +79,13 @@ export const campaignTemplates = [
     showsFeatures: true,
     showsCtaOnArt: false,
     supportsBlockPosition: false,
+    secondaryPhotoUsage: "signature",
+    priceEmphasis: "medium",
+    ctaEmphasis: "discreet",
+    ornamentationLevel: "restrained",
+    idealFeatureCount: 2,
+    photoGuidance: "Uma foto deve ser claramente dominante; as demais são apoio narrativo.",
+    recommendedFor: "Imóveis com 3 ou mais boas fotos de ambientes diferentes.",
   },
   {
     id: "property-editorial",
@@ -60,6 +98,13 @@ export const campaignTemplates = [
     showsFeatures: true,
     showsCtaOnArt: true,
     supportsBlockPosition: true,
+    secondaryPhotoUsage: "frequent",
+    priceEmphasis: "editorial",
+    ctaEmphasis: "medium",
+    ornamentationLevel: "rich",
+    idealFeatureCount: 4,
+    photoGuidance: "Foto secundária é bem-vinda como recurso editorial, sem roubar protagonismo da hero.",
+    recommendedFor: "Branding imobiliário sofisticado, imóveis elegantes e apresentações completas.",
   },
   {
     id: "minimal-contemporary",
@@ -72,6 +117,13 @@ export const campaignTemplates = [
     showsFeatures: true,
     showsCtaOnArt: true,
     supportsBlockPosition: true,
+    secondaryPhotoUsage: "rare",
+    priceEmphasis: "medium",
+    ctaEmphasis: "discreet",
+    ornamentationLevel: "minimal",
+    idealFeatureCount: 2,
+    photoGuidance: "A hero deve respirar; foto secundária é exceção, não regra.",
+    recommendedFor: "Locação, uso recorrente e imóveis de médio padrão com comunicação limpa.",
   },
 ] as const;
 
@@ -104,4 +156,43 @@ export function normalizeCampaignTemplate(
 
 export function getCampaignTemplate(id: CampaignTemplateId) {
   return campaignTemplates.find((template) => template.id === id)!;
+}
+
+export function secondaryPhotoLabel(value: SecondaryPhotoUsage) {
+  switch (value) {
+    case "frequent":
+      return "Foto extra frequente";
+    case "optional":
+      return "Foto extra opcional";
+    case "selective":
+      return "Foto extra seletiva";
+    case "signature":
+      return "Múltiplas fotos";
+    case "rare":
+      return "Foto extra rara";
+  }
+}
+
+export function emphasisLabel(value: VisualEmphasis) {
+  switch (value) {
+    case "discreet":
+      return "Discreto";
+    case "medium":
+      return "Moderado";
+    case "strong":
+      return "Forte";
+    case "editorial":
+      return "Editorial";
+  }
+}
+
+export function ornamentationLabel(value: OrnamentationLevel) {
+  switch (value) {
+    case "minimal":
+      return "Ornamentos mínimos";
+    case "restrained":
+      return "Ornamentos controlados";
+    case "rich":
+      return "Acabamento rico";
+  }
 }
