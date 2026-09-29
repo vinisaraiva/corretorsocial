@@ -4,6 +4,7 @@ import {
   type CampaignTemplateId,
 } from "@/lib/campaign-templates";
 import {
+  carouselFinalCardCtaFromSeed,
   carouselFinalCardDecorations,
   carouselFinalCardThemes,
   defaultCarouselModel,
@@ -50,25 +51,6 @@ export type CampaignRecommendation = {
   };
 };
 
-const carouselCtasByPurpose = {
-  Venda: [
-    "Agende uma visita",
-    "Quero saber mais",
-    "Fale com o corretor",
-    "Conheça este imóvel",
-    "Tire suas dúvidas",
-    "Solicite mais informações",
-  ],
-  Aluguel: [
-    "Consulte disponibilidade",
-    "Agende uma visita",
-    "Quero saber mais",
-    "Fale com o corretor",
-    "Tire suas dúvidas",
-    "Conheça este imóvel",
-  ],
-} as const;
-
 function deterministicIndex(seed: string, length: number) {
   let hash = 2166136261;
 
@@ -90,11 +72,10 @@ function campaignVariationSeed(property: Property, salt: string) {
 }
 
 function carouselCtaForProperty(property: Property) {
-  const options =
-    carouselCtasByPurpose[property.purpose] ?? carouselCtasByPurpose.Venda;
-  return options[
-    deterministicIndex(campaignVariationSeed(property, "cta"), options.length)
-  ];
+  return carouselFinalCardCtaFromSeed(
+    property.purpose,
+    campaignVariationSeed(property, "cta"),
+  );
 }
 
 function carouselFinalCardDecorationForProperty(
