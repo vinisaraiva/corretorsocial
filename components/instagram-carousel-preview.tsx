@@ -1115,6 +1115,7 @@ export function InstagramCarouselPreview({
   finalCardDecoration,
   finalCardTheme,
   renderGroup = "true",
+  comparisonMode = false,
 }: {
   property: Property;
   brand: CarouselBrand;
@@ -1125,6 +1126,7 @@ export function InstagramCarouselPreview({
   finalCardDecoration: CarouselFinalCardDecoration;
   finalCardTheme: CarouselFinalCardTheme;
   renderGroup?: string;
+  comparisonMode?: boolean;
 }) {
   const slides = useMemo(
     () => buildSlides(property, modelId, headline, cta),
@@ -1137,14 +1139,22 @@ export function InstagramCarouselPreview({
 
   return (
     <div className="mx-auto w-full max-w-[470px]">
-      <div className="mb-3 flex items-center justify-between gap-3">
+      <div className={comparisonMode ? "mb-2 flex items-center justify-between gap-2" : "mb-3 flex items-center justify-between gap-3"}>
         <div>
-          <div className="text-xs font-bold uppercase tracking-wide text-[#176B5B]">
-            Carrossel · {model.name}
-          </div>
-          <div className="mt-1 text-xs text-[#667085]">
-            {slides.length} páginas montadas automaticamente
-          </div>
+          {comparisonMode ? (
+            <div className="text-[10px] font-bold uppercase tracking-wide text-[#667085]">
+              Página {safeActive + 1} de {slides.length}
+            </div>
+          ) : (
+            <>
+              <div className="text-xs font-bold uppercase tracking-wide text-[#176B5B]">
+                Carrossel · {model.name}
+              </div>
+              <div className="mt-1 text-xs text-[#667085]">
+                {slides.length} páginas montadas automaticamente
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex gap-2">
@@ -1152,10 +1162,12 @@ export function InstagramCarouselPreview({
             type="button"
             disabled={safeActive === 0}
             onClick={() => setActive((value) => Math.max(0, value - 1))}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#E4E7EC] bg-white disabled:opacity-40"
+            className={`flex items-center justify-center rounded-lg border border-[#E4E7EC] bg-white disabled:opacity-40 ${
+              comparisonMode ? "h-8 w-8" : "h-9 w-9"
+            }`}
             aria-label="Slide anterior"
           >
-            <ChevronLeft size={17} />
+            <ChevronLeft size={comparisonMode ? 15 : 17} />
           </button>
           <button
             type="button"
@@ -1163,10 +1175,12 @@ export function InstagramCarouselPreview({
             onClick={() =>
               setActive((value) => Math.min(slides.length - 1, value + 1))
             }
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#E4E7EC] bg-white disabled:opacity-40"
+            className={`flex items-center justify-center rounded-lg border border-[#E4E7EC] bg-white disabled:opacity-40 ${
+              comparisonMode ? "h-8 w-8" : "h-9 w-9"
+            }`}
             aria-label="Próximo slide"
           >
-            <ChevronRight size={17} />
+            <ChevronRight size={comparisonMode ? 15 : 17} />
           </button>
         </div>
       </div>
@@ -1182,63 +1196,67 @@ export function InstagramCarouselPreview({
         total={slides.length}
       />
 
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed left-[-10000px] top-0 w-[470px]"
-      >
-        {slides.map((slide, index) => (
-          <div
-            key={`export-${slide.kind}-${index}`}
-            data-render-carousel-slide={renderGroup}
-            className="w-[470px]"
-          >
-            <SlideArtwork
-              slide={slide}
-              brand={brand}
-              templateId={templateId}
-              modelId={modelId}
-              finalCardDecoration={finalCardDecoration}
-              finalCardTheme={finalCardTheme}
-              index={index}
-              total={slides.length}
-              exportMode
-            />
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-        {slides.map((slide, index) => (
-          <button
-            key={`${slide.kind}-${index}`}
-            type="button"
-            onClick={() => setActive(index)}
-            className={`w-16 shrink-0 overflow-hidden rounded-lg border ${
-              safeActive === index
-                ? "border-[#176B5B] ring-2 ring-[#176B5B]/10"
-                : "border-[#E4E7EC]"
-            }`}
-          >
-            <div className="relative aspect-[4/5] bg-[#EAECF0]">
-              {"image" in slide && slide.image ? (
-                <img
-                  src={slide.image}
-                  alt=""
-                  className="h-full w-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center">
-                  <Images size={16} className="text-[#98A2B3]" />
-                </div>
-              )}
-              <div className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-center text-[9px] font-bold text-white">
-                {index + 1}
-              </div>
+      {!comparisonMode ? (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed left-[-10000px] top-0 w-[470px]"
+        >
+          {slides.map((slide, index) => (
+            <div
+              key={`export-${slide.kind}-${index}`}
+              data-render-carousel-slide={renderGroup}
+              className="w-[470px]"
+            >
+              <SlideArtwork
+                slide={slide}
+                brand={brand}
+                templateId={templateId}
+                modelId={modelId}
+                finalCardDecoration={finalCardDecoration}
+                finalCardTheme={finalCardTheme}
+                index={index}
+                total={slides.length}
+                exportMode
+              />
             </div>
-          </button>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : null}
+
+      {!comparisonMode ? (
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {slides.map((slide, index) => (
+            <button
+              key={`${slide.kind}-${index}`}
+              type="button"
+              onClick={() => setActive(index)}
+              className={`w-16 shrink-0 overflow-hidden rounded-lg border ${
+                safeActive === index
+                  ? "border-[#176B5B] ring-2 ring-[#176B5B]/10"
+                  : "border-[#E4E7EC]"
+              }`}
+            >
+              <div className="relative aspect-[4/5] bg-[#EAECF0]">
+                {"image" in slide && slide.image ? (
+                  <img
+                    src={slide.image}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <Images size={16} className="text-[#98A2B3]" />
+                  </div>
+                )}
+                <div className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-center text-[9px] font-bold text-white">
+                  {index + 1}
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
