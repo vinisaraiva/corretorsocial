@@ -2,6 +2,10 @@
 
 import { toCanvas } from "html-to-image";
 import { createClient } from "@/lib/supabase/client";
+import {
+  assertRenderAspectRatio,
+  assertRenderedCanvasDimensions,
+} from "@/lib/render-validation";
 
 type RenderProvider = "instagram" | "facebook" | "google_business";
 
@@ -41,16 +45,12 @@ async function renderNode(
 
   const rect = node.getBoundingClientRect();
 
-  if (rect.width <= 0 || rect.height <= 0) {
-    throw new Error("A arte não está disponível para renderização.");
-  }
-
-  const expectedRatio = targetWidth / targetHeight;
-  const actualRatio = rect.width / rect.height;
-
-  if (Math.abs(expectedRatio - actualRatio) > 0.02) {
-    throw new Error("A proporção da arte não corresponde ao formato final.");
-  }
+  assertRenderAspectRatio({
+    sourceWidth: rect.width,
+    sourceHeight: rect.height,
+    targetWidth,
+    targetHeight,
+  });
 
   const pixelRatio = targetWidth / rect.width;
 
@@ -62,6 +62,13 @@ async function renderNode(
       if (!(currentNode instanceof HTMLElement)) return true;
       return currentNode.dataset.renderIgnore !== "true";
     },
+  });
+
+  assertRenderedCanvasDimensions({
+    width: canvas.width,
+    height: canvas.height,
+    targetWidth,
+    targetHeight,
   });
 
   const blob = await new Promise<Blob>((resolve, reject) => {
