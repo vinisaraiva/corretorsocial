@@ -1481,6 +1481,11 @@ export function CampaignBuilder({
                       ? selectedTiktokTemplate.description
                       : selectedTemplate.useCase}
               </p>
+              {!isVerticalView && !isCarouselView ? (
+                <p className="mt-2 text-xs leading-5 text-[#98A2B3]">
+                  {selectedTemplate.photoGuidance}
+                </p>
+              ) : null}
 
               <div className="mt-4 flex flex-wrap gap-1.5">
                 {isCarouselView ? (
