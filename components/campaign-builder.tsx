@@ -1204,9 +1204,13 @@ export function CampaignBuilder({
                     </p>
                   </div>
                   <span className="rounded-full bg-[#E9F4F1] px-2.5 py-1 text-[10px] font-bold text-[#176B5B]">
-                    Padrão: Editorial Clean
+                    Recomendado: {getCampaignTemplate(recommendation.style).name}
                   </span>
                 </div>
+
+                <p className="mt-2 text-[11px] leading-5 text-[#667085]">
+                  {recommendation.styleReason}
+                </p>
 
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   {campaignTemplates.map((template) => (
@@ -1227,12 +1231,19 @@ export function CampaignBuilder({
                         templateId={template.id}
                       />
                       <div className="p-2.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-extrabold">
-                            {template.name}
-                          </span>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <span className="block text-xs font-extrabold">
+                              {template.name}
+                            </span>
+                            {recommendation.style === template.id ? (
+                              <span className="mt-1 inline-flex rounded-full bg-[#E9F4F1] px-2 py-0.5 text-[9px] font-bold text-[#176B5B]">
+                                Recomendado para este imóvel
+                              </span>
+                            ) : null}
+                          </div>
                           {templateId === template.id && (
-                            <Check size={14} className="text-[#176B5B]" />
+                            <Check size={14} className="mt-0.5 shrink-0 text-[#176B5B]" />
                           )}
                         </div>
                         <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-[#667085]">
