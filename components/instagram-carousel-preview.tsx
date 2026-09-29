@@ -984,9 +984,15 @@ function SlideArtwork({
               />
             </div>
 
-            <div className="mt-10 max-w-[78%]">
+            <div className="mt-10 max-w-[94%]">
               <div
-                className={`text-[39px] leading-[0.95] ${
+                className={`whitespace-nowrap leading-[0.95] ${
+                  slide.title.length > 22
+                    ? "text-[31px]"
+                    : slide.title.length > 17
+                      ? "text-[34px]"
+                      : "text-[37px]"
+                } ${
                   treatment === "dark-premium" || treatment === "property-editorial"
                     ? "font-editorial font-semibold"
                     : "font-display font-black"
