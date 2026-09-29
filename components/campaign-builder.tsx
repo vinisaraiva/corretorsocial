@@ -1276,102 +1276,9 @@ export function CampaignBuilder({
                 </button>
 
                 {compareStyles ? (
-                  <div className="mt-4 rounded-2xl border border-[#E4E7EC] bg-[#F9FAFB] p-3">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <div className="text-xs font-extrabold uppercase tracking-wide text-[#667085]">
-                          Comparação visual
-                        </div>
-                        <p className="mt-1 text-[11px] leading-5 text-[#667085]">
-                          Mesmo imóvel, mesma foto principal e mesmo conteúdo. Compare apenas a linguagem visual.
-                        </p>
-                      </div>
-                      <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-bold text-[#667085] ring-1 ring-[#E4E7EC]">
-                        Feed 4:5
-                      </span>
-                    </div>
-
-                    <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                      {campaignTemplates.map((template) => (
-                        <div
-                          key={`compare-${template.id}`}
-                          className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${
-                            templateId === template.id
-                              ? "border-[#176B5B] ring-2 ring-[#176B5B]/10"
-                              : "border-[#E4E7EC]"
-                          }`}
-                        >
-                          <CreativePreview
-                            property={feedProperty}
-                            brand={brand}
-                            templateId={template.id}
-                            headline={headline}
-                            subheadline={subheadline}
-                            copy={captions.instagram}
-                            cta={cta}
-                            blockPosition={blockPositions.instagramFeed}
-                            suggestedBlockPosition={suggestedBlockPositionFromTags(
-                              feedMedia?.aiTags,
-                            )}
-                            artOnly
-                          />
-
-                          <div className="p-3">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <div className="text-sm font-extrabold text-[#18202A]">
-                                  {template.name}
-                                </div>
-                                <p className="mt-1 text-[10px] leading-4 text-[#667085]">
-                                  {template.photoGuidance}
-                                </p>
-                              </div>
-                              {recommendation.style === template.id ? (
-                                <span className="shrink-0 rounded-full bg-[#E9F4F1] px-2 py-1 text-[8px] font-black uppercase tracking-wide text-[#176B5B]">
-                                  Recomendado
-                                </span>
-                              ) : null}
-                            </div>
-
-                            <div className="mt-3 flex flex-wrap gap-1">
-                              <MiniBadge
-                                label={secondaryPhotoLabel(
-                                  template.secondaryPhotoUsage,
-                                )}
-                              />
-                              <MiniBadge
-                                label={`Preço: ${emphasisLabel(
-                                  template.priceEmphasis,
-                                )}`}
-                              />
-                              <MiniBadge
-                                label={ornamentationLabel(
-                                  template.ornamentationLevel,
-                                )}
-                              />
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                applyGlobalStyle(template.id);
-                                setCompareStyles(false);
-                              }}
-                              className={`mt-3 w-full rounded-lg px-3 py-2 text-xs font-extrabold transition ${
-                                templateId === template.id
-                                  ? "bg-[#E9F4F1] text-[#176B5B]"
-                                  : "bg-[#18202A] text-white hover:bg-[#344054]"
-                              }`}
-                            >
-                              {templateId === template.id
-                                ? "Estilo atual"
-                                : "Usar este estilo"}
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <p className="mt-2 text-center text-[10px] font-semibold leading-4 text-[#667085]">
+                    A comparação completa dos seis estilos está aberta abaixo da prévia principal.
+                  </p>
                 ) : null}
               </div>
 
@@ -1890,6 +1797,115 @@ export function CampaignBuilder({
           </p>
         </aside>
       </section>
+
+      {compareStyles ? (
+        <section className="app-card p-4 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wide text-[#176B5B]">
+                <LayoutGrid size={16} />
+                Homologação visual
+              </div>
+              <h3 className="mt-1 text-lg font-extrabold text-[#18202A]">
+                Os 6 estilos com o mesmo imóvel
+              </h3>
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-[#667085]">
+                Mesma foto principal, mesmo conteúdo e mesmos dados. Nesta visão,
+                a diferença deve vir da direção de arte — não do imóvel.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setCompareStyles(false)}
+              className="rounded-lg border border-[#D0D5DD] bg-white px-3 py-2 text-xs font-bold text-[#475467] transition hover:border-[#98A2B3] hover:bg-[#F9FAFB]"
+            >
+              Fechar comparação
+            </button>
+          </div>
+
+          <div className="mt-5 grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+            {campaignTemplates.map((template) => (
+              <article
+                key={`wide-compare-${template.id}`}
+                className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${
+                  templateId === template.id
+                    ? "border-[#176B5B] ring-2 ring-[#176B5B]/10"
+                    : "border-[#E4E7EC]"
+                }`}
+              >
+                <CreativePreview
+                  property={feedProperty}
+                  brand={brand}
+                  templateId={template.id}
+                  headline={headline}
+                  subheadline={subheadline}
+                  copy={captions.instagram}
+                  cta={cta}
+                  blockPosition={blockPositions.instagramFeed}
+                  suggestedBlockPosition={suggestedBlockPositionFromTags(
+                    feedMedia?.aiTags,
+                  )}
+                  artOnly
+                />
+
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-base font-extrabold text-[#18202A]">
+                        {template.name}
+                      </div>
+                      <p className="mt-1 text-xs leading-5 text-[#667085]">
+                        {template.photoGuidance}
+                      </p>
+                    </div>
+
+                    {recommendation.style === template.id ? (
+                      <span className="shrink-0 rounded-full bg-[#E9F4F1] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-[#176B5B]">
+                        Recomendado
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    <MiniBadge
+                      label={secondaryPhotoLabel(template.secondaryPhotoUsage)}
+                    />
+                    <MiniBadge
+                      label={`Preço: ${emphasisLabel(template.priceEmphasis)}`}
+                    />
+                    <MiniBadge
+                      label={ornamentationLabel(template.ornamentationLevel)}
+                    />
+                    <MiniBadge
+                      label={`${template.idealFeatureCount} atributos ideais`}
+                    />
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <span className="text-[10px] font-semibold leading-4 text-[#98A2B3]">
+                      {template.recommendedFor}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => applyGlobalStyle(template.id)}
+                      className={`shrink-0 rounded-lg px-3 py-2 text-xs font-extrabold transition ${
+                        templateId === template.id
+                          ? "bg-[#E9F4F1] text-[#176B5B]"
+                          : "bg-[#18202A] text-white hover:bg-[#344054]"
+                      }`}
+                    >
+                      {templateId === template.id
+                        ? "Estilo atual"
+                        : "Usar este"}
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <CampaignRenderWorkspace
         brand={brand}
