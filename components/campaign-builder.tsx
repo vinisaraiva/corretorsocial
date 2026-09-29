@@ -322,6 +322,7 @@ export function CampaignBuilder({
   >([]);
   const [renderedLabel, setRenderedLabel] = useState("");
   const [compareStyles, setCompareStyles] = useState(false);
+  const [compareFormat, setCompareFormat] = useState<"feed" | "story">("feed");
   const [staging, setStaging] = useState(false);
   const [stagingStyle, setStagingStyle] =
     useState<(typeof stagingStyles)[number]>("Moderno");
@@ -1815,13 +1816,40 @@ export function CampaignBuilder({
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setCompareStyles(false)}
-              className="rounded-lg border border-[#D0D5DD] bg-white px-3 py-2 text-xs font-bold text-[#475467] transition hover:border-[#98A2B3] hover:bg-[#F9FAFB]"
-            >
-              Fechar comparação
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex rounded-lg bg-[#F2F4F7] p-1">
+                <button
+                  type="button"
+                  onClick={() => setCompareFormat("feed")}
+                  className={`rounded-md px-3 py-1.5 text-[10px] font-extrabold transition ${
+                    compareFormat === "feed"
+                      ? "bg-white text-[#18202A] shadow-sm"
+                      : "text-[#667085]"
+                  }`}
+                >
+                  Feed 4:5
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCompareFormat("story")}
+                  className={`rounded-md px-3 py-1.5 text-[10px] font-extrabold transition ${
+                    compareFormat === "story"
+                      ? "bg-white text-[#18202A] shadow-sm"
+                      : "text-[#667085]"
+                  }`}
+                >
+                  Story 9:16
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setCompareStyles(false)}
+                className="rounded-lg border border-[#D0D5DD] bg-white px-3 py-2 text-xs font-bold text-[#475467] transition hover:border-[#98A2B3] hover:bg-[#F9FAFB]"
+              >
+                Fechar comparação
+              </button>
+            </div>
           </div>
 
           <div className="mt-5 grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
@@ -1834,20 +1862,37 @@ export function CampaignBuilder({
                     : "border-[#E4E7EC]"
                 }`}
               >
-                <CreativePreview
-                  property={feedProperty}
-                  brand={brand}
-                  templateId={template.id}
-                  headline={headline}
-                  subheadline={subheadline}
-                  copy={captions.instagram}
-                  cta={cta}
-                  blockPosition={blockPositions.instagramFeed}
-                  suggestedBlockPosition={suggestedBlockPositionFromTags(
-                    feedMedia?.aiTags,
-                  )}
-                  artOnly
-                />
+                {compareFormat === "feed" ? (
+                  <CreativePreview
+                    property={feedProperty}
+                    brand={brand}
+                    templateId={template.id}
+                    headline={headline}
+                    subheadline={subheadline}
+                    copy={captions.instagram}
+                    cta={cta}
+                    blockPosition={blockPositions.instagramFeed}
+                    suggestedBlockPosition={suggestedBlockPositionFromTags(
+                      feedMedia?.aiTags,
+                    )}
+                    artOnly
+                  />
+                ) : (
+                  <VerticalCreativePreview
+                    property={storyProperty}
+                    brand={brand}
+                    platform="instagram_story"
+                    templateId={campaignTemplateToVertical(template.id)}
+                    headline={storyHeadline}
+                    subheadline={storySubheadline}
+                    cta={storyCta}
+                    blockPosition={blockPositions.instagramStory}
+                    suggestedBlockPosition={suggestedBlockPositionFromTags(
+                      storyMedia?.aiTags,
+                    )}
+                    artOnly
+                  />
+                )}
 
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-3">
