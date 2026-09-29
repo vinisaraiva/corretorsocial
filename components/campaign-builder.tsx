@@ -57,8 +57,10 @@ import {
 import { VerticalTemplateControls } from "@/components/vertical-template-controls";
 import { VerticalCreativePreview } from "@/components/vertical-creative-preview";
 import {
+  carouselFinalCardCtaFromSeed,
   carouselFinalCardDecorationFromSeed,
   getCarouselModel,
+  isSystemCarouselFinalCardCta,
   normalizeCarouselFinalCardDecoration,
   normalizeCarouselFinalCardTheme,
   normalizeCarouselModel,
@@ -199,20 +201,30 @@ export function CampaignBuilder({
   const carouselVariationSeedBase =
     campaignData?.id ?? `${property.id}:${property.campaigns ?? 0}`;
 
-  const carouselDecorationFor = (
-    style: CampaignTemplateId,
-    model: CarouselModelId,
-  ) => {
-    const styleOffset = Math.max(
+  const styleOffsetFor = (style: CampaignTemplateId) =>
+    Math.max(
       0,
       campaignTemplates.findIndex((template) => template.id === style),
     );
 
-    return carouselFinalCardDecorationFromSeed(
-      `${carouselVariationSeedBase}:${model}`,
-      styleOffset,
+  const carouselDecorationFor = (
+    style: CampaignTemplateId,
+    model: CarouselModelId,
+  ) =>
+    carouselFinalCardDecorationFromSeed(
+      `${carouselVariationSeedBase}:${model}:grafismo`,
+      styleOffsetFor(style),
     );
-  };
+
+  const carouselCtaFor = (
+    style: CampaignTemplateId,
+    model: CarouselModelId,
+  ) =>
+    carouselFinalCardCtaFromSeed(
+      property.purpose,
+      `${carouselVariationSeedBase}:${model}:cta`,
+      styleOffsetFor(style),
+    );
 
   const [persistedCampaignId, setPersistedCampaignId] = useState(
     campaignData?.id,
@@ -274,9 +286,14 @@ export function CampaignBuilder({
     campaignData?.instagramCarousel?.headline ??
       recommendation.instagramCarousel.headline,
   );
-  const [carouselCta, setCarouselCta] = useState(
-    campaignData?.instagramCarousel?.cta ??
-      recommendation.instagramCarousel.cta,
+  const initialCarouselCta = campaignData?.instagramCarousel?.cta;
+  const [carouselCtaCustomized, setCarouselCtaCustomized] = useState(
+    !isSystemCarouselFinalCardCta(initialCarouselCta),
+  );
+  const [carouselCta, setCarouselCta] = useState(() =>
+    isSystemCarouselFinalCardCta(initialCarouselCta)
+      ? carouselCtaFor(initialTemplateId, initialCarouselModelId)
+      : initialCarouselCta!,
   );
   const [carouselFinalCardDecoration, setCarouselFinalCardDecoration] =
     useState<CarouselFinalCardDecoration>(() => {
@@ -525,6 +542,9 @@ export function CampaignBuilder({
     setCarouselFinalCardDecoration(
       carouselDecorationFor(value, carouselModelId),
     );
+    if (!carouselCtaCustomized) {
+      setCarouselCta(carouselCtaFor(value, carouselModelId));
+    }
     const verticalTemplate = campaignTemplateToVertical(value);
     setStoryTemplateId(verticalTemplate);
     setTiktokTemplateId(verticalTemplate);
@@ -1317,6 +1337,9 @@ export function CampaignBuilder({
                       setCarouselFinalCardDecoration(
                         carouselDecorationFor(templateId, value),
                       );
+                      if (!carouselCtaCustomized) {
+                        setCarouselCta(carouselCtaFor(templateId, value));
+                      }
                       markChanged();
                     }}
                     onHeadlineChange={(value) => {
@@ -1325,6 +1348,7 @@ export function CampaignBuilder({
                     }}
                     onCtaChange={(value) => {
                       setCarouselCta(value);
+                      setCarouselCtaCustomized(true);
                       markChanged();
                     }}
                   />
@@ -1937,7 +1961,11 @@ export function CampaignBuilder({
                     templateId={template.id}
                     modelId={carouselModelId}
                     headline={carouselHeadline}
-                    cta={carouselCta}
+                    cta={
+                      carouselCtaCustomized
+                        ? carouselCta
+                        : carouselCtaFor(template.id, carouselModelId)
+                    }
                     finalCardDecoration={carouselDecorationFor(
                       template.id,
                       carouselModelId,
