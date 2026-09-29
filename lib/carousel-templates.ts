@@ -92,6 +92,40 @@ export function carouselFinalCardDecorationFromSeed(
   return carouselFinalCardDecorations[index];
 }
 
+export const carouselFinalCardCtas = {
+  Venda: [
+    "Agende uma visita",
+    "Quero saber mais",
+    "Fale com o corretor",
+    "Conheça este imóvel",
+    "Tire suas dúvidas",
+    "Solicite mais informações",
+  ],
+  Aluguel: [
+    "Consulte disponibilidade",
+    "Agende uma visita",
+    "Quero saber mais",
+    "Fale com o corretor",
+    "Tire suas dúvidas",
+    "Conheça este imóvel",
+  ],
+} as const;
+
+export function carouselFinalCardCtaFromSeed(
+  purpose: "Venda" | "Aluguel",
+  seed: string,
+  offset = 0,
+) {
+  const options = carouselFinalCardCtas[purpose];
+  const index = (mixedHash(seed) + Math.abs(offset)) % options.length;
+
+  return options[index];
+}
+
+export function isLegacyCarouselFinalCardCta(value?: string | null) {
+  return !value || value.trim() === "Fale comigo no WhatsApp";
+}
+
 export const carouselFinalCardThemes = [
   "brand",
   "dark",
