@@ -126,6 +126,17 @@ export function isLegacyCarouselFinalCardCta(value?: string | null) {
   return !value || value.trim() === "Fale comigo no WhatsApp";
 }
 
+export function isSystemCarouselFinalCardCta(value?: string | null) {
+  if (isLegacyCarouselFinalCardCta(value)) return true;
+
+  const normalized = value?.trim();
+  if (!normalized) return true;
+
+  return Object.values(carouselFinalCardCtas).some((options) =>
+    (options as readonly string[]).includes(normalized),
+  );
+}
+
 export const carouselFinalCardThemes = [
   "brand",
   "dark",
