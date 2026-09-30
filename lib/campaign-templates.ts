@@ -1,4 +1,4 @@
-export const VISUAL_SYSTEM_VERSION = "1.0.0" as const;
+export const VISUAL_SYSTEM_VERSION = "1.0.1" as const;
 export const VISUAL_SYSTEM_STATUS = "frozen" as const;
 
 export const DEFAULT_CAMPAIGN_TEMPLATE_ID = "editorial-clean" as const;
