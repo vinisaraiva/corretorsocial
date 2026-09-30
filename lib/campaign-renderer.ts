@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   assertRenderAspectRatio,
   assertRenderedCanvasDimensions,
+  assertRenderedJpegBlob,
 } from "@/lib/render-validation";
 
 type RenderProvider = "instagram" | "facebook" | "google_business";
@@ -83,6 +84,12 @@ async function renderNode(
       "image/jpeg",
       0.92,
     );
+  });
+
+  await assertRenderedJpegBlob({
+    blob,
+    targetWidth,
+    targetHeight,
   });
 
   return blob;
