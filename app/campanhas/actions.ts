@@ -828,7 +828,7 @@ export async function registerRenderedAssets(input: {
         ...metadata,
         rendered_asset_paths: uniquePaths,
         rendered_at: new Date().toISOString(),
-        render_source: "client_dom_v0_1",
+        render_source: "client_dom_v0_2",
       },
     })
     .eq("id", variant.id);
