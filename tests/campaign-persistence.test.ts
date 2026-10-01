@@ -7,6 +7,7 @@ import {
   renderedPathsFromVariant,
   type CampaignDraftInput,
 } from "../lib/campaign-persistence";
+import { VISUAL_SYSTEM_VERSION } from "../lib/campaign-templates";
 
 function draft(overrides: Partial<CampaignDraftInput> = {}): CampaignDraftInput {
   return {
@@ -134,6 +135,10 @@ test("applyCampaignRenderState preserva render compatível e seus metadados", ()
     block_position: row.render_metadata.block_position,
     carousel_type: row.render_metadata.carousel_type ?? null,
     slide_count: row.render_metadata.slide_count ?? null,
+    final_card_decoration:
+      row.render_metadata.final_card_decoration ?? null,
+    final_card_theme: row.render_metadata.final_card_theme ?? null,
+    visual_system_version: VISUAL_SYSTEM_VERSION,
     media_ids: row.render_metadata.media_ids ?? [],
     render_context: renderContext,
     asset_format: "image/jpeg",
